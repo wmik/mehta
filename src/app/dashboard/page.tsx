@@ -2,27 +2,121 @@
 
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import Link from 'next/link'
+
+interface Session {
+  id: string
+  groupId: string
+  date: string
+  status: string
+  fellow: {
+    name: string
+    email: string
+  }
+  analyses: Array<{
+    id: string
+    riskDetection: any
+    supervisorStatus: string | null
+    createdAt: string
+  }>
+}
 
 export default function DashboardPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const [sessions, setSessions] = useState<Session[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (status === 'loading') return
     if (!session) {
       router.push('/login')
+      return
     }
+
+    fetchSessions()
   }, [session, status, router])
 
-  if (status === 'loading') {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>
+  const fetchSessions = async () => {
+    try {
+      const response = await fetch('/api/sessions')
+      const data = await response.json()
+      setSessions(data.sessions || [])
+    } catch (error) {
+      console.error('Failed to fetch sessions:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (status === 'loading' || loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <header className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <Skeleton className="h-6 w-64" />
+              <Skeleton className="h-10 w-20" />
+            </div>
+          </div>
+        </header>
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="space-y-6">
+            <Skeleton className="h-8 w-96" />
+            <Skeleton className="h-4 w-80" />
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-6 w-32" />
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {[...Array(10)].map((_, i) => (
+                    <Skeleton key={i} className="h-12 w-full" />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+      </div>
+    )
   }
 
   if (!session) {
     return null
+  }
+
+  const getStatusBadge = (status: string, analysis: any) => {
+    if (status === 'PENDING') {
+      return <Badge variant="secondary">Pending</Badge>
+    }
+    
+    const riskStatus = analysis?.riskDetection?.status
+    if (riskStatus === 'RISK') {
+      return <Badge variant="destructive">Risk</Badge>
+    }
+    
+    if (analysis?.supervisorStatus === 'REJECTED') {
+      return <Badge variant="outline">Review Needed</Badge>
+    }
+    
+    if (status === 'PROCESSED' || analysis?.supervisorStatus === 'VALIDATED') {
+      return <Badge variant="default">Safe</Badge>
+    }
+    
+    return <Badge variant="secondary">{status}</Badge>
+  }
+
+  const stats = {
+    total: sessions.length,
+    processed: sessions.filter(s => s.status === 'PROCESSED' || s.analyses.length > 0).length,
+    risks: sessions.filter(s => s.analyses[0]?.riskDetection?.status === 'RISK').length
   }
 
   return (
@@ -58,7 +152,7 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
           <Card>
             <CardHeader>
               <CardTitle>Session Management</CardTitle>
@@ -67,7 +161,7 @@ export default function DashboardPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold text-blue-600">0</p>
+              <p className="text-3xl font-bold text-blue-600">{stats.total}</p>
               <p className="text-sm text-gray-600">Total Sessions</p>
             </CardContent>
           </Card>
@@ -80,7 +174,7 @@ export default function DashboardPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold text-green-600">0</p>
+              <p className="text-3xl font-bold text-green-600">{stats.processed}</p>
               <p className="text-sm text-gray-600">Completed Analyses</p>
             </CardContent>
           </Card>
@@ -93,11 +187,65 @@ export default function DashboardPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold text-red-600">0</p>
+              <p className="text-3xl font-bold text-red-600">{stats.risks}</p>
               <p className="text-sm text-gray-600">Flagged Sessions</p>
             </CardContent>
           </Card>
         </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Sessions</CardTitle>
+            <CardDescription>
+              Therapy sessions conducted by your assigned Fellows
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {sessions.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-500 mb-4">No sessions found.</p>
+                <Button onClick={() => fetchSessions()}>
+                  Refresh
+                </Button>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Fellow Name</TableHead>
+                    <TableHead>Group ID</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {sessions.map((sessionData) => (
+                    <TableRow key={sessionData.id}>
+                      <TableCell className="font-medium">
+                        {sessionData.fellow.name}
+                      </TableCell>
+                      <TableCell>{sessionData.groupId}</TableCell>
+                      <TableCell>
+                        {new Date(sessionData.date).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>
+                        {getStatusBadge(sessionData.status, sessionData.analyses[0])}
+                      </TableCell>
+                      <TableCell>
+                        <Link href={`/dashboard/sessions/${sessionData.id}`}>
+                          <Button variant="outline" size="sm">
+                            View Details
+                          </Button>
+                        </Link>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
       </main>
     </div>
   )

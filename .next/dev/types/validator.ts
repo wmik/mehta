@@ -92,6 +92,33 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
+// Validate ../../../src/app/api/sessions/[id]/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/sessions/[id]">> = Specific
+  const handler = {} as typeof import("../../../src/app/api/sessions/[id]/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../../src/app/api/sessions/list/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/sessions/list">> = Specific
+  const handler = {} as typeof import("../../../src/app/api/sessions/list/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../../src/app/api/sessions/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/sessions">> = Specific
+  const handler = {} as typeof import("../../../src/app/api/sessions/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
 
 
 
