@@ -1,8 +1,6 @@
 'use client'
 
-import { useSession, signOut } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -28,20 +26,6 @@ interface Session {
 }
 
 export default function DashboardPage() {
-  const { data: session, status } = useSession()
-  const router = useRouter()
-  const [sessions, setSessions] = useState<Session[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    if (status === 'loading') return
-    if (!session) {
-      router.push('/login')
-      return
-    }
-
-    fetchSessions()
-  }, [session, status, router])
 
   const fetchSessions = async () => {
     try {
@@ -55,7 +39,7 @@ export default function DashboardPage() {
     }
   }
 
-  if (status === 'loading' || loading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
         <header className="bg-white shadow-sm border-b">
@@ -86,10 +70,6 @@ export default function DashboardPage() {
         </main>
       </div>
     )
-  }
-
-  if (!session) {
-    return null
   }
 
   const getStatusBadge = (status: string, analysis: any) => {
@@ -129,14 +109,8 @@ export default function DashboardPage() {
             </h1>
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-600">
-                {session.user.name}
+                Demo User
               </span>
-              <Button 
-                variant="outline" 
-                onClick={() => signOut()}
-              >
-                Sign Out
-              </Button>
             </div>
           </div>
         </div>
@@ -145,7 +119,7 @@ export default function DashboardPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Welcome back, {session.user.name}
+            Shamiri Supervisor Dashboard
           </h2>
           <p className="text-gray-600">
             Review and analyze therapy sessions conducted by your Fellows.
