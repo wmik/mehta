@@ -1,6 +1,23 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+
+interface Session {
+  id: string
+  groupId: string
+  date: string
+  status: string
+  fellow: {
+    name: string
+    email: string
+  }
+  analyses: Array<{
+    id: string
+    riskDetection: any
+    supervisorStatus: string | null
+    createdAt: string
+  }>
+}
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -29,14 +46,53 @@ export default function DashboardPage() {
 
   const fetchSessions = async () => {
     try {
-      const response = await fetch('/api/sessions')
-      const data = await response.json()
-      setSessions(data.sessions || [])
-    } catch (error) {
-      console.error('Failed to fetch sessions:', error)
-    } finally {
-      setLoading(false)
+      // For MVP, get the first supervisor
+      const supervisor = await prisma.supervisor.findFirst({
+        where: { email: 'supervisor@shamiri.org' }
+      })
+
+    if (!supervisor) {
+      return NextResponse.json({ error: 'No supervisor found' }, { status: 404 })
     }
+
+    const sessions = await prisma.session.findMany({
+      where: {
+        supervisorId: supervisor.id
+      },
+      include: {
+        fellow: {
+          select: {
+            name: true,
+            email: true
+          }
+        },
+        analyses: {
+          select: {
+            id: true,
+            riskDetection: true,
+            supervisorStatus: true,
+            createdAt: true
+          },
+          orderBy: {
+            createdAt: 'desc'
+          },
+          take: 1
+        }
+      },
+      orderBy: {
+        date: 'desc'
+      }
+    })
+
+    return NextResponse.json({ sessions })
+  } catch (error) {
+    console.error('Sessions fetch error:', error)
+    return NextResponse.json(
+      { error: 'Failed to fetch sessions: ' + (error as Error).message },
+      { status: 500 }
+    )
+  }
+  }
   }
 
   if (loading) {

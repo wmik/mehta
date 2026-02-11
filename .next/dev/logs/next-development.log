@@ -1,17 +1,1 @@
-[00:00:02.377] Server  LOG     ✓ Ready in 1807ms
-[00:00:17.842] Browser ERROR   [next-auth][error][CLIENT_FETCH_ERROR] 
-https://next-auth.js.org/errors#client_fetch_error NetworkError when attempting to fetch resource. {"error":{"message":"NetworkError when attempting to fetch resource.","name":"TypeError","stack":""},"message":"NetworkError when attempting to fetch resource.","url":"/api/auth/session"}
-[00:00:18.748] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:00:19.322] Server  ERROR   ⨯ TypeError: Cannot destructure property 'GET' of '{imported module ./src/lib/auth.ts}.handlers' as it is undefined.
-[00:00:19.363] Browser WARN    Image with src "http://localhost:3000/vercel.svg" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
-[00:00:20.564] Server  ERROR   ⨯ TypeError: Cannot destructure property 'GET' of '{imported module ./src/lib/auth.ts}.handlers' as it is undefined.
-[00:00:20.597] Browser ERROR   [next-auth][error][CLIENT_FETCH_ERROR] 
-https://next-auth.js.org/errors#client_fetch_error JSON.parse: unexpected character at line 1 column 1 of the JSON data {"error":{"message":"JSON.parse: unexpected character at line 1 column 1 of the JSON data","name":"SyntaxError","stack":""},"message":"JSON.parse: unexpected character at line 1 column 1 of the JSON data","url":"/api/auth/session"}
-[00:01:01.630] Server  LOG     ✓ Compiled in 208ms
-[00:01:44.056] Server  ERROR   Sessions fetch error: TypeError: (0 , __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$auth$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__.auth) is not a function
-[00:02:07.760] Server  ERROR   Sessions fetch error: TypeError: (0 , __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$auth$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__.auth) is not a function
-[00:02:43.527] Server  LOG     Auth session: null
-[00:02:43.528] Server  LOG     No user session
-[00:04:23.763] Server  LOG     Sessions found: 10
-[00:04:31.018] Server  ERROR   ⨯ ReferenceError: loading is not defined
-[00:04:35.845] Server  ERROR   ⨯ ReferenceError: loading is not defined
+[00:00:03.722] Server  LOG     ✓ Ready in 2.9s
