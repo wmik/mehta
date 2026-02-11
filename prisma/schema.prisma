@@ -1,0 +1,93 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Supervisor - Tier 2 professionals overseeing Fellows
+model Supervisor {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  fellows   Fellow[]
+  sessions  Session[]
+
+  @@map("supervisors")
+}
+
+// Fellow - Lay providers (18-22 years old) delivering therapy
+model Fellow {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  status    String   @default("ACTIVE") // ACTIVE, INACTIVE
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  supervisorId String
+  supervisor   Supervisor @relation(fields: [supervisorId], references: [id], onDelete: Cascade)
+  sessions     Session[]
+
+  @@map("fellows")
+}
+
+// Session - Therapy group sessions conducted by Fellows
+model Session {
+  id        String   @id @default(cuid())
+  groupId   String
+  date      DateTime
+  transcript String  // Full text transcript of 40-60 minute session
+  status    String   @default("PENDING") // PENDING, PROCESSED, FLAGGED_FOR_REVIEW, SAFE
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  fellowId   String
+  fellow     Fellow @relation(fields: [fellowId], references: [id], onDelete: Cascade)
+  supervisorId String
+  supervisor Supervisor @relation(fields: [supervisorId], references: [id], onDelete: Cascade)
+  
+  // AI Analysis
+  analyses SessionAnalysis[]
+
+  @@map("sessions")
+}
+
+// SessionAnalysis - AI-generated analysis and human validation
+model SessionAnalysis {
+  id                String   @id @default(cuid())
+  
+  // AI-generated structured data
+  summary           String
+  contentCoverage   Json     // { score: number, rating: string, justification: string }
+  facilitationQuality Json  // { score: number, rating: string, justification: string }
+  protocolSafety    Json     // { score: number, rating: string, justification: string }
+  riskDetection     Json     // { status: "SAFE" | "RISK", quote?: string, explanation: string }
+  
+  // Human validation
+  supervisorStatus  String?  // VALIDATED, REJECTED, null if not reviewed
+  supervisorNotes   String?
+  reviewedBy        String?
+  reviewedAt        DateTime?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  sessionId String
+  session   Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@map("session_analyses")
+}
