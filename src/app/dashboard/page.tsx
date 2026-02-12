@@ -1,99 +1,105 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import type { Fellow, Meeting, MeetingAnalysis } from '@/generated/prisma';
+import type { JsonObject } from '@/generated/prisma/runtime/client';
 
-interface Session {
-  id: string
-  groupId: string
-  date: string
-  status: string
-  fellow: {
-    name: string
-    email: string
-  }
-  analyses: Array<{
-    id: string
-    riskDetection: any
-    supervisorStatus: string | null
-    createdAt: string
-  }>
-}
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
-import { Skeleton } from '@/components/ui/skeleton'
-import Link from 'next/link'
+type Analysis = Pick<
+  MeetingAnalysis,
+  'id' | 'createdAt' | 'riskDetection' | 'supervisorStatus'
+>;
 
-interface Session {
-  id: string
-  groupId: string
-  date: string
-  status: string
-  fellow: {
-    name: string
-    email: string
-  }
-  analyses: Array<{
-    id: string
-    riskDetection: any
-    supervisorStatus: string | null
-    createdAt: string
-  }>
+interface MeetingWithRelation extends Meeting {
+  analyses: Array<Analysis>;
+  fellow: Pick<Fellow, 'name' | 'email'>;
 }
 
 export default function DashboardPage() {
+  const [loading, setLoading] = useState(false);
+  const [sessions, setSessions] = useState<MeetingWithRelation[]>([]);
+  const [errors, setErrors] = useState<{ error: string; status: number }[]>([]);
 
   const fetchSessions = async () => {
+    setLoading(true);
+
     try {
       // For MVP, get the first supervisor
-      const supervisor = await prisma.supervisor.findFirst({
-        where: { email: 'supervisor@shamiri.org' }
-      })
+      const response = await fetch('/api/meetings');
 
-    if (!supervisor) {
-      return NextResponse.json({ error: 'No supervisor found' }, { status: 404 })
+      if (response.ok) {
+        const sessions = await response.json();
+
+        setSessions(sessions);
+      } else {
+        const error = await response.text();
+
+        setErrors(prev =>
+          prev.concat({
+            error,
+            status: response.status
+          })
+        );
+      }
+    } catch (error) {
+      console.error('Sessions fetch error:', error);
+      return setErrors(prev =>
+        prev.concat({
+          error: 'Failed to fetch sessions: ' + (error as Error).message,
+          status: 500
+        })
+      );
+    }
+  };
+
+  const getStatusBadge = (status: string, analysis: Analysis) => {
+    if (status === 'PENDING') {
+      return <Badge variant="secondary">Pending</Badge>;
+    }
+    const riskStatus = (analysis?.riskDetection as JsonObject)?.status;
+
+    if (riskStatus === 'RISK') {
+      return <Badge variant="destructive">Risk</Badge>;
     }
 
-    const sessions = await prisma.session.findMany({
-      where: {
-        supervisorId: supervisor.id
-      },
-      include: {
-        fellow: {
-          select: {
-            name: true,
-            email: true
-          }
-        },
-        analyses: {
-          select: {
-            id: true,
-            riskDetection: true,
-            supervisorStatus: true,
-            createdAt: true
-          },
-          orderBy: {
-            createdAt: 'desc'
-          },
-          take: 1
-        }
-      },
-      orderBy: {
-        date: 'desc'
-      }
-    })
+    if (analysis?.supervisorStatus === 'REJECTED') {
+      return <Badge variant="outline">Review Needed</Badge>;
+    }
 
-    return NextResponse.json({ sessions })
-  } catch (error) {
-    console.error('Sessions fetch error:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch sessions: ' + (error as Error).message },
-      { status: 500 }
-    )
-  }
-  }
-  }
+    if (status === 'PROCESSED' || analysis?.supervisorStatus === 'VALIDATED') {
+      return <Badge variant="default">Safe</Badge>;
+    }
+
+    return <Badge variant="secondary">{status}</Badge>;
+  };
+
+  const stats = {
+    total: sessions.length,
+    processed: sessions.filter(
+      s => s.status === 'PROCESSED' || s.analyses.length > 0
+    ).length,
+    risks: sessions.filter(
+      s => (s.analyses[0]?.riskDetection as JsonObject)?.status === 'RISK'
+    ).length
+  };
 
   if (loading) {
     return (
@@ -125,34 +131,7 @@ export default function DashboardPage() {
           </div>
         </main>
       </div>
-    )
-  }
-
-  const getStatusBadge = (status: string, analysis: any) => {
-    if (status === 'PENDING') {
-      return <Badge variant="secondary">Pending</Badge>
-    }
-    
-    const riskStatus = analysis?.riskDetection?.status
-    if (riskStatus === 'RISK') {
-      return <Badge variant="destructive">Risk</Badge>
-    }
-    
-    if (analysis?.supervisorStatus === 'REJECTED') {
-      return <Badge variant="outline">Review Needed</Badge>
-    }
-    
-    if (status === 'PROCESSED' || analysis?.supervisorStatus === 'VALIDATED') {
-      return <Badge variant="default">Safe</Badge>
-    }
-    
-    return <Badge variant="secondary">{status}</Badge>
-  }
-
-  const stats = {
-    total: sessions.length,
-    processed: sessions.filter(s => s.status === 'PROCESSED' || s.analyses.length > 0).length,
-    risks: sessions.filter(s => s.analyses[0]?.riskDetection?.status === 'RISK').length
+    );
   }
 
   return (
@@ -164,9 +143,7 @@ export default function DashboardPage() {
               Shamiri Supervisor Dashboard
             </h1>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">
-                Demo User
-              </span>
+              <span className="text-sm text-gray-600">Demo User</span>
             </div>
           </div>
         </div>
@@ -199,12 +176,12 @@ export default function DashboardPage() {
           <Card>
             <CardHeader>
               <CardTitle>AI Analysis</CardTitle>
-              <CardDescription>
-                AI-powered session insights
-              </CardDescription>
+              <CardDescription>AI-powered session insights</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold text-green-600">{stats.processed}</p>
+              <p className="text-3xl font-bold text-green-600">
+                {stats.processed}
+              </p>
               <p className="text-sm text-gray-600">Completed Analyses</p>
             </CardContent>
           </Card>
@@ -212,9 +189,7 @@ export default function DashboardPage() {
           <Card>
             <CardHeader>
               <CardTitle>Risk Alerts</CardTitle>
-              <CardDescription>
-                Sessions requiring attention
-              </CardDescription>
+              <CardDescription>Sessions requiring attention</CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-bold text-red-600">{stats.risks}</p>
@@ -234,9 +209,7 @@ export default function DashboardPage() {
             {sessions.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-gray-500 mb-4">No sessions found.</p>
-                <Button onClick={() => fetchSessions()}>
-                  Refresh
-                </Button>
+                <Button onClick={() => fetchSessions()}>Refresh</Button>
               </div>
             ) : (
               <Table>
@@ -250,7 +223,7 @@ export default function DashboardPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {sessions.map((sessionData) => (
+                  {sessions.map(sessionData => (
                     <TableRow key={sessionData.id}>
                       <TableCell className="font-medium">
                         {sessionData.fellow.name}
@@ -260,7 +233,10 @@ export default function DashboardPage() {
                         {new Date(sessionData.date).toLocaleDateString()}
                       </TableCell>
                       <TableCell>
-                        {getStatusBadge(sessionData.status, sessionData.analyses[0])}
+                        {getStatusBadge(
+                          sessionData.status,
+                          sessionData.analyses[0]
+                        )}
                       </TableCell>
                       <TableCell>
                         <Link href={`/dashboard/sessions/${sessionData.id}`}>
@@ -278,5 +254,5 @@ export default function DashboardPage() {
         </Card>
       </main>
     </div>
-  )
+  );
 }

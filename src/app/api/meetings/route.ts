@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 
 // Sample therapy session transcripts (simplified to avoid syntax issues)
 const SAMPLE_TRANSCRIPTS = [
   {
-    groupId: "GRP-001",
+    groupId: 'GRP-001',
     transcript: `Fellow: Good morning everyone! Welcome to our session on Growth Mindset. Today we are going to talk about how our abilities can grow stronger with practice, just like muscles.
 
 Student 1: What does that mean exactly?
@@ -58,7 +58,7 @@ Fellow: Wonderful! Remember, asking for help shows strength, not weakness. It sh
 Thank you all for sharing today. I am really impressed with your insights. Remember, your brain is like a muscle - more you use it and challenge it, stronger it becomes. Keep practicing these strategies, and I promise you will see amazing results in all areas of your life!`
   },
   {
-    groupId: "GRP-002", 
+    groupId: 'GRP-002',
     transcript: `Fellow: Hello everyone! Today we are continuing our discussion about Growth Mindset. Last week we talked about what Growth Mindset means. Today, let us dive deeper into how we can apply it in our daily lives.
 
 Student 1: I have been thinking about what you said last week about brain being like a muscle.
@@ -143,21 +143,24 @@ Fellow: That is brave and smart! Questions show you are engaged and ready to lea
 
 You are all demonstrating Growth Mindset right now by being open to new ideas and willing to try new approaches. Remember, growth is not always comfortable, but it is always worth it. Keep practicing these strategies, and I promise you will see changes in how you approach challenges and in what you believe you can achieve!`
   }
-]
+];
 
 // GET handler to fetch sessions - for MVP, skip authentication for now
 export async function GET() {
   try {
     // For MVP, get first supervisor
-    const supervisor = await prisma.supervisor.findFirst({
+    const supervisor = await prisma.user.findFirst({
       where: { email: 'supervisor@shamiri.org' }
-    })
+    });
 
     if (!supervisor) {
-      return NextResponse.json({ error: 'No supervisor found' }, { status: 404 })
+      return NextResponse.json(
+        { error: 'No supervisor found' },
+        { status: 404 }
+      );
     }
 
-    const sessions = await prisma.session.findMany({
+    const sessions = await prisma.meeting.findMany({
       where: {
         supervisorId: supervisor.id
       },
@@ -184,15 +187,15 @@ export async function GET() {
       orderBy: {
         date: 'desc'
       }
-    })
+    });
 
-    return NextResponse.json({ sessions })
+    return NextResponse.json({ sessions });
   } catch (error) {
-    console.error('Sessions fetch error:', error)
+    console.error('Sessions fetch error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch sessions: ' + (error as Error).message },
       { status: 500 }
-    )
+    );
   }
 }
 
@@ -200,42 +203,44 @@ export async function GET() {
 export async function POST() {
   try {
     // Get supervisor and fellows
-    const supervisor = await prisma.supervisor.findFirst({
+    const supervisor = await prisma.user.findFirst({
       where: { email: 'supervisor@shamiri.org' }
-    })
+    });
 
     const fellows = await prisma.fellow.findMany({
       where: { supervisorId: supervisor?.id }
-    })
+    });
 
     if (!supervisor || fellows.length === 0) {
       return NextResponse.json(
         { error: 'No supervisor or fellows found. Run /api/seed first.' },
         { status: 400 }
-      )
+      );
     }
 
     // Create sample sessions
-    const sessions = []
-    const now = new Date()
+    const sessions = [];
+    const now = new Date();
 
     for (let i = 0; i < 10; i++) {
-      const fellow = fellows[i % fellows.length]
-      const sampleData = SAMPLE_TRANSCRIPTS[i % SAMPLE_TRANSCRIPTS.length]
-      
-      // Create session date from last 10 days
-      const sessionDate = new Date(now)
-      sessionDate.setDate(now.getDate() - (9 - i))
-      sessionDate.setHours(14 + Math.floor(Math.random() * 4), 0, 0, 0) // Random time 2-6 PM
+      const fellow = fellows[i % fellows.length];
+      const sampleData = SAMPLE_TRANSCRIPTS[i % SAMPLE_TRANSCRIPTS.length];
 
-      const session = await prisma.session.create({
+      // Create session date from last 10 days
+      const sessionDate = new Date(now);
+      sessionDate.setDate(now.getDate() - (9 - i));
+      sessionDate.setHours(14 + Math.floor(Math.random() * 4), 0, 0, 0); // Random time 2-6 PM
+
+      const session = await prisma.meeting.create({
         data: {
           groupId: `${sampleData.groupId}-${i + 1}`,
           date: sessionDate,
           transcript: sampleData.transcript,
-          status: ['PENDING', 'PROCESSED', 'FLAGGED_FOR_REVIEW', 'SAFE'][Math.floor(Math.random() * 4)],
+          status: ['PENDING', 'PROCESSED', 'FLAGGED_FOR_REVIEW', 'SAFE'][
+            Math.floor(Math.random() * 4)
+          ],
           fellowId: fellow.id,
-          supervisorId: supervisor.id,
+          supervisorId: supervisor.id
         },
         include: {
           fellow: {
@@ -245,12 +250,12 @@ export async function POST() {
             }
           }
         }
-      })
+      });
 
-      sessions.push(session)
+      sessions.push(session);
     }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       message: 'Sample sessions created successfully',
       sessions: sessions.map(s => ({
         id: s.id,
@@ -259,12 +264,12 @@ export async function POST() {
         status: s.status,
         fellow: s.fellow
       }))
-    })
+    });
   } catch (error) {
-    console.error('Session creation error:', error)
+    console.error('Session creation error:', error);
     return NextResponse.json(
       { error: 'Failed to create sample sessions' },
       { status: 500 }
-    )
+    );
   }
 }
