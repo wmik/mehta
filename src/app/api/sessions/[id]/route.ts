@@ -4,10 +4,10 @@ import { analyzeSession } from '@/lib/ai-service'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const sessionId = params.id
+    const sessionId = (await context.params).id
     
     const session = await prisma.session.findFirst({
       where: {
@@ -44,10 +44,10 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const sessionId = params.id
+    const sessionId = (await context.params).id
     
     const session = await prisma.session.findFirst({
       where: {

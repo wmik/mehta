@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-// Simple test version - no complex data
 export async function GET() {
   try {
+    // For MVP, get first supervisor
     const supervisor = await prisma.supervisor.findFirst({
-      where: { email: 'supervisor@shamiri.org' }
+      where: { not: {} }
     })
 
     if (!supervisor) {
@@ -13,7 +13,7 @@ export async function GET() {
     }
 
     const sessionCount = await prisma.session.count({
-      where: { supervisorId: supervisor.id }
+      where: { supervisorId: supervisor?.id }
     })
 
     return NextResponse.json({ 
@@ -31,8 +31,9 @@ export async function GET() {
 
 export async function POST() {
   try {
+    // For MVP, get first supervisor
     const supervisor = await prisma.supervisor.findFirst({
-      where: { email: 'supervisor@shamiri.org' }
+      where: { not: {} }
     })
 
     if (!supervisor) {
@@ -41,7 +42,7 @@ export async function POST() {
 
     // Create one simple test session
     const fellow = await prisma.fellow.findFirst({
-      where: { supervisorId: supervisor.id }
+      where: { supervisorId: supervisor?.id }
     })
 
     if (!fellow) {

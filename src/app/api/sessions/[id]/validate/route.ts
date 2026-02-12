@@ -3,20 +3,21 @@ import { prisma } from '@/lib/prisma'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const { analysisId, supervisorStatus, supervisorNotes } = await request.json()
 
+    // For MVP, get first supervisor
+    const supervisor = await prisma.supervisor.findFirst({
+      where: {
+        not: {}
+      }
+    })
+
     const analysis = await prisma.sessionAnalysis.findFirst({
       where: {
-        id: analysisId,
-        session: {
-          supervisorId: {
-            // For MVP, we'll skip authentication and assume first supervisor
-            not: {}
-          }
-        }
+        id: analysisId
       }
     })
 
@@ -35,9 +36,7 @@ export async function POST(
 
     // Update session status based on validation result
     await prisma.session.update({
-      where: {
-        id: analysis.sessionId
-      },
+      where: { id: analysis.sessionId },
       data: {
         status: supervisorStatus === 'VALIDATED' ? 'SAFE' : 
                 supervisorStatus === 'REJECTED' ? 'FLAGGED_FOR_REVIEW' : 'PROCESSED'
