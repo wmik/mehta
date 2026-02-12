@@ -1,1 +1,6 @@
-[00:00:03.722] Server  LOG     ✓ Ready in 2.9s
+[00:00:04.044] Server  LOG     ✓ Ready in 3.1s
+[00:00:15.188] Browser WARN    Image with src "http://localhost:3000/vercel.svg" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[00:00:16.829] Server  ERROR   ⨯ TypeError: Cannot destructure property 'GET' of '{imported module ./src/lib/auth.ts}.handlers' as it is undefined.
+[00:00:17.993] Browser ERROR   [next-auth][error][CLIENT_FETCH_ERROR] 
+https://next-auth.js.org/errors#client_fetch_error Unexpected token '<', "<!DOCTYPE "... is not valid JSON {"error":{"message":"Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON","name":"SyntaxError","stack":"SyntaxError: Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON"},"message":"Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON","url":"/api/auth/session"}
+[00:00:18.169] Server  ERROR   ⨯ TypeError: Cannot destructure property 'GET' of '{imported module ./src/lib/auth.ts}.handlers' as it is undefined.
