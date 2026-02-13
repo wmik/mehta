@@ -62,7 +62,7 @@ export default function SessionDetailPage() {
 
   const fetchSession = useCallback(async () => {
     try {
-      const response = await fetch(`/api/sessions/${params.id}`);
+      const response = await fetch(`/api/meetings/${params.id}`);
       const data = await response.json();
       setSession(data.session);
     } catch (error) {
@@ -81,7 +81,7 @@ export default function SessionDetailPage() {
   const runAnalysis = async () => {
     setAnalyzing(true);
     try {
-      const response = await fetch(`/api/sessions/${params.id}`, {
+      const response = await fetch(`/api/meetings/${params.id}`, {
         method: 'POST'
       });
       const data = await response.json();
@@ -107,7 +107,7 @@ export default function SessionDetailPage() {
 
   const validateAnalysis = async (analysisId: string, isApproved: boolean) => {
     try {
-      const response = await fetch(`/api/sessions/${params.id}/validate`, {
+      const response = await fetch(`/api/meetings/${params.id}/validate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
