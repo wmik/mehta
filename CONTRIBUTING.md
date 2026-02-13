@@ -1,4 +1,4 @@
-# Contributing to Cron Builder
+# Contributing to Shamiri Supervisor Copilot
 
 Thank you for your interest in contributing to Cron Builder! This document provides guidelines and workflows for contributing to this project.
 
@@ -122,11 +122,14 @@ npm run format       # Format code with Prettier
 npm run format:check # Check code formatting
 
 # Testing
-npm run test         # Run all tests
+npm run test         # Run unit tests
 npm run test:watch   # Run tests in watch mode
 npm run test:ui      # Run tests with UI
-npm test __tests__/<file>.test.tsx  # Run specific test file
-npm run test --coverage  # Run tests with coverage
+npm run test:coverage # Run tests with coverage
+
+# E2E Testing
+npm run test:e2e     # Run Playwright E2E tests
+npm run test:e2e:ui # Run Playwright E2E tests with UI
 ```
 
 ## Code Quality Standards
@@ -161,20 +164,25 @@ npm run format:check
 
 ```
 src/
+├── app/                  # Next.js App Router
+│   ├── api/             # API routes
+│   ├── dashboard/       # Dashboard pages
+│   └── login/           # Login page
 ├── components/          # React components
 │   ├── hooks/          # Custom hooks
-│   └── ui/             # UI components
-├── utils/              # Utility functions
-│   ├── constants.ts    # App constants
-│   ├── parser.ts  # Cron expression parsing
-│   ├── date-utils.ts   # Date manipulation utilities
-│   └── themes.ts       # Theme configurations
-├── App.tsx             # Root component
-└── main.tsx            # Entry point
+│   └── ui/             # UI components (shadcn)
+├── lib/                # Core library functions
+│   ├── auth.ts         # NextAuth configuration
+│   ├── prisma.ts       # Prisma client
+│   ├── ai-service.ts   # AI SDK service
+│   └── schemas.ts      # Zod validation schemas
+└── types/              # TypeScript type definitions
 
-__tests__/
-├── setup.ts            # Test setup
-└── *.test.tsx          # Test files
+__tests__/              # Unit & integration tests
+├── lib/                # Library function tests
+└── components/         # Component tests
+
+e2e/                    # Playwright E2E tests
 ```
 
 ## Submitting Changes

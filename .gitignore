@@ -5,8 +5,13 @@
 /.pnp
 .pnp.js
 
-# testing
+# Testing
 /coverage
+# Playwright
+/playwright-report/
+/test-results/
+# TypeScript
+*.tsbuildinfo
 
 # next.js
 /.next/
