@@ -1,6 +1,7 @@
-import { generateObject } from 'ai';
+import { generateText, Output } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
 import { createAnthropic } from '@ai-sdk/anthropic';
+import { createOllama } from 'ollama-ai-provider-v2';
 import { sessionAnalysisSchema, SESSION_ANALYSIS_PROMPT } from './schemas';
 
 // Configure AI providers
@@ -12,17 +13,27 @@ const anthropic = createAnthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || ''
 });
 
+const ollama = createOllama({
+  baseURL: process.env.OLLAMA_API_URL || '',
+  headers: {
+    Authorization: `Bearer ${process.env.OLLAMA_API_KEY}`
+  }
+});
+
 // Provider configuration
-type AIProvider = 'openai' | 'anthropic';
+type AIProvider = 'openai' | 'anthropic' | 'ollama';
 
 const PROVIDER_MODELS = {
-  openai: openai('gpt-4-turbo'),
-  anthropic: anthropic('claude-3-5-sonnet-20241022')
+  openai: openai(process.env.OPENAI_MODEL ?? 'gpt-4-turbo'),
+  anthropic: anthropic(
+    process.env.ANTHROPIC_MODEL ?? 'claude-3-5-sonnet-20241022'
+  ),
+  ollama: ollama(process.env.OLLAMA_MODEL ?? 'phi3')
 };
 
 export async function analyzeSession(
   transcript: string,
-  provider: AIProvider = 'openai'
+  provider: AIProvider = (process.env.AI_PROVIDER as AIProvider) ?? 'openai'
 ): Promise<ReturnType<typeof sessionAnalysisSchema.parse>> {
   const model = PROVIDER_MODELS[provider];
 
@@ -30,19 +41,21 @@ export async function analyzeSession(
     throw new Error(`AI provider ${provider} not available`);
   }
 
+  console.log(`Running analysis with ${provider}`);
+
   try {
-    const { object } = await generateObject({
+    const result = await generateText({
       model,
       prompt: `${SESSION_ANALYSIS_PROMPT}
 
 SESSION TRANSCRIPT:
 ${transcript}`,
-      schema: sessionAnalysisSchema,
+      output: Output.object({ schema: sessionAnalysisSchema }),
       temperature: 0.1, // Low temperature for consistent analysis
-      maxTokens: 2000
+      maxRetries: 2
     });
 
-    return sessionAnalysisSchema.parse(object);
+    return result.output;
   } catch (error) {
     console.error('AI Analysis Error:', error);
 
@@ -53,6 +66,10 @@ ${transcript}`,
 
     if (provider === 'anthropic' && process.env.OPENAI_API_KEY) {
       return analyzeSession(transcript, 'openai');
+    }
+
+    if (provider === 'ollama' && process.env.OLLAMA_API_URL) {
+      return analyzeSession(transcript, 'ollama');
     }
 
     throw new Error(

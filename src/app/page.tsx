@@ -60,7 +60,7 @@ export default function Home() {
 
           <div className="flex gap-8 flex-wrap">
             <a
-              href="#"
+              href="/login"
               className="px-12 py-4 text-xs font-bold border-3 border-black 
                 bg-black text-white no-underline uppercase tracking-wider font-mono
                 relative overflow-hidden transition-colors duration-200
@@ -71,7 +71,7 @@ export default function Home() {
               <span className="relative z-20">Start Trial</span>
             </a>
             <a
-              href="#"
+              href="/login"
               className="px-12 py-4 text-xs font-bold border-3 border-black 
                 bg-transparent text-black no-underline uppercase tracking-wider font-mono
                 relative overflow-hidden transition-colors duration-200
@@ -260,7 +260,7 @@ export default function Home() {
             </p>
 
             <a
-              href="#"
+              href="/login"
               className="relative z-10 px-12 py-4 text-xs font-bold border-3 border-black 
                 bg-transparent text-black no-underline uppercase tracking-wider font-mono
                 inline-block overflow-hidden transition-colors duration-200

@@ -1,17 +1,17 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import { analyzeSession } from '@/lib/ai-service'
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import { analyzeSession } from '@/lib/ai-service';
 
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const sessionId = (await context.params).id
-    
-    const session = await prisma.session.findFirst({
+    const meetingId = (await context.params).id;
+
+    const meeting = await prisma.meeting.findFirst({
       where: {
-        id: sessionId,
+        id: meetingId
       },
       include: {
         fellow: {
@@ -26,19 +26,39 @@ export async function GET(
           }
         }
       }
-    })
+    });
 
-    if (!session) {
-      return NextResponse.json({ error: 'Session not found' }, { status: 404 })
+    if (!meeting) {
+      return NextResponse.json({ error: 'Meeting not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ session })
+    return NextResponse.json({
+      session: {
+        id: meeting.id,
+        groupId: meeting.groupId,
+        date: meeting.date.toISOString(),
+        status: meeting.status,
+        transcript: meeting.transcript,
+        fellow: meeting.fellow,
+        analyses: meeting.analyses.map(analysis => ({
+          id: analysis.id,
+          summary: analysis.summary,
+          contentCoverage: analysis.contentCoverage,
+          facilitationQuality: analysis.facilitationQuality,
+          protocolSafety: analysis.protocolSafety,
+          riskDetection: analysis.riskDetection,
+          supervisorStatus: analysis.supervisorStatus,
+          supervisorNotes: analysis.supervisorNotes,
+          createdAt: analysis.createdAt.toISOString()
+        }))
+      }
+    });
   } catch (error) {
-    console.error('Session fetch error:', error)
+    console.error('Failed to fetch meeting:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch session' },
+      { error: 'Failed to fetch meeting' },
       { status: 500 }
-    )
+    );
   }
 }
 
@@ -47,67 +67,53 @@ export async function POST(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const sessionId = (await context.params).id
-    
-    const session = await prisma.session.findFirst({
-      where: {
-        id: sessionId,
-      },
-      include: {
-        fellow: true
-      }
-    })
+    const meetingId = (await context.params).id;
 
-    if (!session) {
-      return NextResponse.json({ error: 'Session not found' }, { status: 404 })
+    const meeting = await prisma.meeting.findUnique({
+      where: { id: meetingId }
+    });
+
+    if (!meeting) {
+      return NextResponse.json({ error: 'Meeting not found' }, { status: 404 });
     }
 
-    // Check if AI provider is available
-    const { getAvailableProviders } = await import('@/lib/ai-service')
-    const availableProviders = getAvailableProviders()
-    
-    if (availableProviders.length === 0) {
-      return NextResponse.json(
-        { error: 'No AI providers available. Please configure OPENAI_API_KEY or ANTHROPIC_API_KEY' },
-        { status: 400 }
-      )
-    }
+    const analysis = await analyzeSession(meeting.transcript);
 
-    // Run AI analysis
-    const analysis = await analyzeSession(session.transcript)
-    
-    // Save analysis to database
-    const sessionAnalysis = await prisma.sessionAnalysis.create({
+    const savedAnalysis = await prisma.meetingAnalysis.create({
       data: {
-        sessionId: session.id,
+        meetingId: meeting.id,
         summary: analysis.summary,
         contentCoverage: analysis.contentCoverage,
         facilitationQuality: analysis.facilitationQuality,
         protocolSafety: analysis.protocolSafety,
-        riskDetection: analysis.riskDetection,
-        supervisorStatus: null, // Will be set by human reviewer
-        supervisorNotes: null,
+        riskDetection: analysis.riskDetection
       }
-    })
+    });
 
-    // Update session status
-    await prisma.session.update({
-      where: { id: session.id },
-      data: {
-        status: analysis.riskDetection.status === 'RISK' ? 'FLAGGED_FOR_REVIEW' : 'PROCESSED'
+    // Update meeting status
+    await prisma.meeting.update({
+      where: { id: meeting.id },
+      data: { status: 'PROCESSED' }
+    });
+
+    return NextResponse.json({
+      analysis: {
+        id: savedAnalysis.id,
+        summary: savedAnalysis.summary,
+        contentCoverage: savedAnalysis.contentCoverage,
+        facilitationQuality: savedAnalysis.facilitationQuality,
+        protocolSafety: savedAnalysis.protocolSafety,
+        riskDetection: savedAnalysis.riskDetection,
+        supervisorStatus: savedAnalysis.supervisorStatus,
+        supervisorNotes: savedAnalysis.supervisorNotes,
+        createdAt: savedAnalysis.createdAt.toISOString()
       }
-    })
-
-    return NextResponse.json({ 
-      message: 'Session analysis completed',
-      analysis: sessionAnalysis,
-      sessionStatus: analysis.riskDetection.status === 'RISK' ? 'FLAGGED_FOR_REVIEW' : 'PROCESSED'
-    })
+    });
   } catch (error) {
-    console.error('Session analysis error:', error)
+    console.error('Failed to analyze meeting:', error);
     return NextResponse.json(
-      { error: 'Failed to analyze session' },
+      { error: 'Failed to analyze meeting' },
       { status: 500 }
-    )
+    );
   }
 }

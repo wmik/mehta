@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,6 +22,8 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Fellow, Meeting, MeetingAnalysis } from '@/generated/prisma';
 import type { JsonObject } from '@/generated/prisma/runtime/client';
+import { Toaster } from '@/components/ui/sonner';
+import { toast } from 'sonner';
 
 type Analysis = Pick<
   MeetingAnalysis,
@@ -36,60 +38,35 @@ interface MeetingWithRelation extends Meeting {
 export default function DashboardPage() {
   const [loading, setLoading] = useState(false);
   const [sessions, setSessions] = useState<MeetingWithRelation[]>([]);
-  const [errors, setErrors] = useState<{ error: string; status: number }[]>([]);
 
-  const fetchSessions = async () => {
+  async function fetchSessions() {
     setLoading(true);
+
+    const loadingToast = toast.loading('Retrieving latest sessions...', {
+      duration: Infinity
+    });
 
     try {
       // For MVP, get the first supervisor
       const response = await fetch('/api/meetings');
 
       if (response.ok) {
-        const sessions = await response.json();
+        const result = await response.json();
 
-        setSessions(sessions);
+        setSessions(result?.sessions);
+        toast.success('Loaded sessions successfully');
       } else {
         const error = await response.text();
-
-        setErrors(prev =>
-          prev.concat({
-            error,
-            status: response.status
-          })
-        );
+        toast.error(error);
       }
     } catch (error) {
       console.error('Sessions fetch error:', error);
-      return setErrors(prev =>
-        prev.concat({
-          error: 'Failed to fetch sessions: ' + (error as Error).message,
-          status: 500
-        })
-      );
-    }
-  };
-
-  const getStatusBadge = (status: string, analysis: Analysis) => {
-    if (status === 'PENDING') {
-      return <Badge variant="secondary">Pending</Badge>;
-    }
-    const riskStatus = (analysis?.riskDetection as JsonObject)?.status;
-
-    if (riskStatus === 'RISK') {
-      return <Badge variant="destructive">Risk</Badge>;
+      toast.error('Failed to fetch sessions: ' + (error as Error).message);
     }
 
-    if (analysis?.supervisorStatus === 'REJECTED') {
-      return <Badge variant="outline">Review Needed</Badge>;
-    }
-
-    if (status === 'PROCESSED' || analysis?.supervisorStatus === 'VALIDATED') {
-      return <Badge variant="default">Safe</Badge>;
-    }
-
-    return <Badge variant="secondary">{status}</Badge>;
-  };
+    setLoading(false);
+    toast.dismiss(loadingToast);
+  }
 
   const stats = {
     total: sessions.length,
@@ -101,41 +78,17 @@ export default function DashboardPage() {
     ).length
   };
 
+  useEffect(() => {
+    fetchSessions();
+  }, []);
+
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <header className="bg-white shadow-sm border-b">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <Skeleton className="h-6 w-64" />
-              <Skeleton className="h-10 w-20" />
-            </div>
-          </div>
-        </header>
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="space-y-6">
-            <Skeleton className="h-8 w-96" />
-            <Skeleton className="h-4 w-80" />
-            <Card>
-              <CardHeader>
-                <Skeleton className="h-6 w-32" />
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {[...Array(10)].map((_, i) => (
-                    <Skeleton key={i} className="h-12 w-full" />
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </main>
-      </div>
-    );
+    return <DashboardLoader />;
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Toaster />
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -233,14 +186,18 @@ export default function DashboardPage() {
                         {new Date(sessionData.date).toLocaleDateString()}
                       </TableCell>
                       <TableCell>
-                        {getStatusBadge(
-                          sessionData.status,
-                          sessionData.analyses[0]
-                        )}
+                        <StatusBadge
+                          status={sessionData.status}
+                          analysis={sessionData.analyses[0]}
+                        />
                       </TableCell>
                       <TableCell>
                         <Link href={`/dashboard/sessions/${sessionData.id}`}>
-                          <Button variant="outline" size="sm">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="rounded-none"
+                          >
                             View Details
                           </Button>
                         </Link>
@@ -255,4 +212,64 @@ export default function DashboardPage() {
       </main>
     </div>
   );
+}
+
+function DashboardLoader() {
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <Skeleton className="h-6 w-64" />
+            <Skeleton className="h-10 w-20" />
+          </div>
+        </div>
+      </header>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="space-y-6">
+          <Skeleton className="h-8 w-96" />
+          <Skeleton className="h-4 w-80" />
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-32" />
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {[...Array(10)].map((_, i) => (
+                  <Skeleton key={i} className="h-12 w-full" />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+type StatusBadgeProps = {
+  status: string;
+  analysis: Analysis;
+};
+
+function StatusBadge({ status, analysis }: StatusBadgeProps) {
+  const riskStatus = (analysis?.riskDetection as JsonObject)?.status;
+
+  if (status === 'PENDING') {
+    return <Badge variant="secondary">Pending</Badge>;
+  }
+
+  if (riskStatus === 'RISK') {
+    return <Badge variant="destructive">Risk</Badge>;
+  }
+
+  if (analysis?.supervisorStatus === 'REJECTED') {
+    return <Badge variant="outline">Review Needed</Badge>;
+  }
+
+  if (status === 'PROCESSED' || analysis?.supervisorStatus === 'VALIDATED') {
+    return <Badge variant="default">Safe</Badge>;
+  }
+
+  return <Badge variant="secondary">{status}</Badge>;
 }
