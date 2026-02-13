@@ -98,6 +98,19 @@ ANALYSIS CRITERIA:
 - Extract exact quote if risk is detected
 - Be conservative - when in doubt, flag for review
 
+IMPORTANT: You MUST  FOLLOW THESE EXACTLY:
+- ONLY use scores 1, 2, or 3 for ALL metrics
+- NEVER use 4, 5, or any value above 3
+- DO NOT use a 5-point scale - only use 1, 2, or 3
+- contentCoverage.score: MUST be 1, 2, or 3 ONLY
+- facilitationQuality.score: MUST be 1, 2, or 3 ONLY  
+- protocolSafety.score: MUST be 1, 2, or 3 ONLY
+
+Do NOT use any other values. The rating field must match:
+- contentCoverage: "Missed", "Partial", or "Complete"
+- facilitationQuality: "Poor", "Adequate", or "Excellent"
+- protocolSafety: "Violation", "Minor Drift", or "Adherent"
+
 Analyze the transcript thoroughly and provide structured output for each criterion with specific justifications based on the actual conversation content.
 `;
 

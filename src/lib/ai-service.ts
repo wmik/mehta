@@ -55,7 +55,22 @@ ${transcript}`,
       maxRetries: 2
     });
 
-    return result.output;
+    const output = result.output;
+
+    output.contentCoverage.score = Math.min(
+      3,
+      Math.max(1, output.contentCoverage.score)
+    );
+    output.facilitationQuality.score = Math.min(
+      3,
+      Math.max(1, output.facilitationQuality.score)
+    );
+    output.protocolSafety.score = Math.min(
+      3,
+      Math.max(1, output.protocolSafety.score)
+    );
+
+    return output;
   } catch (error) {
     console.error('AI Analysis Error:', error);
 
