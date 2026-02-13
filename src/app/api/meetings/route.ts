@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth';
 
 // Sample therapy session transcripts (simplified to avoid syntax issues)
 const SAMPLE_TRANSCRIPTS = [
@@ -145,24 +147,18 @@ You are all demonstrating Growth Mindset right now by being open to new ideas an
   }
 ];
 
-// GET handler to fetch sessions - for MVP, skip authentication for now
+// GET handler to fetch therapy sessions
 export async function GET() {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
-    // For MVP, get first supervisor
-    const supervisor = await prisma.user.findFirst({
-      where: { email: 'supervisor@shamiri.org' }
-    });
-
-    if (!supervisor) {
-      return NextResponse.json(
-        { error: 'No supervisor found' },
-        { status: 404 }
-      );
-    }
-
     const sessions = await prisma.meeting.findMany({
       where: {
-        supervisorId: supervisor.id
+        supervisorId: session.user.id
       },
       include: {
         fellow: {
@@ -201,10 +197,16 @@ export async function GET() {
 
 // POST handler to create sample sessions
 export async function POST() {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     // Get supervisor and fellows
-    const supervisor = await prisma.user.findFirst({
-      where: { email: 'supervisor@shamiri.org' }
+    const supervisor = await prisma.user.findUnique({
+      where: { email: session?.user?.email }
     });
 
     const fellows = await prisma.fellow.findMany({

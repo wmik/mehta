@@ -40,8 +40,6 @@ export default function DashboardPage() {
   const [sessions, setSessions] = useState<MeetingWithRelation[]>([]);
 
   async function fetchSessions() {
-    setLoading(true);
-
     const loadingToast = toast.loading('Retrieving latest sessions...', {
       duration: Infinity
     });
@@ -52,7 +50,6 @@ export default function DashboardPage() {
 
       if (response.ok) {
         const result = await response.json();
-
         setSessions(result?.sessions);
         toast.success('Loaded sessions successfully');
       } else {
@@ -62,10 +59,9 @@ export default function DashboardPage() {
     } catch (error) {
       console.error('Sessions fetch error:', error);
       toast.error('Failed to fetch sessions: ' + (error as Error).message);
+    } finally {
+      toast.dismiss(loadingToast);
     }
-
-    setLoading(false);
-    toast.dismiss(loadingToast);
   }
 
   const stats = {
@@ -79,7 +75,8 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
-    fetchSessions();
+    setLoading(true);
+    fetchSessions().finally(() => setLoading(false));
   }, []);
 
   if (loading) {
@@ -92,8 +89,8 @@ export default function DashboardPage() {
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <h1 className="text-xl font-semibold text-gray-900">
-              Shamiri Supervisor Dashboard
+            <h1 className="text-lg font-bold tracking-tighter uppercase font-mono">
+              SHAMIRI /// COPILOT
             </h1>
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-600">Demo User</span>
@@ -217,6 +214,7 @@ export default function DashboardPage() {
 function DashboardLoader() {
   return (
     <div className="min-h-screen bg-gray-50">
+      <Toaster />
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
