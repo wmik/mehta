@@ -25,10 +25,10 @@ interface SessionStatusPieProps {
 }
 
 const STATUS_COLORS = {
-  PENDING: 'hsl(var(--chart-5))',
-  PROCESSED: 'hsl(var(--chart-2))',
-  SAFE: 'hsl(var(--chart-1))',
-  FLAGGED_FOR_REVIEW: 'hsl(var(--chart-4))'
+  PENDING: '#6b7280', // gray
+  PROCESSED: '#22c55e', // green
+  SAFE: '#10b981', // emerald
+  FLAGGED_FOR_REVIEW: '#f59e0b' // amber
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -92,7 +92,7 @@ export function SessionStatusPie({ data }: SessionStatusPieProps) {
             border: '1px solid hsl(var(--border))',
             borderRadius: '8px'
           }}
-          formatter={value => [`${value} sessions`, '']}
+          formatter={(value, name) => [`${value} sessions`, name]}
         />
         <Legend
           verticalAlign="bottom"

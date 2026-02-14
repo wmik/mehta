@@ -25,9 +25,9 @@ interface PerformanceBarChartProps {
 }
 
 const CHART_COLORS = {
-  contentCoverage: 'hsl(var(--chart-1))',
-  facilitationQuality: 'hsl(var(--chart-2))',
-  protocolSafety: 'hsl(var(--chart-3))'
+  contentCoverage: '#3b82f6', // blue
+  facilitationQuality: '#22c55e', // green
+  protocolSafety: '#a855f7' // purple
 };
 
 export function PerformanceBarChart({ data }: PerformanceBarChartProps) {

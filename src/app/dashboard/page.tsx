@@ -38,15 +38,13 @@ import { ThemeToggle } from '@/components/dashboard/theme-toggle';
 import { Notifications } from '@/components/dashboard/notifications';
 import { UserMenu } from '@/components/dashboard/user-menu';
 import {
-  PerformanceBarChart,
   RiskTrendChart,
   SessionStatusPie,
-  WeeklyVolumeChart,
-  RiskBreakdownChart
+  ScoreDistributionChart
 } from '@/components/dashboard/charts';
 import useSWR from 'swr';
 import { Toggle } from '@/components/ui/toggle';
-import { BarChart3, List, TrendingUp, PieChart } from 'lucide-react';
+import { List, TrendingUp, PieChart } from 'lucide-react';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 
 type Analysis = Pick<
@@ -98,10 +96,6 @@ export default function DashboardPage() {
   const itemsPerPage = 5;
 
   // Chart/List toggle states with localStorage persistence
-  const [showPerformanceChart, setShowPerformanceChart] = useLocalStorage(
-    'dashboard-showPerformanceChart',
-    true
-  );
   const [showRiskChart, setShowRiskChart] = useLocalStorage(
     'dashboard-showRiskChart',
     true
@@ -122,6 +116,16 @@ export default function DashboardPage() {
     revalidateOnFocus: true,
     dedupingInterval: 5000
   });
+
+  // Statistics data
+  const { data: statsData, error: statsError } = useSWR(
+    '/api/statistics',
+    fetcher,
+    {
+      refreshInterval: 60000, // Poll every minute
+      revalidateOnFocus: true
+    }
+  );
 
   // Update sessions when SWR data changes
   useEffect(() => {
@@ -577,62 +581,18 @@ export default function DashboardPage() {
                   </Card>
                 </div>
 
-                {fellowStats.length > 0 && (
+                {statsData?.scoreDistribution && (
                   <Card>
                     <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <CardTitle>Fellow Performance Summary</CardTitle>
-                          <CardDescription>
-                            Quick overview of fellow metrics
-                          </CardDescription>
-                        </div>
-                        <Toggle
-                          pressed={showPerformanceChart}
-                          onPressedChange={setShowPerformanceChart}
-                          aria-label="Toggle chart view"
-                          className="rounded-none"
-                        >
-                          {showPerformanceChart ? (
-                            <BarChart3 className="h-4 w-4" />
-                          ) : (
-                            <List className="h-4 w-4" />
-                          )}
-                        </Toggle>
-                      </div>
+                      <CardTitle>Score Distribution</CardTitle>
+                      <CardDescription>
+                        Distribution of scores across all analyzed sessions
+                      </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      {showPerformanceChart ? (
-                        <PerformanceBarChart data={fellowStats} />
-                      ) : (
-                        <div className="space-y-4">
-                          {fellowStats.map(f => (
-                            <div
-                              key={f.name}
-                              className="flex items-center justify-between"
-                            >
-                              <div>
-                                <p className="font-medium">{f.name}</p>
-                                <p className="text-xs text-gray-500">
-                                  {f.totalSessions} sessions • {f.riskCount}{' '}
-                                  risks
-                                </p>
-                              </div>
-                              <div className="flex gap-2">
-                                <Badge variant="outline" className="text-xs">
-                                  CC: {f.avgContentCoverage.toFixed(1)}
-                                </Badge>
-                                <Badge variant="outline" className="text-xs">
-                                  FQ: {f.avgFacilitationQuality.toFixed(1)}
-                                </Badge>
-                                <Badge variant="outline" className="text-xs">
-                                  PS: {f.avgProtocolSafety.toFixed(1)}
-                                </Badge>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                      <ScoreDistributionChart
+                        data={statsData.scoreDistribution}
+                      />
                     </CardContent>
                   </Card>
                 )}

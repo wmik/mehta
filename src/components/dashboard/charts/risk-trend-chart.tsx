@@ -44,16 +44,8 @@ export function RiskTrendChart({ data }: RiskTrendChartProps) {
       >
         <defs>
           <linearGradient id="riskGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop
-              offset="5%"
-              stopColor="hsl(var(--chart-4))"
-              stopOpacity={0.3}
-            />
-            <stop
-              offset="95%"
-              stopColor="hsl(var(--chart-4))"
-              stopOpacity={0}
-            />
+            <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
+            <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
           </linearGradient>
         </defs>
         <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
@@ -78,7 +70,7 @@ export function RiskTrendChart({ data }: RiskTrendChartProps) {
         <Area
           type="monotone"
           dataKey="Risks"
-          stroke="hsl(var(--chart-4))"
+          stroke="#ef4444"
           fillOpacity={1}
           fill="url(#riskGradient)"
           strokeWidth={2}

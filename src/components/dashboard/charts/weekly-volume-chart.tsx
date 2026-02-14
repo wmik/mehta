@@ -53,13 +53,13 @@ export function WeeklyVolumeChart({ data }: WeeklyVolumeChartProps) {
         />
         <Bar
           dataKey="sessions"
-          fill="hsl(var(--chart-5))"
+          fill="#3b82f6"
           radius={[4, 4, 0, 0]}
           name="Total Sessions"
         />
         <Bar
           dataKey="analyzed"
-          fill="hsl(var(--chart-1))"
+          fill="#22c55e"
           radius={[4, 4, 0, 0]}
           name="Analyzed"
         />

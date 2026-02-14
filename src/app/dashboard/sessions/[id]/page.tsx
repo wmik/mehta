@@ -4,6 +4,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -25,6 +26,14 @@ import {
   AIAnalysisLoader
 } from '@/components/ui/loaders';
 import { ProgressProvider } from '@/components/ui/progress-bar';
+import { FellowRadarChart } from '@/components/dashboard/charts';
+import useSWR from 'swr';
+import { Toggle } from '@/components/ui/toggle';
+import { Users, BarChart3 } from 'lucide-react';
+import { ThemeToggle } from '@/components/dashboard/theme-toggle';
+import { Notifications } from '@/components/dashboard/notifications';
+import { UserMenu } from '@/components/dashboard/user-menu';
+import { useSession } from 'next-auth/react';
 
 interface Session {
   id: string;
@@ -62,6 +71,7 @@ interface AnalysisCard {
 }
 
 export default function SessionDetailPage() {
+  const { data: auth } = useSession();
   const params = useParams();
   const router = useRouter();
   const [session, setSession] = useState<Session | null>(null);
@@ -77,6 +87,43 @@ export default function SessionDetailPage() {
   >(null);
   const [confirmTitle, setConfirmTitle] = useState('');
   const [confirmDescription, setConfirmDescription] = useState('');
+
+  // Radar chart state
+  const [showComparison, setShowComparison] = useState(true);
+
+  // Fetch team statistics
+  const fetcher = (url: string) => fetch(url).then(res => res.json());
+  const { data: statsData } = useSWR('/api/statistics', fetcher, {
+    revalidateOnFocus: false
+  });
+
+  // Get fellow's other sessions
+  const [fellowSessions, setFellowSessions] = useState<Session[]>([]);
+
+  const fetchFellowSessions = useCallback(async () => {
+    if (!session?.fellow?.email) return;
+    try {
+      const response = await fetch('/api/meetings');
+      const data = await response.json();
+      if (data.sessions) {
+        const otherSessions = data.sessions
+          .filter(
+            (s: Session) =>
+              s.fellow.email === session.fellow.email && s.id !== session.id
+          )
+          .slice(0, 5);
+        setFellowSessions(otherSessions);
+      }
+    } catch (error) {
+      console.error('Failed to fetch fellow sessions:', error);
+    }
+  }, [session]);
+
+  useEffect(() => {
+    if (session) {
+      fetchFellowSessions();
+    }
+  }, [session, fetchFellowSessions]);
 
   const fetchSession = useCallback(async () => {
     try {
@@ -333,33 +380,10 @@ export default function SessionDetailPage() {
                 <span className="text-gray-500"> • {session?.groupId}</span>
               </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="outline"
-                onClick={() =>
-                  window.open(`/api/export/${session?.id}`, '_blank')
-                }
-                className="rounded-none"
-              >
-                📥 Export CSV
-              </Button>
-              <StatusBadge status={session?.status ?? 'Risk'} />
-              {latestAnalysis && (
-                <Badge
-                  variant={
-                    latestAnalysis.supervisorStatus === 'VALIDATED'
-                      ? 'default'
-                      : 'outline'
-                  }
-                  className={latestAnalysis.supervisorStatus ? '' : 'hidden'}
-                >
-                  {latestAnalysis.supervisorStatus === 'VALIDATED'
-                    ? '✓ Validated'
-                    : latestAnalysis.supervisorStatus === 'REJECTED'
-                      ? '✗ Rejected'
-                      : 'Pending Review'}
-                </Badge>
-              )}
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <Notifications />
+              {auth?.user && <UserMenu user={auth.user} />}
             </div>
           </div>
         </div>
@@ -370,33 +394,64 @@ export default function SessionDetailPage() {
           {loading ? (
             <SessionInfoSkeleton />
           ) : session ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>Session Information</CardTitle>
-                <CardDescription>
-                  Therapy session conducted on{' '}
-                  {new Date(session?.date).toLocaleDateString()}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <p className="text-sm text-gray-600">Fellow</p>
-                    <p className="font-medium">{session?.fellow.name}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Group ID</p>
-                    <p className="font-medium">{session?.groupId}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Status</p>
+            <>
+              <div className="flex items-center space-x-2 ml-auto w-fit">
+                {/* <StatusBadge status={session?.status ?? 'Risk'} /> */}
+                {latestAnalysis && (
+                  <Badge
+                    variant={
+                      latestAnalysis.supervisorStatus === 'VALIDATED'
+                        ? 'default'
+                        : 'outline'
+                    }
+                    className={latestAnalysis.supervisorStatus ? '' : 'hidden'}
+                  >
+                    {latestAnalysis.supervisorStatus === 'VALIDATED'
+                      ? '✓ Validated'
+                      : latestAnalysis.supervisorStatus === 'REJECTED'
+                        ? '✗ Rejected'
+                        : 'Pending Review'}
+                  </Badge>
+                )}
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    window.open(`/api/export/${session?.id}`, '_blank')
+                  }
+                  className="rounded-none"
+                >
+                  📥 Export CSV
+                </Button>
+              </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Session Information</CardTitle>
+                  <CardDescription>
+                    Therapy session conducted on{' '}
+                    {new Date(session?.date).toLocaleDateString()}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <StatusBadge status={session?.status} />
+                      <p className="text-sm text-gray-600">Fellow</p>
+                      <p className="font-medium">{session?.fellow.name}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Group ID</p>
+                      <p className="font-medium">{session?.groupId}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Status</p>
+                      <div>
+                        <StatusBadge status={session?.status} />
+                      </div>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </>
           ) : null}
 
           {riskStatus === 'RISK' && latestAnalysis?.riskDetection?.quote ? (
@@ -480,6 +535,140 @@ export default function SessionDetailPage() {
                 </p>
               </CardContent>
             </Card>
+          )}
+
+          {/* Radar Chart and Fellow Sessions - 2 Column Layout */}
+          {session && latestAnalysis && (
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+              {/* Radar Chart */}
+              <Card className="lg:col-span-3">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Fellow Performance</CardTitle>
+                      <CardDescription>
+                        {session.fellow.name}&apos;s metrics overview
+                      </CardDescription>
+                    </div>
+                    <Toggle
+                      pressed={showComparison}
+                      onPressedChange={setShowComparison}
+                      aria-label="Toggle comparison view"
+                      className="rounded-none"
+                    >
+                      {showComparison ? (
+                        <BarChart3 className="h-4 w-4" />
+                      ) : (
+                        <Users className="h-4 w-4" />
+                      )}
+                    </Toggle>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <FellowRadarChart
+                    data={{
+                      fellowName: session.fellow.name,
+                      contentCoverage:
+                        (latestAnalysis.contentCoverage as any)?.score || 0,
+                      facilitationQuality:
+                        (latestAnalysis.facilitationQuality as any)?.score || 0,
+                      protocolSafety:
+                        (latestAnalysis.protocolSafety as any)?.score || 0,
+                      sessionCount: fellowSessions.length + 1,
+                      riskRate:
+                        (fellowSessions.filter(s => {
+                          const analysis = s.analyses[0];
+                          return (
+                            analysis?.riskDetection &&
+                            (analysis.riskDetection as any).status === 'RISK'
+                          );
+                        }).length /
+                          (fellowSessions.length + 1)) *
+                        100,
+                      validationRate:
+                        (fellowSessions.filter(s => {
+                          const analysis = s.analyses[0];
+                          return analysis?.supervisorStatus === 'VALIDATED';
+                        }).length /
+                          (fellowSessions.length + 1)) *
+                        100
+                    }}
+                    teamAverages={
+                      showComparison
+                        ? {
+                            fellowName: 'Team Average',
+                            contentCoverage:
+                              statsData?.teamAverages?.contentCoverage || 0,
+                            facilitationQuality:
+                              statsData?.teamAverages?.facilitationQuality || 0,
+                            protocolSafety:
+                              statsData?.teamAverages?.protocolSafety || 0,
+                            sessionCount:
+                              statsData?.summary?.totalSessions || 0,
+                            riskRate: statsData?.summary?.riskCount
+                              ? (statsData.summary.riskCount /
+                                  statsData.summary.totalSessions) *
+                                100
+                              : 0,
+                            validationRate: 0
+                          }
+                        : undefined
+                    }
+                  />
+                </CardContent>
+              </Card>
+
+              {/* Fellow's Other Sessions */}
+              <Card className="lg:col-span-2">
+                <CardHeader>
+                  <CardTitle>Other Sessions</CardTitle>
+                  <CardDescription>
+                    Recent sessions by {session.fellow.name}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {fellowSessions.length > 0 ? (
+                    <div className="space-y-2">
+                      {fellowSessions.map(s => (
+                        <Link
+                          key={s.id}
+                          href={`/dashboard/sessions/${s.id}`}
+                          className="block"
+                        >
+                          <div className="flex items-center justify-between p-2 rounded hover:bg-gray-50 border transition-colors">
+                            <div className="text-sm">
+                              <p className="font-medium">
+                                {new Date(s.date).toLocaleDateString()}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {s.groupId}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <StatusBadge status={s.status} />
+                              {s.analyses[0]?.riskDetection &&
+                                (s.analyses[0].riskDetection as any).status ===
+                                  'RISK' && (
+                                  <Badge
+                                    variant="destructive"
+                                    className="text-xs"
+                                  >
+                                    Risk
+                                  </Badge>
+                                )}
+                            </div>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500 text-center py-4">
+                      No other sessions found
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           )}
 
           {/* Human Review Actions */}

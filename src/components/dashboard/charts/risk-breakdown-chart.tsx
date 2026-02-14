@@ -21,11 +21,11 @@ interface RiskBreakdownChartProps {
 }
 
 const RISK_COLORS = [
-  'hsl(var(--chart-4))',
-  'hsl(var(--chart-3))',
-  'hsl(var(--chart-2))',
-  'hsl(var(--chart-1))',
-  'hsl(var(--chart-5))'
+  '#ef4444', // red
+  '#f97316', // orange
+  '#eab308', // yellow
+  '#22c55e', // green
+  '#3b82f6' // blue
 ];
 
 export function RiskBreakdownChart({ data }: RiskBreakdownChartProps) {
