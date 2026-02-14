@@ -7,20 +7,20 @@ export async function POST(request: NextRequest) {
     const { analysisId, supervisorStatus, supervisorNotes } =
       await request.json();
 
-    const analysis = await prisma.meetingAnalysis.findFirst({
+    const exists = await prisma.meetingAnalysis.findFirst({
       where: {
         id: analysisId
       }
     });
 
-    if (!analysis) {
+    if (!exists) {
       return NextResponse.json(
         { error: 'Analysis not found' },
         { status: 404 }
       );
     }
 
-    const updatedAnalysis = await prisma.meetingAnalysis.update({
+    const analysis = await prisma.meetingAnalysis.update({
       where: { id: analysisId },
       data: {
         supervisorStatus,
@@ -42,9 +42,28 @@ export async function POST(request: NextRequest) {
       }
     });
 
+    // Fetch the updated meeting with relations
+    const meeting = await prisma.meeting.findUnique({
+      where: { id: analysis.meetingId },
+      include: {
+        fellow: {
+          select: {
+            name: true,
+            email: true
+          }
+        },
+        analyses: {
+          orderBy: {
+            createdAt: 'desc'
+          }
+        }
+      }
+    });
+
     return NextResponse.json({
       message: 'Analysis validated successfully',
-      analysis: updatedAnalysis
+      analysis,
+      session: meeting
     });
   } catch (error) {
     console.error('Validation error:', error);

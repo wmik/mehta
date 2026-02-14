@@ -50,8 +50,8 @@ export default function DashboardPage() {
 
       if (response.ok) {
         const result = await response.json();
-        setSessions(result?.sessions);
         toast.success('Loaded sessions successfully');
+        return result?.sessions;
       } else {
         const error = await response.text();
         toast.error(error);
@@ -76,7 +76,9 @@ export default function DashboardPage() {
 
   useEffect(() => {
     setLoading(true);
-    fetchSessions().finally(() => setLoading(false));
+    fetchSessions()
+      .then(sessions => setSessions(sessions))
+      .finally(() => setLoading(false));
   }, []);
 
   if (loading) {

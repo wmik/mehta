@@ -105,6 +105,8 @@ export default function SessionDetailPage() {
     }
   };
 
+  const [notes, setNotes] = useState('');
+
   const validateAnalysis = async (analysisId: string, isApproved: boolean) => {
     try {
       const response = await fetch(`/api/meetings/${params.id}/validate`, {
@@ -114,13 +116,15 @@ export default function SessionDetailPage() {
         },
         body: JSON.stringify({
           analysisId,
-          supervisorStatus: isApproved ? 'VALIDATED' : 'REJECTED'
+          supervisorStatus: isApproved ? 'VALIDATED' : 'REJECTED',
+          supervisorNotes: notes
         })
       });
       const data = await response.json();
 
-      if (data.session) {
-        setSession(data.session);
+      if (data.analysis) {
+        // Fetch updated session to get the latest data
+        await fetchSession();
       }
     } catch (error) {
       console.error('Validation failed:', error);
@@ -381,6 +385,20 @@ export default function SessionDetailPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
+                <div className="mb-4">
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Supervisor Notes (optional)
+                  </label>
+                  <textarea
+                    placeholder="Add notes about this analysis or session..."
+                    value={notes}
+                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                      setNotes(e.target.value)
+                    }
+                    className="flex min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    rows={3}
+                  />
+                </div>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Button
                     onClick={() => validateAnalysis(latestAnalysis.id, true)}
