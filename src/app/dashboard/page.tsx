@@ -26,6 +26,13 @@ import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
 import { FilterDropdown } from '@/components/ui/filter-dropdown';
 import { Pagination } from '@/components/ui/pagination';
+import {
+  StatsCardSkeleton,
+  TableSkeleton,
+  FilterBarSkeleton,
+  AnalyticsSkeleton
+} from '@/components/ui/loaders';
+import { ProgressProvider } from '@/components/ui/progress-bar';
 
 type Analysis = Pick<
   MeetingAnalysis,
@@ -54,7 +61,6 @@ interface FellowStats {
 
 export default function DashboardPage() {
   const [loading, setLoading] = useState(false);
-  const [sessions, setSessions] = useState<MeetingWithRelation[]>([]);
   const [allSessions, setAllSessions] = useState<MeetingWithRelation[]>([]);
   const [fellows, setFellows] = useState<Array<{ id: string; name: string }>>(
     []
@@ -295,7 +301,6 @@ export default function DashboardPage() {
     fetchSessions()
       .then(sessions => {
         setAllSessions(sessions || []);
-        setSessions(sessions || []);
       })
       .finally(() => setLoading(false));
   }, []);
@@ -310,12 +315,9 @@ export default function DashboardPage() {
 
   const fellowOptions = fellows.map(f => ({ value: f.id, label: f.name }));
 
-  if (loading) {
-    return <DashboardLoader />;
-  }
-
   return (
     <div className="min-h-screen bg-gray-50">
+      <ProgressProvider />
       <Toaster />
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -342,112 +344,134 @@ export default function DashboardPage() {
 
         {/* Stats Cards */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Session Management</CardTitle>
-              <CardDescription>
-                View and analyze therapy sessions
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold text-blue-600">{stats.total}</p>
-              <p className="text-sm text-gray-600">Total Sessions</p>
-            </CardContent>
-          </Card>
+          {loading ? (
+            <>
+              <StatsCardSkeleton delay={0} />
+              <StatsCardSkeleton delay={100} />
+              <StatsCardSkeleton delay={200} />
+            </>
+          ) : (
+            <>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Session Management</CardTitle>
+                  <CardDescription>
+                    View and analyze therapy sessions
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-3xl font-bold text-blue-600">
+                    {stats.total}
+                  </p>
+                  <p className="text-sm text-gray-600">Total Sessions</p>
+                </CardContent>
+              </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>AI Analysis</CardTitle>
-              <CardDescription>AI-powered session insights</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold text-green-600">
-                {stats.processed}
-              </p>
-              <p className="text-sm text-gray-600">Completed Analyses</p>
-            </CardContent>
-          </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>AI Analysis</CardTitle>
+                  <CardDescription>AI-powered session insights</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-3xl font-bold text-green-600">
+                    {stats.processed}
+                  </p>
+                  <p className="text-sm text-gray-600">Completed Analyses</p>
+                </CardContent>
+              </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Risk Alerts</CardTitle>
-              <CardDescription>Sessions requiring attention</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold text-red-600">{stats.risks}</p>
-              <p className="text-sm text-gray-600">Flagged Sessions</p>
-            </CardContent>
-          </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Risk Alerts</CardTitle>
+                  <CardDescription>
+                    Sessions requiring attention
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-3xl font-bold text-red-600">
+                    {stats.risks}
+                  </p>
+                  <p className="text-sm text-gray-600">Flagged Sessions</p>
+                </CardContent>
+              </Card>
+            </>
+          )}
         </div>
 
         {/* Analytics Section */}
-        {fellowStats.length > 0 && (
-          <div className="grid gap-6 md:grid-cols-2 mb-8">
-            <Card>
-              <CardHeader>
-                <CardTitle>Fellow Performance</CardTitle>
-                <CardDescription>Average scores by fellow</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {fellowStats.map(f => (
-                    <div
-                      key={f.name}
-                      className="flex items-center justify-between"
-                    >
-                      <div>
-                        <p className="font-medium">{f.name}</p>
-                        <p className="text-xs text-gray-500">
-                          {f.totalSessions} sessions • {f.riskCount} risks
-                        </p>
-                      </div>
-                      <div className="flex gap-2">
-                        <Badge variant="outline" className="text-xs">
-                          CC: {f.avgContentCoverage.toFixed(1)}
-                        </Badge>
-                        <Badge variant="outline" className="text-xs">
-                          FQ: {f.avgFacilitationQuality.toFixed(1)}
-                        </Badge>
-                        <Badge variant="outline" className="text-xs">
-                          PS: {f.avgProtocolSafety.toFixed(1)}
-                        </Badge>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Risk Detection Trend</CardTitle>
-                <CardDescription>
-                  Risks detected in last 30 days
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {riskTrend.length > 0 ? (
-                  <div className="space-y-2">
-                    {riskTrend.slice(-7).map(t => (
+        {loading ? (
+          <div className="mb-8">
+            <AnalyticsSkeleton />
+          </div>
+        ) : (
+          fellowStats.length > 0 && (
+            <div className="grid gap-6 md:grid-cols-2 mb-8">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Fellow Performance</CardTitle>
+                  <CardDescription>Average scores by fellow</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {fellowStats.map(f => (
                       <div
-                        key={t.date}
+                        key={f.name}
                         className="flex items-center justify-between"
                       >
-                        <span className="text-sm text-gray-600">
-                          {new Date(t.date).toLocaleDateString()}
-                        </span>
-                        <Badge variant="destructive">{t.count} risk(s)</Badge>
+                        <div>
+                          <p className="font-medium">{f.name}</p>
+                          <p className="text-xs text-gray-500">
+                            {f.totalSessions} sessions • {f.riskCount} risks
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Badge variant="outline" className="text-xs">
+                            CC: {f.avgContentCoverage.toFixed(1)}
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            FQ: {f.avgFacilitationQuality.toFixed(1)}
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            PS: {f.avgProtocolSafety.toFixed(1)}
+                          </Badge>
+                        </div>
                       </div>
                     ))}
                   </div>
-                ) : (
-                  <p className="text-gray-500 text-sm">
-                    No risk data available in the last 30 days
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Risk Detection Trend</CardTitle>
+                  <CardDescription>
+                    Risks detected in last 30 days
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {riskTrend.length > 0 ? (
+                    <div className="space-y-2">
+                      {riskTrend.slice(-7).map(t => (
+                        <div
+                          key={t.date}
+                          className="flex items-center justify-between"
+                        >
+                          <span className="text-sm text-gray-600">
+                            {new Date(t.date).toLocaleDateString()}
+                          </span>
+                          <Badge variant="destructive">{t.count} risk(s)</Badge>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 text-sm">
+                      No risk data available in the last 30 days
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )
         )}
 
         {/* Sessions Table */}
@@ -462,19 +486,25 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="mt-4">
-              <FilterDropdown
-                statusOptions={statusOptions}
-                fellowOptions={fellowOptions}
-                onStatusChange={setSelectedStatuses}
-                onFellowChange={setSelectedFellows}
-                onDateRangeChange={(start, end) => setDateRange({ start, end })}
-                onSortChange={(sort, order) => {
-                  setSortBy(sort);
-                  setSortOrder(order);
-                }}
-                onSearchChange={setSearchQuery}
-                initialSearch={searchQuery}
-              />
+              {loading ? (
+                <FilterBarSkeleton />
+              ) : (
+                <FilterDropdown
+                  statusOptions={statusOptions}
+                  fellowOptions={fellowOptions}
+                  onStatusChange={setSelectedStatuses}
+                  onFellowChange={setSelectedFellows}
+                  onDateRangeChange={(start, end) =>
+                    setDateRange({ start, end })
+                  }
+                  onSortChange={(sort, order) => {
+                    setSortBy(sort);
+                    setSortOrder(order);
+                  }}
+                  onSearchChange={setSearchQuery}
+                  initialSearch={searchQuery}
+                />
+              )}
             </div>
           </CardHeader>
           <CardContent>
@@ -491,47 +521,53 @@ export default function DashboardPage() {
               </div>
             ) : (
               <>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Fellow Name</TableHead>
-                      <TableHead>Group ID</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {paginatedSessions.map(sessionData => (
-                      <TableRow key={sessionData.id}>
-                        <TableCell className="font-medium">
-                          {sessionData.fellow.name}
-                        </TableCell>
-                        <TableCell>{sessionData.groupId}</TableCell>
-                        <TableCell>
-                          {new Date(sessionData.date).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>
-                          <StatusBadge
-                            status={sessionData.status}
-                            analysis={sessionData.analyses[0]}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Link href={`/dashboard/sessions/${sessionData.id}`}>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="rounded-none"
-                            >
-                              View Details
-                            </Button>
-                          </Link>
-                        </TableCell>
+                {loading ? (
+                  <TableSkeleton />
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Fellow Name</TableHead>
+                        <TableHead>Group ID</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Actions</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {paginatedSessions.map(sessionData => (
+                        <TableRow key={sessionData.id}>
+                          <TableCell className="font-medium">
+                            {sessionData.fellow.name}
+                          </TableCell>
+                          <TableCell>{sessionData.groupId}</TableCell>
+                          <TableCell>
+                            {new Date(sessionData.date).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell>
+                            <StatusBadge
+                              status={sessionData.status}
+                              analysis={sessionData.analyses[0]}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Link
+                              href={`/dashboard/sessions/${sessionData.id}`}
+                            >
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="rounded-none"
+                              >
+                                View Details
+                              </Button>
+                            </Link>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
 
                 <div className="mt-4 flex items-center justify-between">
                   <p className="text-sm text-gray-600">

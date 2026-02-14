@@ -14,11 +14,17 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
+import {
+  SessionInfoSkeleton,
+  AnalysisCardSkeleton,
+  TranscriptSkeleton,
+  AIAnalysisLoader
+} from '@/components/ui/loaders';
+import { ProgressProvider } from '@/components/ui/progress-bar';
 
 interface Session {
   id: string;
@@ -218,39 +224,7 @@ export default function SessionDetailPage() {
     setConfirmAction(null);
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <header className="bg-white shadow-sm border-b">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <Skeleton className="h-6 w-32" />
-              <Skeleton className="h-10 w-20" />
-            </div>
-          </div>
-        </header>
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="space-y-6">
-            <Skeleton className="h-8 w-64" />
-            <Card>
-              <CardHeader>
-                <Skeleton className="h-6 w-32" />
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {[...Array(4)].map((_, i) => (
-                    <Skeleton key={i} className="h-24 w-full" />
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </main>
-      </div>
-    );
-  }
-
-  if (!session) {
+  if (!session && !loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Card className="w-full max-w-md">
@@ -272,7 +246,7 @@ export default function SessionDetailPage() {
     );
   }
 
-  const latestAnalysis = session.analyses[0];
+  const latestAnalysis = session?.analyses[0];
   const riskStatus = latestAnalysis?.riskDetection?.status;
 
   const analysisCards: AnalysisCard[] = [
@@ -326,6 +300,7 @@ export default function SessionDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <ProgressProvider />
       <Toaster />
       <ConfirmationDialog
         open={confirmOpen}
@@ -354,21 +329,21 @@ export default function SessionDetailPage() {
                 ← Back to Dashboard
               </Button>
               <div className="text-sm">
-                <span className="font-medium">{session.fellow.name}</span>
-                <span className="text-gray-500"> • {session.groupId}</span>
+                <span className="font-medium">{session?.fellow.name}</span>
+                <span className="text-gray-500"> • {session?.groupId}</span>
               </div>
             </div>
             <div className="flex items-center space-x-2">
               <Button
                 variant="outline"
                 onClick={() =>
-                  window.open(`/api/export/${session.id}`, '_blank')
+                  window.open(`/api/export/${session?.id}`, '_blank')
                 }
                 className="rounded-none"
               >
                 📥 Export CSV
               </Button>
-              <StatusBadge status={session.status} />
+              <StatusBadge status={session?.status ?? 'Risk'} />
               {latestAnalysis && (
                 <Badge
                   variant={
@@ -392,33 +367,37 @@ export default function SessionDetailPage() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Session Information</CardTitle>
-              <CardDescription>
-                Therapy session conducted on{' '}
-                {new Date(session.date).toLocaleDateString()}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <p className="text-sm text-gray-600">Fellow</p>
-                  <p className="font-medium">{session.fellow.name}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Group ID</p>
-                  <p className="font-medium">{session.groupId}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Status</p>
+          {loading ? (
+            <SessionInfoSkeleton />
+          ) : session ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Session Information</CardTitle>
+                <CardDescription>
+                  Therapy session conducted on{' '}
+                  {new Date(session?.date).toLocaleDateString()}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <StatusBadge status={session.status} />
+                    <p className="text-sm text-gray-600">Fellow</p>
+                    <p className="font-medium">{session?.fellow.name}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Group ID</p>
+                    <p className="font-medium">{session?.groupId}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Status</p>
+                    <div>
+                      <StatusBadge status={session?.status} />
+                    </div>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          ) : null}
 
           {riskStatus === 'RISK' && latestAnalysis?.riskDetection?.quote ? (
             <Alert className="border-red-200 bg-red-50">
@@ -464,12 +443,16 @@ export default function SessionDetailPage() {
               </div>
             </div>
 
-            {latestAnalysis ? (
+            {analyzing ? (
+              <AIAnalysisLoader />
+            ) : latestAnalysis ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {analysisCards.map(card => (
                   <AnalysisCard card={card} key={card.title} />
                 ))}
               </div>
+            ) : loading ? (
+              <AnalysisCardSkeleton />
             ) : (
               <Card>
                 <CardContent className="text-center py-12">
@@ -514,7 +497,7 @@ export default function SessionDetailPage() {
                     Supervisor Notes (optional)
                   </label>
                   <textarea
-                    placeholder="Add notes about this analysis or session..."
+                    placeholder="Add notes about this analysis or session?..."
                     value={notes}
                     onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                       setNotes(e.target.value)
@@ -563,21 +546,25 @@ export default function SessionDetailPage() {
           )}
 
           {/* Full Transcript */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Session Transcript</CardTitle>
-              <CardDescription>
-                Full conversation from the therapy session
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-96 w-full border p-4">
-                <div className="text-sm font-mono whitespace-pre-wrap">
-                  {session.transcript}
-                </div>
-              </ScrollArea>
-            </CardContent>
-          </Card>
+          {loading ? (
+            <TranscriptSkeleton />
+          ) : session ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Session Transcript</CardTitle>
+                <CardDescription>
+                  Full conversation from the therapy session
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ScrollArea className="h-96 w-full border p-4">
+                  <div className="text-sm font-mono whitespace-pre-wrap">
+                    {session?.transcript}
+                  </div>
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          ) : null}
         </div>
       </main>
     </div>
