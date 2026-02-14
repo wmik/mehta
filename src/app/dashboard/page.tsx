@@ -37,6 +37,14 @@ import { ProgressProvider } from '@/components/ui/progress-bar';
 import { ThemeToggle } from '@/components/dashboard/theme-toggle';
 import { Notifications } from '@/components/dashboard/notifications';
 import { UserMenu } from '@/components/dashboard/user-menu';
+import {
+  PerformanceBarChart,
+  RiskTrendChart,
+  SessionStatusPie,
+  WeeklyVolumeChart,
+  RiskBreakdownChart
+} from '@/components/dashboard/charts';
+import useSWR from 'swr';
 
 type Analysis = Pick<
   MeetingAnalysis,
@@ -85,6 +93,30 @@ export default function DashboardPage() {
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+
+  // Real-time data fetching with SWR
+  const fetcher = (url: string) => fetch(url).then(res => res.json());
+  const {
+    data: swrData,
+    error: swrError,
+    isLoading: swrLoading
+  } = useSWR('/api/meetings', fetcher, {
+    refreshInterval: 30000, // Poll every 30 seconds
+    revalidateOnFocus: true,
+    dedupingInterval: 5000
+  });
+
+  // Update sessions when SWR data changes
+  useEffect(() => {
+    if (swrData?.sessions) {
+      setAllSessions(swrData.sessions);
+    }
+  }, [swrData]);
+
+  // Set loading state based on SWR
+  useEffect(() => {
+    setLoading(swrLoading);
+  }, [swrLoading]);
 
   async function fetchSessions() {
     const loadingToast = toast.loading('Retrieving latest sessions...', {
@@ -231,6 +263,18 @@ export default function DashboardPage() {
     };
   }, [allSessions]);
 
+  // Compute status distribution for pie chart
+  const statusDistribution = useMemo(() => {
+    return {
+      PENDING: allSessions.filter(s => s.status === 'PENDING').length,
+      PROCESSED: allSessions.filter(s => s.status === 'PROCESSED').length,
+      SAFE: allSessions.filter(s => s.status === 'SAFE').length,
+      FLAGGED_FOR_REVIEW: allSessions.filter(
+        s => s.status === 'FLAGGED_FOR_REVIEW'
+      ).length
+    };
+  }, [allSessions]);
+
   // Compute fellow performance stats
   const fellowStats = useMemo((): FellowStats[] => {
     const fellowMap = new Map<string, FellowStats>();
@@ -301,14 +345,8 @@ export default function DashboardPage() {
       .sort((a, b) => a.date.localeCompare(b.date));
   }, [allSessions]);
 
-  useEffect(() => {
-    setLoading(true);
-    fetchSessions()
-      .then(sessions => {
-        setAllSessions(sessions || []);
-      })
-      .finally(() => setLoading(false));
-  }, []);
+  // Initial load handled by SWR - no need for separate useEffect
+  // SWR handles: refreshInterval: 30000, revalidateOnFocus: true
 
   const statusOptions = [
     { value: 'PENDING', label: 'Pending' },
@@ -411,74 +449,124 @@ export default function DashboardPage() {
             <AnalyticsSkeleton />
           </div>
         ) : (
-          fellowStats.length > 0 && (
-            <div className="grid gap-6 md:grid-cols-2 mb-8">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Fellow Performance</CardTitle>
-                  <CardDescription>Average scores by fellow</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {fellowStats.map(f => (
-                      <div
-                        key={f.name}
-                        className="flex items-center justify-between"
-                      >
-                        <div>
-                          <p className="font-medium">{f.name}</p>
-                          <p className="text-xs text-gray-500">
-                            {f.totalSessions} sessions • {f.riskCount} risks
-                          </p>
-                        </div>
-                        <div className="flex gap-2">
-                          <Badge variant="outline" className="text-xs">
-                            CC: {f.avgContentCoverage.toFixed(1)}
-                          </Badge>
-                          <Badge variant="outline" className="text-xs">
-                            FQ: {f.avgFacilitationQuality.toFixed(1)}
-                          </Badge>
-                          <Badge variant="outline" className="text-xs">
-                            PS: {f.avgProtocolSafety.toFixed(1)}
-                          </Badge>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+          <div className="space-y-8">
+            {/* Charts Row */}
+            {(fellowStats.length > 0 || riskTrend.length > 0) && (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
+                {fellowStats.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Fellow Performance</CardTitle>
+                      <CardDescription>
+                        Average scores by fellow
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <PerformanceBarChart data={fellowStats} />
+                    </CardContent>
+                  </Card>
+                )}
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Risk Detection Trend</CardTitle>
-                  <CardDescription>
-                    Risks detected in last 30 days
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {riskTrend.length > 0 ? (
-                    <div className="space-y-2">
-                      {riskTrend.slice(-7).map(t => (
+                {riskTrend.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Risk Trend</CardTitle>
+                      <CardDescription>
+                        Risks detected over time
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <RiskTrendChart data={riskTrend} />
+                    </CardContent>
+                  </Card>
+                )}
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Session Status</CardTitle>
+                    <CardDescription>
+                      Distribution of session statuses
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <SessionStatusPie data={statusDistribution} />
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Text-based Summary Cards - Keep these for quick overview */}
+            {fellowStats.length > 0 && (
+              <div className="grid gap-6 md:grid-cols-2 mb-8">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Fellow Performance Summary</CardTitle>
+                    <CardDescription>
+                      Quick overview of fellow metrics
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {fellowStats.map(f => (
                         <div
-                          key={t.date}
+                          key={f.name}
                           className="flex items-center justify-between"
                         >
-                          <span className="text-sm text-gray-600">
-                            {new Date(t.date).toLocaleDateString()}
-                          </span>
-                          <Badge variant="destructive">{t.count} risk(s)</Badge>
+                          <div>
+                            <p className="font-medium">{f.name}</p>
+                            <p className="text-xs text-gray-500">
+                              {f.totalSessions} sessions • {f.riskCount} risks
+                            </p>
+                          </div>
+                          <div className="flex gap-2">
+                            <Badge variant="outline" className="text-xs">
+                              CC: {f.avgContentCoverage.toFixed(1)}
+                            </Badge>
+                            <Badge variant="outline" className="text-xs">
+                              FQ: {f.avgFacilitationQuality.toFixed(1)}
+                            </Badge>
+                            <Badge variant="outline" className="text-xs">
+                              PS: {f.avgProtocolSafety.toFixed(1)}
+                            </Badge>
+                          </div>
                         </div>
                       ))}
                     </div>
-                  ) : (
-                    <p className="text-gray-500 text-sm">
-                      No risk data available in the last 30 days
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          )
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Risk Detection Summary</CardTitle>
+                    <CardDescription>Recent risk alerts</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {riskTrend.length > 0 ? (
+                      <div className="space-y-2">
+                        {riskTrend.slice(-7).map(t => (
+                          <div
+                            key={t.date}
+                            className="flex items-center justify-between"
+                          >
+                            <span className="text-sm text-gray-600">
+                              {new Date(t.date).toLocaleDateString()}
+                            </span>
+                            <Badge variant="destructive">
+                              {t.count} risk(s)
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500 text-sm">
+                        No risk data available in the last 30 days
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </div>
         )}
 
         {/* Sessions Table */}

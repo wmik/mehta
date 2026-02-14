@@ -62,15 +62,15 @@ export function UserMenu({ user }: UserMenuProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="rounded-none gap-2">
+        <Button variant="ghost" className="rounded-full p-0">
           <Avatar className="h-7 w-7">
             <AvatarFallback className="text-xs">
               {getInitials(user.name, user.email)}
             </AvatarFallback>
           </Avatar>
-          <span className="hidden sm:inline-block">
+          {/* <span className="hidden sm:inline-block">
             {user.name || user.email}
-          </span>
+          </span> */}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
