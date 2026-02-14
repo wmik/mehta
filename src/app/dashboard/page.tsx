@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -33,6 +34,9 @@ import {
   AnalyticsSkeleton
 } from '@/components/ui/loaders';
 import { ProgressProvider } from '@/components/ui/progress-bar';
+import { ThemeToggle } from '@/components/dashboard/theme-toggle';
+import { Notifications } from '@/components/dashboard/notifications';
+import { UserMenu } from '@/components/dashboard/user-menu';
 
 type Analysis = Pick<
   MeetingAnalysis,
@@ -60,6 +64,7 @@ interface FellowStats {
 }
 
 export default function DashboardPage() {
+  const { data: session } = useSession();
   const [loading, setLoading] = useState(false);
   const [allSessions, setAllSessions] = useState<MeetingWithRelation[]>([]);
   const [fellows, setFellows] = useState<Array<{ id: string; name: string }>>(
@@ -325,8 +330,10 @@ export default function DashboardPage() {
             <h1 className="text-lg font-bold tracking-tighter uppercase font-mono">
               SHAMIRI /// COPILOT
             </h1>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">Demo User</span>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <Notifications />
+              {session?.user && <UserMenu user={session.user} />}
             </div>
           </div>
         </div>
