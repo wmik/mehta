@@ -62,7 +62,7 @@ export function UserMenu({ user }: UserMenuProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="rounded-full p-0">
+        <Button variant="ghost" className="rounded-none p-0">
           <Avatar className="h-7 w-7">
             <AvatarFallback className="text-xs">
               {getInitials(user.name, user.email)}

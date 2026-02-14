@@ -45,6 +45,9 @@ import {
   RiskBreakdownChart
 } from '@/components/dashboard/charts';
 import useSWR from 'swr';
+import { Toggle } from '@/components/ui/toggle';
+import { BarChart3, List, TrendingUp, PieChart } from 'lucide-react';
+import { useLocalStorage } from '@/hooks/use-local-storage';
 
 type Analysis = Pick<
   MeetingAnalysis,
@@ -93,6 +96,20 @@ export default function DashboardPage() {
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+
+  // Chart/List toggle states with localStorage persistence
+  const [showPerformanceChart, setShowPerformanceChart] = useLocalStorage(
+    'dashboard-showPerformanceChart',
+    true
+  );
+  const [showRiskChart, setShowRiskChart] = useLocalStorage(
+    'dashboard-showRiskChart',
+    true
+  );
+  const [showStatusChart, setShowStatusChart] = useLocalStorage(
+    'dashboard-showStatusChart',
+    true
+  );
 
   // Real-time data fetching with SWR
   const fetcher = (url: string) => fetch(url).then(res => res.json());
@@ -452,118 +469,173 @@ export default function DashboardPage() {
           <div className="space-y-8">
             {/* Charts Row */}
             {(fellowStats.length > 0 || riskTrend.length > 0) && (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
-                {fellowStats.length > 0 && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Fellow Performance</CardTitle>
-                      <CardDescription>
-                        Average scores by fellow
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <PerformanceBarChart data={fellowStats} />
-                    </CardContent>
-                  </Card>
-                )}
-
-                {riskTrend.length > 0 && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Risk Trend</CardTitle>
-                      <CardDescription>
-                        Risks detected over time
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <RiskTrendChart data={riskTrend} />
-                    </CardContent>
-                  </Card>
-                )}
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Session Status</CardTitle>
-                    <CardDescription>
-                      Distribution of session statuses
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <SessionStatusPie data={statusDistribution} />
-                  </CardContent>
-                </Card>
-              </div>
-            )}
-
-            {/* Text-based Summary Cards - Keep these for quick overview */}
-            {fellowStats.length > 0 && (
-              <div className="grid gap-6 md:grid-cols-2 mb-8">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Fellow Performance Summary</CardTitle>
-                    <CardDescription>
-                      Quick overview of fellow metrics
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {fellowStats.map(f => (
-                        <div
-                          key={f.name}
-                          className="flex items-center justify-between"
-                        >
+              <div className="grid gap-6 grid-cols-1 mb-8">
+                <div className="grid gap-6 grid-cols-2">
+                  {riskTrend.length > 0 && (
+                    <Card>
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
                           <div>
-                            <p className="font-medium">{f.name}</p>
-                            <p className="text-xs text-gray-500">
-                              {f.totalSessions} sessions • {f.riskCount} risks
-                            </p>
+                            <CardTitle>Risk Trend</CardTitle>
+                            <CardDescription>
+                              Risks detected over time
+                            </CardDescription>
                           </div>
-                          <div className="flex gap-2">
-                            <Badge variant="outline" className="text-xs">
-                              CC: {f.avgContentCoverage.toFixed(1)}
+                          <Toggle
+                            pressed={showRiskChart}
+                            onPressedChange={setShowRiskChart}
+                            aria-label="Toggle chart view"
+                            className="rounded-none"
+                          >
+                            {showRiskChart ? (
+                              <TrendingUp className="h-4 w-4" />
+                            ) : (
+                              <List className="h-4 w-4" />
+                            )}
+                          </Toggle>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        {showRiskChart ? (
+                          <RiskTrendChart data={riskTrend} />
+                        ) : (
+                          <div className="space-y-2">
+                            {riskTrend.slice(-7).map(t => (
+                              <div
+                                key={t.date}
+                                className="flex items-center justify-between"
+                              >
+                                <span className="text-sm text-gray-600">
+                                  {new Date(t.date).toLocaleDateString()}
+                                </span>
+                                <Badge variant="destructive">
+                                  {t.count} risk(s)
+                                </Badge>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle>Session Status</CardTitle>
+                          <CardDescription>
+                            Distribution of session statuses
+                          </CardDescription>
+                        </div>
+                        <Toggle
+                          pressed={showStatusChart}
+                          onPressedChange={setShowStatusChart}
+                          aria-label="Toggle chart view"
+                          className="rounded-none"
+                        >
+                          {showStatusChart ? (
+                            <PieChart className="h-4 w-4" />
+                          ) : (
+                            <List className="h-4 w-4" />
+                          )}
+                        </Toggle>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      {showStatusChart ? (
+                        <SessionStatusPie data={statusDistribution} />
+                      ) : (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm">Pending</span>
+                            <Badge variant="secondary">
+                              {statusDistribution.PENDING}
                             </Badge>
-                            <Badge variant="outline" className="text-xs">
-                              FQ: {f.avgFacilitationQuality.toFixed(1)}
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm">Processed</span>
+                            <Badge variant="outline">
+                              {statusDistribution.PROCESSED}
                             </Badge>
-                            <Badge variant="outline" className="text-xs">
-                              PS: {f.avgProtocolSafety.toFixed(1)}
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm">Safe</span>
+                            <Badge className="bg-green-500">
+                              {statusDistribution.SAFE}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm">Flagged</span>
+                            <Badge variant="destructive">
+                              {statusDistribution.FLAGGED_FOR_REVIEW}
                             </Badge>
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Risk Detection Summary</CardTitle>
-                    <CardDescription>Recent risk alerts</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {riskTrend.length > 0 ? (
-                      <div className="space-y-2">
-                        {riskTrend.slice(-7).map(t => (
-                          <div
-                            key={t.date}
-                            className="flex items-center justify-between"
-                          >
-                            <span className="text-sm text-gray-600">
-                              {new Date(t.date).toLocaleDateString()}
-                            </span>
-                            <Badge variant="destructive">
-                              {t.count} risk(s)
-                            </Badge>
-                          </div>
-                        ))}
+                {fellowStats.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle>Fellow Performance Summary</CardTitle>
+                          <CardDescription>
+                            Quick overview of fellow metrics
+                          </CardDescription>
+                        </div>
+                        <Toggle
+                          pressed={showPerformanceChart}
+                          onPressedChange={setShowPerformanceChart}
+                          aria-label="Toggle chart view"
+                          className="rounded-none"
+                        >
+                          {showPerformanceChart ? (
+                            <BarChart3 className="h-4 w-4" />
+                          ) : (
+                            <List className="h-4 w-4" />
+                          )}
+                        </Toggle>
                       </div>
-                    ) : (
-                      <p className="text-gray-500 text-sm">
-                        No risk data available in the last 30 days
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
+                    </CardHeader>
+                    <CardContent>
+                      {showPerformanceChart ? (
+                        <PerformanceBarChart data={fellowStats} />
+                      ) : (
+                        <div className="space-y-4">
+                          {fellowStats.map(f => (
+                            <div
+                              key={f.name}
+                              className="flex items-center justify-between"
+                            >
+                              <div>
+                                <p className="font-medium">{f.name}</p>
+                                <p className="text-xs text-gray-500">
+                                  {f.totalSessions} sessions • {f.riskCount}{' '}
+                                  risks
+                                </p>
+                              </div>
+                              <div className="flex gap-2">
+                                <Badge variant="outline" className="text-xs">
+                                  CC: {f.avgContentCoverage.toFixed(1)}
+                                </Badge>
+                                <Badge variant="outline" className="text-xs">
+                                  FQ: {f.avgFacilitationQuality.toFixed(1)}
+                                </Badge>
+                                <Badge variant="outline" className="text-xs">
+                                  PS: {f.avgProtocolSafety.toFixed(1)}
+                                </Badge>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             )}
           </div>
