@@ -15,8 +15,10 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
-
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Toaster } from '@/components/ui/sonner';
+import { toast } from 'sonner';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 
 interface Session {
   id: string;
@@ -59,6 +61,16 @@ export default function SessionDetailPage() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
+  const [notes, setNotes] = useState('');
+  const [analysisStatus, setAnalysisStatus] = useState('');
+
+  // Confirmation dialog state
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<
+    'validate' | 'reject' | 'override' | null
+  >(null);
+  const [confirmTitle, setConfirmTitle] = useState('');
+  const [confirmDescription, setConfirmDescription] = useState('');
 
   const fetchSession = useCallback(async () => {
     try {
@@ -77,9 +89,6 @@ export default function SessionDetailPage() {
       fetchSession();
     }
   }, [params.id, fetchSession]);
-
-  const [notes, setNotes] = useState('');
-  const [analysisStatus, setAnalysisStatus] = useState('');
 
   const ANALYSIS_PROGRESS_MESSAGES = [
     'Analyzing transcript...',
@@ -157,10 +166,56 @@ export default function SessionDetailPage() {
 
       if (data.analysis) {
         await fetchSession();
+
+        // Show success toast
+        if (action === 'validate') {
+          toast.success('Analysis validated successfully');
+        } else if (action === 'reject') {
+          toast.success('Analysis rejected');
+        } else if (action === 'override') {
+          toast.success('Risk flag overridden - session marked as safe');
+        }
       }
     } catch (error) {
       console.error('Validation failed:', error);
+      toast.error('Failed to validate analysis. Please try again.');
     }
+  };
+
+  const handleValidateClick = (action: 'validate' | 'reject' | 'override') => {
+    const config = {
+      validate: {
+        title: 'Validate Analysis',
+        description:
+          'Are you sure you want to validate this AI analysis? This will mark the session as reviewed and approved.',
+        confirmLabel: 'Validate'
+      },
+      reject: {
+        title: 'Reject Analysis',
+        description:
+          'Are you sure you want to reject this AI analysis? This will flag the session for further review.',
+        confirmLabel: 'Reject'
+      },
+      override: {
+        title: 'Override Risk Flag',
+        description:
+          'Are you sure you want to override the AI risk assessment? This will mark the session as safe despite the detected risk.',
+        confirmLabel: 'Override'
+      }
+    };
+
+    setConfirmAction(action);
+    setConfirmTitle(config[action].title);
+    setConfirmDescription(config[action].description);
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmAction = () => {
+    if (confirmAction && latestAnalysis) {
+      validateAnalysis(latestAnalysis.id, confirmAction);
+    }
+    setConfirmOpen(false);
+    setConfirmAction(null);
   };
 
   if (loading) {
@@ -271,6 +326,22 @@ export default function SessionDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Toaster />
+      <ConfirmationDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={confirmTitle}
+        description={confirmDescription}
+        confirmLabel={
+          confirmAction === 'reject'
+            ? 'Reject'
+            : confirmAction === 'override'
+              ? 'Override'
+              : 'Validate'
+        }
+        variant={confirmAction === 'reject' ? 'destructive' : 'default'}
+        onConfirm={handleConfirmAction}
+      />
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -288,6 +359,15 @@ export default function SessionDetailPage() {
               </div>
             </div>
             <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                onClick={() =>
+                  window.open(`/api/export/${session.id}`, '_blank')
+                }
+                className="rounded-none"
+              >
+                📥 Export CSV
+              </Button>
               <StatusBadge status={session.status} />
               {latestAnalysis && (
                 <Badge
@@ -445,18 +525,14 @@ export default function SessionDetailPage() {
                 </div>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Button
-                    onClick={() =>
-                      validateAnalysis(latestAnalysis.id, 'validate')
-                    }
+                    onClick={() => handleValidateClick('validate')}
                     className="flex-1 bg-green-600 hover:bg-green-700"
                     size="lg"
                   >
                     ✅ Validate Analysis
                   </Button>
                   <Button
-                    onClick={() =>
-                      validateAnalysis(latestAnalysis.id, 'reject')
-                    }
+                    onClick={() => handleValidateClick('reject')}
                     variant="outline"
                     className="flex-1 border-red-300 text-red-600 hover:bg-red-50"
                     size="lg"
@@ -465,9 +541,7 @@ export default function SessionDetailPage() {
                   </Button>
                   {riskStatus === 'RISK' && (
                     <Button
-                      onClick={() =>
-                        validateAnalysis(latestAnalysis.id, 'override')
-                      }
+                      onClick={() => handleValidateClick('override')}
                       variant="outline"
                       className="flex-1 border-amber-300 text-amber-700 hover:bg-amber-50"
                       size="lg"

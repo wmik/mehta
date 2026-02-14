@@ -57,6 +57,7 @@ export async function POST(request: NextRequest) {
       include: {
         fellow: {
           select: {
+            id: true,
             name: true,
             email: true
           }

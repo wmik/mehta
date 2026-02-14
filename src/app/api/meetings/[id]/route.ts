@@ -16,6 +16,7 @@ export async function GET(
       include: {
         fellow: {
           select: {
+            id: true,
             name: true,
             email: true
           }

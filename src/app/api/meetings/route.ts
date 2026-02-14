@@ -163,6 +163,7 @@ export async function GET() {
       include: {
         fellow: {
           select: {
+            id: true,
             name: true,
             email: true
           }
@@ -172,6 +173,9 @@ export async function GET() {
             id: true,
             riskDetection: true,
             supervisorStatus: true,
+            contentCoverage: true,
+            facilitationQuality: true,
+            protocolSafety: true,
             createdAt: true
           },
           orderBy: {
@@ -247,9 +251,25 @@ export async function POST() {
         include: {
           fellow: {
             select: {
+              id: true,
               name: true,
               email: true
             }
+          },
+          analyses: {
+            select: {
+              id: true,
+              riskDetection: true,
+              supervisorStatus: true,
+              contentCoverage: true,
+              facilitationQuality: true,
+              protocolSafety: true,
+              createdAt: true
+            },
+            orderBy: {
+              createdAt: 'desc'
+            },
+            take: 1
           }
         }
       });
@@ -264,7 +284,16 @@ export async function POST() {
         groupId: s.groupId,
         date: s.date,
         status: s.status,
-        fellow: s.fellow
+        fellow: s.fellow,
+        analyses: s.analyses.map(a => ({
+          id: a.id,
+          riskDetection: a.riskDetection,
+          supervisorStatus: a.supervisorStatus,
+          contentCoverage: a.contentCoverage,
+          facilitationQuality: a.facilitationQuality,
+          protocolSafety: a.protocolSafety,
+          createdAt: a.createdAt
+        }))
       }))
     });
   } catch (error) {
