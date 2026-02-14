@@ -2,31 +2,40 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 export async function POST(request: NextRequest) {
-  // Extract params to avoid unused variable warning
   try {
-    const { analysisId, supervisorStatus, supervisorNotes } =
+    const { analysisId, supervisorStatus, supervisorNotes, overrideRisk } =
       await request.json();
 
-    const exists = await prisma.meetingAnalysis.findFirst({
+    const existingAnalysis = await prisma.meetingAnalysis.findFirst({
       where: {
         id: analysisId
       }
     });
 
-    if (!exists) {
+    if (!existingAnalysis) {
       return NextResponse.json(
         { error: 'Analysis not found' },
         { status: 404 }
       );
     }
 
+    const updateData: Record<string, unknown> = {
+      supervisorStatus,
+      supervisorNotes,
+      reviewedAt: new Date()
+    };
+
+    if (overrideRisk && supervisorStatus === 'VALIDATED') {
+      updateData.riskDetection = {
+        status: 'SAFE',
+        quote: null,
+        explanation: 'Supervisor override: Risk assessment manually cleared'
+      };
+    }
+
     const analysis = await prisma.meetingAnalysis.update({
       where: { id: analysisId },
-      data: {
-        supervisorStatus,
-        supervisorNotes,
-        reviewedAt: new Date()
-      }
+      data: updateData
     });
 
     // Update meeting status based on validation result

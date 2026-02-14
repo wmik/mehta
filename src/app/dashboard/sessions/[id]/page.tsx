@@ -78,8 +78,30 @@ export default function SessionDetailPage() {
     }
   }, [params.id, fetchSession]);
 
+  const [notes, setNotes] = useState('');
+  const [analysisStatus, setAnalysisStatus] = useState('');
+
+  const ANALYSIS_PROGRESS_MESSAGES = [
+    'Analyzing transcript...',
+    'Evaluating content coverage...',
+    'Assessing facilitation quality...',
+    'Checking protocol safety...',
+    'Detecting risk indicators...',
+    'Finalizing analysis...'
+  ];
+
   const runAnalysis = async () => {
     setAnalyzing(true);
+    setAnalysisStatus(ANALYSIS_PROGRESS_MESSAGES[0]);
+
+    let progressIndex = 0;
+    const progressInterval = setInterval(() => {
+      progressIndex++;
+      if (progressIndex < ANALYSIS_PROGRESS_MESSAGES.length) {
+        setAnalysisStatus(ANALYSIS_PROGRESS_MESSAGES[progressIndex]);
+      }
+    }, 2000);
+
     try {
       const response = await fetch(`/api/meetings/${params.id}`, {
         method: 'POST'
@@ -87,7 +109,6 @@ export default function SessionDetailPage() {
       const data = await response.json();
 
       if (data.analysis) {
-        // Update session with new analysis
         setSession(prev =>
           prev
             ? {
@@ -101,13 +122,24 @@ export default function SessionDetailPage() {
       console.error('Analysis failed:', error);
       alert('Analysis failed. Please check your AI provider configuration.');
     } finally {
+      clearInterval(progressInterval);
       setAnalyzing(false);
+      setAnalysisStatus('');
     }
   };
 
-  const [notes, setNotes] = useState('');
+  const validateAnalysis = async (
+    analysisId: string,
+    action: 'validate' | 'reject' | 'override'
+  ) => {
+    const statusMap = {
+      validate: 'VALIDATED',
+      reject: 'REJECTED',
+      override: 'VALIDATED'
+    } as const;
 
-  const validateAnalysis = async (analysisId: string, isApproved: boolean) => {
+    const overrideRisk = action === 'override';
+
     try {
       const response = await fetch(`/api/meetings/${params.id}/validate`, {
         method: 'POST',
@@ -116,14 +148,14 @@ export default function SessionDetailPage() {
         },
         body: JSON.stringify({
           analysisId,
-          supervisorStatus: isApproved ? 'VALIDATED' : 'REJECTED',
-          supervisorNotes: notes
+          supervisorStatus: statusMap[action],
+          supervisorNotes: notes,
+          overrideRisk
         })
       });
       const data = await response.json();
 
       if (data.analysis) {
-        // Fetch updated session to get the latest data
         await fetchSession();
       }
     } catch (error) {
@@ -327,17 +359,29 @@ export default function SessionDetailPage() {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold">AI Analysis Results</h2>
-              <Button
-                onClick={runAnalysis}
-                disabled={analyzing}
-                className="min-w-32 rounded-none"
-              >
-                {analyzing
-                  ? 'Analyzing...'
-                  : latestAnalysis
-                    ? 'Re-analyze'
-                    : 'Analyze Session'}
-              </Button>
+              <div className="flex flex-col items-end gap-1">
+                {analyzing && analysisStatus && (
+                  <span className="text-xs text-amber-600 animate-pulse">
+                    {analysisStatus}
+                  </span>
+                )}
+                <Button
+                  onClick={runAnalysis}
+                  disabled={analyzing}
+                  className="min-w-32 rounded-none"
+                >
+                  {analyzing ? (
+                    <span className="flex items-center gap-2">
+                      <span className="animate-spin">⏳</span>
+                      Analyzing...
+                    </span>
+                  ) : latestAnalysis ? (
+                    'Re-analyze'
+                  ) : (
+                    'Analyze Session'
+                  )}
+                </Button>
+              </div>
             </div>
 
             {latestAnalysis ? (
@@ -401,20 +445,36 @@ export default function SessionDetailPage() {
                 </div>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Button
-                    onClick={() => validateAnalysis(latestAnalysis.id, true)}
+                    onClick={() =>
+                      validateAnalysis(latestAnalysis.id, 'validate')
+                    }
                     className="flex-1 bg-green-600 hover:bg-green-700"
                     size="lg"
                   >
                     ✅ Validate Analysis
                   </Button>
                   <Button
-                    onClick={() => validateAnalysis(latestAnalysis.id, false)}
+                    onClick={() =>
+                      validateAnalysis(latestAnalysis.id, 'reject')
+                    }
                     variant="outline"
                     className="flex-1 border-red-300 text-red-600 hover:bg-red-50"
                     size="lg"
                   >
                     ✗ Reject Analysis
                   </Button>
+                  {riskStatus === 'RISK' && (
+                    <Button
+                      onClick={() =>
+                        validateAnalysis(latestAnalysis.id, 'override')
+                      }
+                      variant="outline"
+                      className="flex-1 border-amber-300 text-amber-700 hover:bg-amber-50"
+                      size="lg"
+                    >
+                      ⚠️ Mark as Safe (Override)
+                    </Button>
+                  )}
                 </div>
                 {latestAnalysis.supervisorNotes && (
                   <div className="mt-4 p-4 bg-gray-50 rounded-lg">
