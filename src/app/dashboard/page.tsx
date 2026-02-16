@@ -43,8 +43,16 @@ import {
 } from '@/components/dashboard/charts';
 import useSWR from 'swr';
 import { Toggle } from '@/components/ui/toggle';
-import { List, TrendingUp, PieChart } from 'lucide-react';
+import { List, TrendingUp, PieChart, Plus, User, Calendar } from 'lucide-react';
 import { useLocalStorage } from '@/hooks/use-local-storage';
+import { AddFellowDialog } from '@/components/dashboard/add-fellow-dialog';
+import { AddSessionDialog } from '@/components/dashboard/add-session-dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
 
 type Analysis = Pick<
   MeetingAnalysis,
@@ -90,6 +98,10 @@ export default function DashboardPage() {
   const [sortBy, setSortBy] = useState('date');
   const [sortOrder, setSortOrder] = useState('desc');
 
+  // Dialog state
+  const [showAddFellowDialog, setShowAddFellowDialog] = useState(false);
+  const [showAddSessionDialog, setShowAddSessionDialog] = useState(false);
+
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
@@ -109,7 +121,8 @@ export default function DashboardPage() {
   const {
     data: swrData,
     error: swrError,
-    isLoading: swrLoading
+    isLoading: swrLoading,
+    mutate
   } = useSWR('/api/meetings', fetcher, {
     refreshInterval: 30000, // Poll every 30 seconds
     revalidateOnFocus: true,
@@ -610,6 +623,28 @@ export default function DashboardPage() {
                   Therapy sessions conducted by your assigned Fellows
                 </CardDescription>
               </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button className="rounded-none">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem
+                    onClick={() => setShowAddFellowDialog(true)}
+                  >
+                    <User className="h-4 w-4 mr-2" />
+                    Add Fellow
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setShowAddSessionDialog(true)}
+                  >
+                    <Calendar className="h-4 w-4 mr-2" />
+                    Add Session
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
             <div className="mt-4">
               {loading ? (
@@ -714,6 +749,17 @@ export default function DashboardPage() {
             )}
           </CardContent>
         </Card>
+
+        <AddFellowDialog
+          open={showAddFellowDialog}
+          onOpenChange={setShowAddFellowDialog}
+          onSuccess={() => mutate('/api/fellows')}
+        />
+        <AddSessionDialog
+          open={showAddSessionDialog}
+          onOpenChange={setShowAddSessionDialog}
+          onSuccess={() => mutate('/api/meetings')}
+        />
       </main>
     </div>
   );

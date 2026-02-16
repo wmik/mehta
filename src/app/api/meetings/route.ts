@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
+import { analyzeSession } from '@/lib/ai-service';
 
 // Sample therapy session transcripts (simplified to avoid syntax issues)
 const SAMPLE_TRANSCRIPTS = [
@@ -199,8 +200,8 @@ export async function GET() {
   }
 }
 
-// POST handler to create sample sessions
-export async function POST() {
+// POST handler to create sessions
+export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.id) {
@@ -208,13 +209,147 @@ export async function POST() {
   }
 
   try {
-    // Get supervisor and fellows
+    const body = await request.json();
+    const { action, groupId, date, fellowId, transcript } = body;
+
+    // Check if creating sample sessions (backward compatibility)
+    if (action === 'sample') {
+      return createSampleSessions(session.user.id);
+    }
+
+    // Create a real session
+    if (!groupId || !date || !fellowId) {
+      return NextResponse.json(
+        { error: 'groupId, date, and fellowId are required' },
+        { status: 400 }
+      );
+    }
+
+    // Verify the fellow belongs to this supervisor
+    const fellow = await prisma.fellow.findFirst({
+      where: {
+        id: fellowId,
+        supervisorId: session.user.id,
+        deletedAt: null
+      }
+    });
+
+    if (!fellow) {
+      return NextResponse.json(
+        { error: 'Fellow not found or does not belong to you' },
+        { status: 404 }
+      );
+    }
+
+    // Create the session
+    const status = transcript ? 'PROCESSING' : 'PENDING';
+
+    const newSession = await prisma.meeting.create({
+      data: {
+        groupId,
+        date: new Date(date),
+        transcript: transcript || '',
+        status,
+        fellowId,
+        supervisorId: session.user.id
+      },
+      include: {
+        fellow: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        },
+        analyses: {
+          select: {
+            id: true,
+            riskDetection: true,
+            supervisorStatus: true,
+            contentCoverage: true,
+            facilitationQuality: true,
+            protocolSafety: true,
+            createdAt: true
+          }
+        }
+      }
+    });
+
+    // If transcript provided, trigger AI analysis
+    if (transcript) {
+      try {
+        const analysis = await analyzeSession(transcript);
+
+        await prisma.meetingAnalysis.create({
+          data: {
+            meetingId: newSession.id,
+            summary: analysis.summary,
+            contentCoverage: analysis.contentCoverage,
+            facilitationQuality: analysis.facilitationQuality,
+            protocolSafety: analysis.protocolSafety,
+            riskDetection: analysis.riskDetection
+          }
+        });
+
+        // Update status based on risk detection
+        const riskStatus = (analysis.riskDetection as { status?: string })
+          ?.status;
+        const finalStatus =
+          riskStatus === 'RISK' ? 'FLAGGED_FOR_REVIEW' : 'PROCESSED';
+
+        await prisma.meeting.update({
+          where: { id: newSession.id },
+          data: { status: finalStatus }
+        });
+
+        newSession.status = finalStatus;
+      } catch (analysisError) {
+        console.error('AI Analysis failed:', analysisError);
+        await prisma.meeting.update({
+          where: { id: newSession.id },
+          data: { status: 'PENDING' }
+        });
+        newSession.status = 'PENDING';
+      }
+    }
+
+    return NextResponse.json({
+      message: 'Session created successfully',
+      session: {
+        id: newSession.id,
+        groupId: newSession.groupId,
+        date: newSession.date,
+        status: newSession.status,
+        transcript: newSession.transcript,
+        fellow: newSession.fellow,
+        analyses: newSession.analyses.map(a => ({
+          id: a.id,
+          riskDetection: a.riskDetection,
+          supervisorStatus: a.supervisorStatus,
+          contentCoverage: a.contentCoverage,
+          facilitationQuality: a.facilitationQuality,
+          protocolSafety: a.protocolSafety,
+          createdAt: a.createdAt
+        }))
+      }
+    });
+  } catch (error) {
+    console.error('Session creation error:', error);
+    return NextResponse.json(
+      { error: 'Failed to create session: ' + (error as Error).message },
+      { status: 500 }
+    );
+  }
+}
+
+async function createSampleSessions(supervisorId: string) {
+  try {
     const supervisor = await prisma.user.findUnique({
-      where: { email: session?.user?.email }
+      where: { id: supervisorId }
     });
 
     const fellows = await prisma.fellow.findMany({
-      where: { supervisorId: supervisor?.id }
+      where: { supervisorId }
     });
 
     if (!supervisor || fellows.length === 0) {
@@ -224,7 +359,6 @@ export async function POST() {
       );
     }
 
-    // Create sample sessions
     const sessions = [];
     const now = new Date();
 
@@ -232,12 +366,11 @@ export async function POST() {
       const fellow = fellows[i % fellows.length];
       const sampleData = SAMPLE_TRANSCRIPTS[i % SAMPLE_TRANSCRIPTS.length];
 
-      // Create session date from last 10 days
       const sessionDate = new Date(now);
       sessionDate.setDate(now.getDate() - (9 - i));
-      sessionDate.setHours(14 + Math.floor(Math.random() * 4), 0, 0, 0); // Random time 2-6 PM
+      sessionDate.setHours(14 + Math.floor(Math.random() * 4), 0, 0, 0);
 
-      const session = await prisma.meeting.create({
+      const meeting = await prisma.meeting.create({
         data: {
           groupId: `${sampleData.groupId}-${i + 1}`,
           date: sessionDate,
@@ -274,7 +407,7 @@ export async function POST() {
         }
       });
 
-      sessions.push(session);
+      sessions.push(meeting);
     }
 
     return NextResponse.json({
@@ -297,7 +430,7 @@ export async function POST() {
       }))
     });
   } catch (error) {
-    console.error('Session creation error:', error);
+    console.error('Sample sessions creation error:', error);
     return NextResponse.json(
       { error: 'Failed to create sample sessions' },
       { status: 500 }
