@@ -15,26 +15,28 @@ Now let me create the chart wrapper component that provides shadcn-style theming
 **Tool: write**
 
 **Input:**
+
 ```json
 {
   "content": "'use client';\n\nimport * as React from 'react';\nimport { cn } from '@/lib/utils';\n\ninterface ChartConfig {\n  [key: string]: {\n    label: string;\n    color: string;\n  };\n}\n\ninterface ChartContainerProps extends React.HTMLAttributes<HTMLDivElement> {\n  config: ChartConfig;\n}\n\nconst ChartContext = React.createContext<ChartConfig>({});\n\nexport function ChartContainer({\n  config,\n  children,\n  className,\n  ...props\n}: ChartContainerProps) {\n  return (\n    <ChartContext.Provider value={config}>\n      <div className={cn('', className)} {...props}>\n        {children}\n      </div>\n    </ChartContext.Provider>\n  );\n}\n\nexport function useChart() {\n  return React.useContext(ChartContext);\n}\n\nexport function ChartTooltip({\n  active,\n  payload,\n  label,\n  config\n}: {\n  active?: boolean;\n  payload?: Array<{ name: string; value: number; color: string; payload: Record<string, unknown> }>;\n  label?: string;\n  config: ChartConfig;\n}) {\n  if (!active || !payload) return null;\n\n  return (\n    <div className=\"rounded-lg border bg-background p-3 shadow-md\">\n      {label && (\n        <p className=\"font-medium mb-2\">{label}</p>\n      )}\n      <div className=\"space-y-1\">\n        {payload.map((entry, index) => (\n          <div key={index} className=\"flex items-center gap-2\">\n            <div\n              className=\"h-2 w-2 rounded-full\"\n              style={{ backgroundColor: entry.color }}\n            />\n            <span className=\"text-sm text-muted-foreground\">\n              {config[entry.name]?.label || entry.name}:\n            </span>\n            <span className=\"text-sm font-medium\">\n              {typeof entry.value === 'number' ? entry.value.toFixed(1) : entry.value}\n            </span>\n          </div>\n        ))}\n      </div>\n    </div>\n  );\n}\n\nexport function ChartLegend({\n  payload,\n  config\n}: {\n  payload?: Array<{ value: string; color: string; }>;\n  config: ChartConfig;\n}) {\n  if (!payload) return null;\n\n  return (\n    <div className=\"flex flex-wrap gap-4 justify-center mt-4\">\n      {payload.map((entry, index) => (\n        <div key={index} className=\"flex items-center gap-2\">\n          <div\n            className=\"h-3 w-3 rounded-full\"\n            style={{ backgroundColor: entry.color }}\n          />\n          <span className=\"text-sm text-muted-foreground\">\n            {config[entry.value]?.label || entry.value}\n          </span>\n        </div>\n      ))}\n    </div>\n  );\n}\n",
-  "filePath": "/Users/six/code/mehta/src/components/ui/chart.tsx"
+  "filePath": "./src/components/ui/chart.tsx"
 }
 ```
 
 **Output:**
+
 ```
 Wrote file successfully.
 
 LSP errors detected in other files:
-<diagnostics file="/Users/six/code/mehta/src/lib/auth.ts">
-ERROR [9:3] Type 'import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").Adapter' is not assignable to type 'import("/Users/six/code/mehta/node_modules/next-auth/adapters").Adapter'.
+<diagnostics file="./src/lib/auth.ts">
+ERROR [9:3] Type 'import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").Adapter' is not assignable to type 'import("./node_modules/next-auth/adapters").Adapter'.
   Types of property 'getUser' are incompatible.
-    Type '((id: string) => import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>) | undefined' is not assignable to type '((id: string) => import("/Users/six/code/mehta/node_modules/next-auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/next-auth/adapters").AdapterUser | null>) | undefined'.
-      Type '(id: string) => import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>' is not assignable to type '(id: string) => import("/Users/six/code/mehta/node_modules/next-auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/next-auth/adapters").AdapterUser | null>'.
-        Type 'import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>' is not assignable to type 'import("/Users/six/code/mehta/node_modules/next-auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/next-auth/adapters").AdapterUser | null>'.
+    Type '((id: string) => import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>) | undefined' is not assignable to type '((id: string) => import("./node_modules/next-auth/core/types").Awaitable<import("./node_modules/next-auth/adapters").AdapterUser | null>) | undefined'.
+      Type '(id: string) => import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>' is not assignable to type '(id: string) => import("./node_modules/next-auth/core/types").Awaitable<import("./node_modules/next-auth/adapters").AdapterUser | null>'.
+        Type 'import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>' is not assignable to type 'import("./node_modules/next-auth/core/types").Awaitable<import("./node_modules/next-auth/adapters").AdapterUser | null>'.
           Type 'AdapterUser' is not assignable to type 'Awaitable<AdapterUser | null>'.
-            Property 'role' is missing in type 'import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser' but required in type 'import("/Users/six/code/mehta/node_modules/next-auth/adapters").AdapterUser'.
+            Property 'role' is missing in type 'import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser' but required in type 'import("./node_modules/next-auth/adapters").AdapterUser'.
 ERROR [9:12] Excessive complexity comparing types 'PrismaClient<PrismaClientOptions, never, DefaultArgs>' and 'PrismaClient<PrismaClientOptions, never, DefaultArgs> | DynamicClientExtensionThis<TypeMap<InternalArgs & InternalArgs<{ [x: string]: { [x: string]: unknown; }; }, { ...; }, { ...; }, { ...; }>, {}>, TypeMapCb<...>, InternalArgs<...>>'.
 ERROR [9:26] Argument of type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>' is not assignable to parameter of type 'PrismaClient<PrismaClientOptions, never, DefaultArgs> | DynamicClientExtensionThis<TypeMap<InternalArgs & InternalArgs<{ [x: string]: { [x: string]: unknown; }; }, { ...; }, { ...; }, { ...; }>, {}>, TypeMapCb<...>, InternalArgs<...>>'.
   Excessive complexity comparing types 'PrismaClient<PrismaClientOptions, never, DefaultArgs>' and 'PrismaClient<PrismaClientOptions, never, DefaultArgs> | DynamicClientExtensionThis<TypeMap<InternalArgs & InternalArgs<{ [x: string]: { [x: string]: unknown; }; }, { ...; }, { ...; }, { ...; }>, {}>, TypeMapCb<...>, InternalArgs<...>>'.
@@ -54,26 +56,28 @@ Now let me create all 5 chart components:
 **Tool: write**
 
 **Input:**
+
 ```json
 {
   "content": "'use client';\n\nimport {\n  BarChart,\n  Bar,\n  XAxis,\n  YAxis,\n  CartesianGrid,\n  Tooltip,\n  Legend,\n  ResponsiveContainer\n} from 'recharts';\n\ninterface FellowPerformance {\n  name: string;\n  totalSessions: number;\n  avgContentCoverage: number;\n  avgFacilitationQuality: number;\n  avgProtocolSafety: number;\n  riskCount: number;\n}\n\ninterface PerformanceBarChartProps {\n  data: FellowPerformance[];\n}\n\nconst CHART_COLORS = {\n  contentCoverage: 'hsl(var(--chart-1))',\n  facilitationQuality: 'hsl(var(--chart-2))',\n  protocolSafety: 'hsl(var(--chart-3))'\n};\n\nexport function PerformanceBarChart({ data }: PerformanceBarChartProps) {\n  if (!data || data.length === 0) {\n    return (\n      <div className=\"flex items-center justify-center h-64 text-muted-foreground\">\n        No performance data available\n      </div>\n    );\n  }\n\n  const chartData = data.map(f => ({\n    name: f.name.length > 12 ? f.name.slice(0, 12) + '...' : f.name,\n    'Content Coverage': Number(f.avgContentCoverage.toFixed(1)),\n    'Facilitation Quality': Number(f.avgFacilitationQuality.toFixed(1)),\n    'Protocol Safety': Number(f.avgProtocolSafety.toFixed(1))\n  }));\n\n  return (\n    <ResponsiveContainer width=\"100%\" height={300}>\n      <BarChart\n        data={chartData}\n        layout=\"vertical\"\n        margin={{ top: 5, right: 30, left: 80, bottom: 5 }}\n      >\n        <CartesianGrid strokeDasharray=\"3 3\" className=\"stroke-muted\" />\n        <XAxis\n          type=\"number\"\n          domain={[0, 3]}\n          tick={{ fontSize: 12 }}\n          className=\"fill-muted-foreground\"\n        />\n        <YAxis\n          type=\"category\"\n          dataKey=\"name\"\n          width={80}\n          tick={{ fontSize: 12 }}\n          className=\"fill-muted-foreground\"\n        />\n        <Tooltip\n          contentStyle={{\n            backgroundColor: 'hsl(var(--card))',\n            border: '1px solid hsl(var(--border))',\n            borderRadius: '8px'\n          }}\n          labelStyle={{ color: 'hsl(var(--foreground))' }}\n        />\n        <Legend />\n        <Bar\n          dataKey=\"Content Coverage\"\n          fill={CHART_COLORS.contentCoverage}\n          radius={[0, 4, 4, 0]}\n        />\n        <Bar\n          dataKey=\"Facilitation Quality\"\n          fill={CHART_COLORS.facilitationQuality}\n          radius={[0, 4, 4, 0]}\n        />\n        <Bar\n          dataKey=\"Protocol Safety\"\n          fill={CHART_COLORS.protocolSafety}\n          radius={[0, 4, 4, 0]}\n        />\n      </BarChart>\n    </ResponsiveContainer>\n  );\n}\n",
-  "filePath": "/Users/six/code/mehta/src/components/dashboard/charts/performance-bar-chart.tsx"
+  "filePath": "./src/components/dashboard/charts/performance-bar-chart.tsx"
 }
 ```
 
 **Output:**
+
 ```
 Wrote file successfully.
 
 LSP errors detected in other files:
-<diagnostics file="/Users/six/code/mehta/src/lib/auth.ts">
-ERROR [9:3] Type 'import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").Adapter' is not assignable to type 'import("/Users/six/code/mehta/node_modules/next-auth/adapters").Adapter'.
+<diagnostics file="./src/lib/auth.ts">
+ERROR [9:3] Type 'import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").Adapter' is not assignable to type 'import("./node_modules/next-auth/adapters").Adapter'.
   Types of property 'getUser' are incompatible.
-    Type '((id: string) => import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>) | undefined' is not assignable to type '((id: string) => import("/Users/six/code/mehta/node_modules/next-auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/next-auth/adapters").AdapterUser | null>) | undefined'.
-      Type '(id: string) => import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>' is not assignable to type '(id: string) => import("/Users/six/code/mehta/node_modules/next-auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/next-auth/adapters").AdapterUser | null>'.
-        Type 'import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>' is not assignable to type 'import("/Users/six/code/mehta/node_modules/next-auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/next-auth/adapters").AdapterUser | null>'.
+    Type '((id: string) => import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>) | undefined' is not assignable to type '((id: string) => import("./node_modules/next-auth/core/types").Awaitable<import("./node_modules/next-auth/adapters").AdapterUser | null>) | undefined'.
+      Type '(id: string) => import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>' is not assignable to type '(id: string) => import("./node_modules/next-auth/core/types").Awaitable<import("./node_modules/next-auth/adapters").AdapterUser | null>'.
+        Type 'import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>' is not assignable to type 'import("./node_modules/next-auth/core/types").Awaitable<import("./node_modules/next-auth/adapters").AdapterUser | null>'.
           Type 'AdapterUser' is not assignable to type 'Awaitable<AdapterUser | null>'.
-            Property 'role' is missing in type 'import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser' but required in type 'import("/Users/six/code/mehta/node_modules/next-auth/adapters").AdapterUser'.
+            Property 'role' is missing in type 'import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser' but required in type 'import("./node_modules/next-auth/adapters").AdapterUser'.
 ERROR [9:26] Argument of type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>' is not assignable to parameter of type 'PrismaClient<PrismaClientOptions, never, DefaultArgs> | DynamicClientExtensionThis<TypeMap<InternalArgs & InternalArgs<{ [x: string]: { [x: string]: unknown; }; }, { ...; }, { ...; }, { ...; }>, {}>, TypeMapCb<...>, InternalArgs<...>>'.
   Type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>' is not assignable to type 'DynamicClientExtensionThis<TypeMap<InternalArgs & InternalArgs<{ [x: string]: { [x: string]: unknown; }; }, { [x: string]: { [x: string]: unknown; }; }, { [x: string]: { [x: string]: unknown; }; }, { [x: string]: unknown; }>, {}>, TypeMapCb<...>, InternalArgs<...>>'.
     Type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>' is not assignable to type '{ [x: string]: unknown; }'.
@@ -92,26 +96,28 @@ Now let me create the RiskTrendChart:
 **Tool: write**
 
 **Input:**
+
 ```json
 {
   "content": "'use client';\n\nimport {\n  AreaChart,\n  Area,\n  XAxis,\n  YAxis,\n  CartesianGrid,\n  Tooltip,\n  ResponsiveContainer\n} from 'recharts';\n\ninterface RiskTrendData {\n  date: string;\n  count: number;\n}\n\ninterface RiskTrendChartProps {\n  data: RiskTrendData[];\n}\n\nexport function RiskTrendChart({ data }: RiskTrendChartProps) {\n  if (!data || data.length === 0) {\n    return (\n      <div className=\"flex items-center justify-center h-64 text-muted-foreground\">\n        No risk data available in the last 30 days\n      </div>\n    );\n  }\n\n  const chartData = data.map(d => ({\n    date: new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),\n    Risks: d.count\n  }));\n\n  return (\n    <ResponsiveContainer width=\"100%\" height={250}>\n      <AreaChart\n        data={chartData}\n        margin={{ top: 10, right: 30, left: 0, bottom: 0 }}\n      >\n        <defs>\n          <linearGradient id=\"riskGradient\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\">\n            <stop offset=\"5%\" stopColor=\"hsl(var(--chart-4))\" stopOpacity={0.3} />\n            <stop offset=\"95%\" stopColor=\"hsl(var(--chart-4))\" stopOpacity={0} />\n          </linearGradient>\n        </defs>\n        <CartesianGrid strokeDasharray=\"3 3\" className=\"stroke-muted\" />\n        <XAxis\n          dataKey=\"date\"\n          tick={{ fontSize: 11 }}\n          className=\"fill-muted-foreground\"\n        />\n        <YAxis\n          tick={{ fontSize: 11 }}\n          className=\"fill-muted-foreground\"\n          allowDecimals={false}\n        />\n        <Tooltip\n          contentStyle={{\n            backgroundColor: 'hsl(var(--card))',\n            border: '1px solid hsl(var(--border))',\n            borderRadius: '8px'\n          }}\n          labelStyle={{ color: 'hsl(var(--foreground))' }}\n        />\n        <Area\n          type=\"monotone\"\n          dataKey=\"Risks\"\n          stroke=\"hsl(var(--chart-4))\"\n          fillOpacity={1}\n          fill=\"url(#riskGradient)\"\n          strokeWidth={2}\n        />\n      </AreaChart>\n    </ResponsiveContainer>\n  );\n}\n",
-  "filePath": "/Users/six/code/mehta/src/components/dashboard/charts/risk-trend-chart.tsx"
+  "filePath": "./src/components/dashboard/charts/risk-trend-chart.tsx"
 }
 ```
 
 **Output:**
+
 ```
 Wrote file successfully.
 
 LSP errors detected in other files:
-<diagnostics file="/Users/six/code/mehta/src/lib/auth.ts">
-ERROR [9:3] Type 'import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").Adapter' is not assignable to type 'import("/Users/six/code/mehta/node_modules/next-auth/adapters").Adapter'.
+<diagnostics file="./src/lib/auth.ts">
+ERROR [9:3] Type 'import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").Adapter' is not assignable to type 'import("./node_modules/next-auth/adapters").Adapter'.
   Types of property 'getUser' are incompatible.
-    Type '((id: string) => import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>) | undefined' is not assignable to type '((id: string) => import("/Users/six/code/mehta/node_modules/next-auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/next-auth/adapters").AdapterUser | null>) | undefined'.
-      Type '(id: string) => import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>' is not assignable to type '(id: string) => import("/Users/six/code/mehta/node_modules/next-auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/next-auth/adapters").AdapterUser | null>'.
-        Type 'import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>' is not assignable to type 'import("/Users/six/code/mehta/node_modules/next-auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/next-auth/adapters").AdapterUser | null>'.
+    Type '((id: string) => import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>) | undefined' is not assignable to type '((id: string) => import("./node_modules/next-auth/core/types").Awaitable<import("./node_modules/next-auth/adapters").AdapterUser | null>) | undefined'.
+      Type '(id: string) => import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>' is not assignable to type '(id: string) => import("./node_modules/next-auth/core/types").Awaitable<import("./node_modules/next-auth/adapters").AdapterUser | null>'.
+        Type 'import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>' is not assignable to type 'import("./node_modules/next-auth/core/types").Awaitable<import("./node_modules/next-auth/adapters").AdapterUser | null>'.
           Type 'AdapterUser' is not assignable to type 'Awaitable<AdapterUser | null>'.
-            Property 'role' is missing in type 'import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser' but required in type 'import("/Users/six/code/mehta/node_modules/next-auth/adapters").AdapterUser'.
+            Property 'role' is missing in type 'import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser' but required in type 'import("./node_modules/next-auth/adapters").AdapterUser'.
 ERROR [9:26] Argument of type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>' is not assignable to parameter of type 'PrismaClient<PrismaClientOptions, never, DefaultArgs> | DynamicClientExtensionThis<TypeMap<InternalArgs & InternalArgs<{ [x: string]: { [x: string]: unknown; }; }, { ...; }, { ...; }, { ...; }>, {}>, TypeMapCb<...>, InternalArgs<...>>'.
   Type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>' is not assignable to type 'DynamicClientExtensionThis<TypeMap<InternalArgs & InternalArgs<{ [x: string]: { [x: string]: unknown; }; }, { [x: string]: { [x: string]: unknown; }; }, { [x: string]: { [x: string]: unknown; }; }, { [x: string]: unknown; }>, {}>, TypeMapCb<...>, InternalArgs<...>>'.
     Type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>' is not assignable to type '{ [x: string]: unknown; }'.
@@ -130,26 +136,28 @@ Now let me create the SessionStatusPie chart:
 **Tool: write**
 
 **Input:**
+
 ```json
 {
   "content": "'use client';\n\nimport {\n  PieChart,\n  Pie,\n  Cell,\n  Tooltip,\n  Legend,\n  ResponsiveContainer\n} from 'recharts';\n\ninterface SessionStatusData {\n  name: string;\n  value: number;\n  color: string;\n}\n\ninterface SessionStatusPieProps {\n  data: {\n    PENDING: number;\n    PROCESSED: number;\n    SAFE: number;\n    FLAGGED_FOR_REVIEW: number;\n  };\n}\n\nconst STATUS_COLORS = {\n  PENDING: 'hsl(var(--chart-5))',\n  PROCESSED: 'hsl(var(--chart-2))',\n  SAFE: 'hsl(var(--chart-1))',\n  FLAGGED_FOR_REVIEW: 'hsl(var(--chart-4))'\n};\n\nconst STATUS_LABELS: Record<string, string> = {\n  PENDING: 'Pending',\n  PROCESSED: 'Processed',\n  SAFE: 'Safe',\n  FLAGGED_FOR_REVIEW: 'Flagged'\n};\n\nexport function SessionStatusPie({ data }: SessionStatusPieProps) {\n  if (!data) {\n    return (\n      <div className=\"flex items-center justify-center h-64 text-muted-foreground\">\n        No session data available\n      </div>\n    );\n  }\n\n  const chartData: SessionStatusData[] = [\n    { name: 'Pending', value: data.PENDING || 0, color: STATUS_COLORS.PENDING },\n    { name: 'Processed', value: data.PROCESSED || 0, color: STATUS_COLORS.PROCESSED },\n    { name: 'Safe', value: data.SAFE || 0, color: STATUS_COLORS.SAFE },\n    { name: 'Flagged', value: data.FLAGGED_FOR_REVIEW || 0, color: STATUS_COLORS.FLAGGED_FOR_REVIEW }\n  ].filter(d => d.value > 0);\n\n  if (chartData.length === 0) {\n    return (\n      <div className=\"flex items-center justify-center h-64 text-muted-foreground\">\n        No sessions found\n      </div>\n    );\n  }\n\n  return (\n    <ResponsiveContainer width=\"100%\" height={280}>\n      <PieChart>\n        <Pie\n          data={chartData}\n          cx=\"50%\"\n          cy=\"50%\"\n          innerRadius={60}\n          outerRadius={90}\n          paddingAngle={2}\n          dataKey=\"value\"\n        >\n          {chartData.map((entry, index) => (\n            <Cell key={`cell-${index}`} fill={entry.color} />\n          ))}\n        </Pie>\n        <Tooltip\n          contentStyle={{\n            backgroundColor: 'hsl(var(--card))',\n            border: '1px solid hsl(var(--border))',\n            borderRadius: '8px'\n          }}\n          formatter={(value: number) => [`${value} sessions`, '']}\n        />\n        <Legend\n          verticalAlign=\"bottom\"\n          height={36}\n          formatter={(value) => (\n            <span className=\"text-sm text-muted-foreground\">{value}</span>\n          )}\n        />\n      </PieChart>\n    </ResponsiveContainer>\n  );\n}\n",
-  "filePath": "/Users/six/code/mehta/src/components/dashboard/charts/session-status-pie.tsx"
+  "filePath": "./src/components/dashboard/charts/session-status-pie.tsx"
 }
 ```
 
 **Output:**
+
 ```
 Wrote file successfully.
 
 LSP errors detected in other files:
-<diagnostics file="/Users/six/code/mehta/src/lib/auth.ts">
-ERROR [9:3] Type 'import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").Adapter' is not assignable to type 'import("/Users/six/code/mehta/node_modules/next-auth/adapters").Adapter'.
+<diagnostics file="./src/lib/auth.ts">
+ERROR [9:3] Type 'import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").Adapter' is not assignable to type 'import("./node_modules/next-auth/adapters").Adapter'.
   Types of property 'getUser' are incompatible.
-    Type '((id: string) => import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>) | undefined' is not assignable to type '((id: string) => import("/Users/six/code/mehta/node_modules/next-auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/next-auth/adapters").AdapterUser | null>) | undefined'.
-      Type '(id: string) => import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>' is not assignable to type '(id: string) => import("/Users/six/code/mehta/node_modules/next-auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/next-auth/adapters").AdapterUser | null>'.
-        Type 'import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>' is not assignable to type 'import("/Users/six/code/mehta/node_modules/next-auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/next-auth/adapters").AdapterUser | null>'.
+    Type '((id: string) => import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>) | undefined' is not assignable to type '((id: string) => import("./node_modules/next-auth/core/types").Awaitable<import("./node_modules/next-auth/adapters").AdapterUser | null>) | undefined'.
+      Type '(id: string) => import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>' is not assignable to type '(id: string) => import("./node_modules/next-auth/core/types").Awaitable<import("./node_modules/next-auth/adapters").AdapterUser | null>'.
+        Type 'import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>' is not assignable to type 'import("./node_modules/next-auth/core/types").Awaitable<import("./node_modules/next-auth/adapters").AdapterUser | null>'.
           Type 'AdapterUser' is not assignable to type 'Awaitable<AdapterUser | null>'.
-            Property 'role' is missing in type 'import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser' but required in type 'import("/Users/six/code/mehta/node_modules/next-auth/adapters").AdapterUser'.
+            Property 'role' is missing in type 'import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser' but required in type 'import("./node_modules/next-auth/adapters").AdapterUser'.
 ERROR [9:26] Argument of type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>' is not assignable to parameter of type 'PrismaClient<PrismaClientOptions, never, DefaultArgs> | DynamicClientExtensionThis<TypeMap<InternalArgs & InternalArgs<{ [x: string]: { [x: string]: unknown; }; }, { ...; }, { ...; }, { ...; }>, {}>, TypeMapCb<...>, InternalArgs<...>>'.
   Type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>' is not assignable to type 'DynamicClientExtensionThis<TypeMap<InternalArgs & InternalArgs<{ [x: string]: { [x: string]: unknown; }; }, { [x: string]: { [x: string]: unknown; }; }, { [x: string]: { [x: string]: unknown; }; }, { [x: string]: unknown; }>, {}>, TypeMapCb<...>, InternalArgs<...>>'.
     Type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>' is not assignable to type '{ [x: string]: unknown; }'.
@@ -157,7 +165,7 @@ ERROR [9:26] Argument of type 'PrismaClient<PrismaClientOptions, never, DefaultA
 </diagnostics>
 
 LSP errors detected in this file, please fix:
-<diagnostics file="/Users/six/code/mehta/src/components/dashboard/charts/session-status-pie.tsx">
+<diagnostics file="./src/components/dashboard/charts/session-status-pie.tsx">
 ERROR [95:11] Type '(value: number) => [string, ""]' is not assignable to type 'Formatter<number, ""> & ((value: number, name: "", item: Payload<number, "">, index: number, payload: Payload<number, "">[]) => ReactNode | [...])'.
   Type '(value: number) => [string, ""]' is not assignable to type 'Formatter<number, "">'.
     Types of parameters 'value' and 'value' are incompatible.
@@ -177,15 +185,17 @@ There's a type error in the Tooltip formatter. Let me fix that and continue with
 **Tool: edit**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/six/code/mehta/src/components/dashboard/charts/session-status-pie.tsx",
+  "filePath": "./src/components/dashboard/charts/session-status-pie.tsx",
   "newString": "        <Tooltip\n          contentStyle={{\n            backgroundColor: 'hsl(var(--card))',\n            border: '1px solid hsl(var(--border))',\n            borderRadius: '8px'\n          }}\n          formatter={(value) => [`${value} sessions`, '']}\n        />",
   "oldString": "        <Tooltip\n          contentStyle={{\n            backgroundColor: 'hsl(var(--card))',\n            border: '1px solid hsl(var(--border))',\n            borderRadius: '8px'\n          }}\n          formatter={(value: number) => [`${value} sessions`, '']}\n        />"
 }
 ```
 
 **Output:**
+
 ```
 Edit applied successfully.
 ```
@@ -201,26 +211,28 @@ Now let me create the WeeklyVolumeChart:
 **Tool: write**
 
 **Input:**
+
 ```json
 {
   "content": "'use client';\n\nimport {\n  BarChart,\n  Bar,\n  XAxis,\n  YAxis,\n  CartesianGrid,\n  Tooltip,\n  ResponsiveContainer\n} from 'recharts';\n\ninterface WeeklyVolumeData {\n  week: string;\n  sessions: number;\n  analyzed: number;\n}\n\ninterface WeeklyVolumeChartProps {\n  data: WeeklyVolumeData[];\n}\n\nexport function WeeklyVolumeChart({ data }: WeeklyVolumeChartProps) {\n  if (!data || data.length === 0) {\n    return (\n      <div className=\"flex items-center justify-center h-64 text-muted-foreground\">\n        No weekly data available\n      </div>\n    );\n  }\n\n  return (\n    <ResponsiveContainer width=\"100%\" height={250}>\n      <BarChart\n        data={data}\n        margin={{ top: 10, right: 30, left: 0, bottom: 0 }}\n      >\n        <CartesianGrid strokeDasharray=\"3 3\" className=\"stroke-muted\" />\n        <XAxis\n          dataKey=\"week\"\n          tick={{ fontSize: 11 }}\n          className=\"fill-muted-foreground\"\n        />\n        <YAxis\n          tick={{ fontSize: 11 }}\n          className=\"fill-muted-foreground\"\n          allowDecimals={false}\n        />\n        <Tooltip\n          contentStyle={{\n            backgroundColor: 'hsl(var(--card))',\n            border: '1px solid hsl(var(--border))',\n            borderRadius: '8px'\n          }}\n          labelStyle={{ color: 'hsl(var(--foreground))' }}\n        />\n        <Bar\n          dataKey=\"sessions\"\n          fill=\"hsl(var(--chart-5))\"\n          radius={[4, 4, 0, 0]}\n          name=\"Total Sessions\"\n        />\n        <Bar\n          dataKey=\"analyzed\"\n          fill=\"hsl(var(--chart-1))\"\n          radius={[4, 4, 0, 0]}\n          name=\"Analyzed\"\n        />\n      </BarChart>\n    </ResponsiveContainer>\n  );\n}\n",
-  "filePath": "/Users/six/code/mehta/src/components/dashboard/charts/weekly-volume-chart.tsx"
+  "filePath": "./src/components/dashboard/charts/weekly-volume-chart.tsx"
 }
 ```
 
 **Output:**
+
 ```
 Wrote file successfully.
 
 LSP errors detected in other files:
-<diagnostics file="/Users/six/code/mehta/src/lib/auth.ts">
-ERROR [9:3] Type 'import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").Adapter' is not assignable to type 'import("/Users/six/code/mehta/node_modules/next-auth/adapters").Adapter'.
+<diagnostics file="./src/lib/auth.ts">
+ERROR [9:3] Type 'import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").Adapter' is not assignable to type 'import("./node_modules/next-auth/adapters").Adapter'.
   Types of property 'getUser' are incompatible.
-    Type '((id: string) => import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>) | undefined' is not assignable to type '((id: string) => import("/Users/six/code/mehta/node_modules/next-auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/next-auth/adapters").AdapterUser | null>) | undefined'.
-      Type '(id: string) => import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>' is not assignable to type '(id: string) => import("/Users/six/code/mehta/node_modules/next-auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/next-auth/adapters").AdapterUser | null>'.
-        Type 'import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>' is not assignable to type 'import("/Users/six/code/mehta/node_modules/next-auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/next-auth/adapters").AdapterUser | null>'.
+    Type '((id: string) => import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>) | undefined' is not assignable to type '((id: string) => import("./node_modules/next-auth/core/types").Awaitable<import("./node_modules/next-auth/adapters").AdapterUser | null>) | undefined'.
+      Type '(id: string) => import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>' is not assignable to type '(id: string) => import("./node_modules/next-auth/core/types").Awaitable<import("./node_modules/next-auth/adapters").AdapterUser | null>'.
+        Type 'import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>' is not assignable to type 'import("./node_modules/next-auth/core/types").Awaitable<import("./node_modules/next-auth/adapters").AdapterUser | null>'.
           Type 'AdapterUser' is not assignable to type 'Awaitable<AdapterUser | null>'.
-            Property 'role' is missing in type 'import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser' but required in type 'import("/Users/six/code/mehta/node_modules/next-auth/adapters").AdapterUser'.
+            Property 'role' is missing in type 'import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser' but required in type 'import("./node_modules/next-auth/adapters").AdapterUser'.
 ERROR [9:26] Argument of type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>' is not assignable to parameter of type 'PrismaClient<PrismaClientOptions, never, DefaultArgs> | DynamicClientExtensionThis<TypeMap<InternalArgs & InternalArgs<{ [x: string]: { [x: string]: unknown; }; }, { ...; }, { ...; }, { ...; }>, {}>, TypeMapCb<...>, InternalArgs<...>>'.
   Type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>' is not assignable to type 'DynamicClientExtensionThis<TypeMap<InternalArgs & InternalArgs<{ [x: string]: { [x: string]: unknown; }; }, { [x: string]: { [x: string]: unknown; }; }, { [x: string]: { [x: string]: unknown; }; }, { [x: string]: unknown; }>, {}>, TypeMapCb<...>, InternalArgs<...>>'.
     Type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>' is not assignable to type '{ [x: string]: unknown; }'.
@@ -239,26 +251,28 @@ Now let me create the RiskBreakdownChart:
 **Tool: write**
 
 **Input:**
+
 ```json
 {
   "content": "'use client';\n\nimport {\n  BarChart,\n  Bar,\n  XAxis,\n  YAxis,\n  CartesianGrid,\n  Tooltip,\n  ResponsiveContainer,\n  Cell\n} from 'recharts';\n\ninterface RiskCategory {\n  category: string;\n  count: number;\n}\n\ninterface RiskBreakdownChartProps {\n  data: RiskCategory[];\n}\n\nconst RISK_COLORS = [\n  'hsl(var(--chart-4))',\n  'hsl(var(--chart-3))',\n  'hsl(var(--chart-2))',\n  'hsl(var(--chart-1))',\n  'hsl(var(--chart-5))'\n];\n\nexport function RiskBreakdownChart({ data }: RiskBreakdownChartProps) {\n  if (!data || data.length === 0) {\n    return (\n      <div className=\"flex items-center justify-center h-64 text-muted-foreground\">\n        No risk categories detected\n      </div>\n    );\n  }\n\n  const chartData = data.map(d => ({\n    name: d.category.length > 20 ? d.category.slice(0, 20) + '...' : d.category,\n    fullName: d.category,\n    count: d.count\n  }));\n\n  return (\n    <ResponsiveContainer width=\"100%\" height={250}>\n      <BarChart\n        data={chartData}\n        layout=\"vertical\"\n        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}\n      >\n        <CartesianGrid strokeDasharray=\"3 3\" className=\"stroke-muted\" />\n        <XAxis\n          type=\"number\"\n          tick={{ fontSize: 11 }}\n          className=\"fill-muted-foreground\"\n          allowDecimals={false}\n        />\n        <YAxis\n          type=\"category\"\n          dataKey=\"name\"\n          width={100}\n          tick={{ fontSize: 11 }}\n          className=\"fill-muted-foreground\"\n        />\n        <Tooltip\n          contentStyle={{\n            backgroundColor: 'hsl(var(--card))',\n            border: '1px solid hsl(var(--border))',\n            borderRadius: '8px'\n          }}\n          labelStyle={{ color: 'hsl(var(--foreground))' }}\n          formatter={(value: number, name: string, props: { payload: { fullName: string } }) => [\n            `${value} ${value === 1 ? 'instance' : 'instances'}`,\n            props.payload.fullName\n          ]}\n        />\n        <Bar dataKey=\"count\" radius={[0, 4, 4, 0]} name=\"Count\">\n          {chartData.map((entry, index) => (\n            <Cell\n              key={`cell-${index}`}\n              fill={RISK_COLORS[index % RISK_COLORS.length]}\n            />\n          ))}\n        </Bar>\n      </BarChart>\n    </ResponsiveContainer>\n  );\n}\n",
-  "filePath": "/Users/six/code/mehta/src/components/dashboard/charts/risk-breakdown-chart.tsx"
+  "filePath": "./src/components/dashboard/charts/risk-breakdown-chart.tsx"
 }
 ```
 
 **Output:**
+
 ```
 Wrote file successfully.
 
 LSP errors detected in other files:
-<diagnostics file="/Users/six/code/mehta/src/lib/auth.ts">
-ERROR [9:3] Type 'import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").Adapter' is not assignable to type 'import("/Users/six/code/mehta/node_modules/next-auth/adapters").Adapter'.
+<diagnostics file="./src/lib/auth.ts">
+ERROR [9:3] Type 'import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").Adapter' is not assignable to type 'import("./node_modules/next-auth/adapters").Adapter'.
   Types of property 'getUser' are incompatible.
-    Type '((id: string) => import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>) | undefined' is not assignable to type '((id: string) => import("/Users/six/code/mehta/node_modules/next-auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/next-auth/adapters").AdapterUser | null>) | undefined'.
-      Type '(id: string) => import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>' is not assignable to type '(id: string) => import("/Users/six/code/mehta/node_modules/next-auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/next-auth/adapters").AdapterUser | null>'.
-        Type 'import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>' is not assignable to type 'import("/Users/six/code/mehta/node_modules/next-auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/next-auth/adapters").AdapterUser | null>'.
+    Type '((id: string) => import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>) | undefined' is not assignable to type '((id: string) => import("./node_modules/next-auth/core/types").Awaitable<import("./node_modules/next-auth/adapters").AdapterUser | null>) | undefined'.
+      Type '(id: string) => import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>' is not assignable to type '(id: string) => import("./node_modules/next-auth/core/types").Awaitable<import("./node_modules/next-auth/adapters").AdapterUser | null>'.
+        Type 'import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>' is not assignable to type 'import("./node_modules/next-auth/core/types").Awaitable<import("./node_modules/next-auth/adapters").AdapterUser | null>'.
           Type 'AdapterUser' is not assignable to type 'Awaitable<AdapterUser | null>'.
-            Property 'role' is missing in type 'import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser' but required in type 'import("/Users/six/code/mehta/node_modules/next-auth/adapters").AdapterUser'.
+            Property 'role' is missing in type 'import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser' but required in type 'import("./node_modules/next-auth/adapters").AdapterUser'.
 ERROR [9:26] Argument of type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>' is not assignable to parameter of type 'PrismaClient<PrismaClientOptions, never, DefaultArgs> | DynamicClientExtensionThis<TypeMap<InternalArgs & InternalArgs<{ [x: string]: { [x: string]: unknown; }; }, { ...; }, { ...; }, { ...; }>, {}>, TypeMapCb<...>, InternalArgs<...>>'.
   Type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>' is not assignable to type 'DynamicClientExtensionThis<TypeMap<InternalArgs & InternalArgs<{ [x: string]: { [x: string]: unknown; }; }, { [x: string]: { [x: string]: unknown; }; }, { [x: string]: { [x: string]: unknown; }; }, { [x: string]: unknown; }>, {}>, TypeMapCb<...>, InternalArgs<...>>'.
     Type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>' is not assignable to type '{ [x: string]: unknown; }'.
@@ -266,7 +280,7 @@ ERROR [9:26] Argument of type 'PrismaClient<PrismaClientOptions, never, DefaultA
 </diagnostics>
 
 LSP errors detected in this file, please fix:
-<diagnostics file="/Users/six/code/mehta/src/components/dashboard/charts/risk-breakdown-chart.tsx">
+<diagnostics file="./src/components/dashboard/charts/risk-breakdown-chart.tsx">
 ERROR [74:11] Type '(value: number, name: string, props: { payload: { fullName: string; }; }) => [string, string]' is not assignable to type 'Formatter<number, string> & ((value: number, name: string, item: Payload<number, string>, index: number, payload: Payload<number, string>[]) => ReactNode | [...])'.
   Type '(value: number, name: string, props: { payload: { fullName: string; }; }) => [string, string]' is not assignable to type 'Formatter<number, string>'.
     Types of parameters 'value' and 'value' are incompatible.
@@ -286,20 +300,22 @@ Let me fix the type error and then create the index file to export all charts:
 **Tool: edit**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/six/code/mehta/src/components/dashboard/charts/risk-breakdown-chart.tsx",
+  "filePath": "./src/components/dashboard/charts/risk-breakdown-chart.tsx",
   "newString": "        <Tooltip\n          contentStyle={{\n            backgroundColor: 'hsl(var(--card))',\n            border: '1px solid hsl(var(--border))',\n            borderRadius: '8px'\n          }}\n          labelStyle={{ color: 'hsl(var(--foreground))' }}\n          formatter={(value, name, props) => [\n            `${value} ${Number(value) === 1 ? 'instance' : 'instances'}`,\n            props.payload.fullName\n          ]}\n        />",
   "oldString": "        <Tooltip\n          contentStyle={{\n            backgroundColor: 'hsl(var(--card))',\n            border: '1px solid hsl(var(--border))',\n            borderRadius: '8px'\n          }}\n          labelStyle={{ color: 'hsl(var(--foreground))' }}\n          formatter={(value: number, name: string, props: { payload: { fullName: string } }) => [\n            `${value} ${value === 1 ? 'instance' : 'instances'}`,\n            props.payload.fullName\n          ]}\n        />"
 }
 ```
 
 **Output:**
+
 ```
 Edit applied successfully.
 
 LSP errors detected in this file, please fix:
-<diagnostics file="/Users/six/code/mehta/src/components/dashboard/charts/risk-breakdown-chart.tsx">
+<diagnostics file="./src/components/dashboard/charts/risk-breakdown-chart.tsx">
 ERROR [74:11] Type '(value: number, name: string, props: { payload: { fullName: string; }; }) => [string, string]' is not assignable to type 'Formatter<number, string> & ((value: number, name: string, item: Payload<number, string>, index: number, payload: Payload<number, string>[]) => ReactNode | [...])'.
   Type '(value: number, name: string, props: { payload: { fullName: string; }; }) => [string, string]' is not assignable to type 'Formatter<number, string>'.
     Types of parameters 'value' and 'value' are incompatible.
@@ -319,20 +335,22 @@ Let me just remove the type annotations entirely to fix the error:
 **Tool: edit**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/six/code/mehta/src/components/dashboard/charts/risk-breakdown-chart.tsx",
+  "filePath": "./src/components/dashboard/charts/risk-breakdown-chart.tsx",
   "newString": "        <Tooltip\n          contentStyle={{\n            backgroundColor: 'hsl(var(--card))',\n            border: '1px solid hsl(var(--border))',\n            borderRadius: '8px'\n          }}\n          labelStyle={{ color: 'hsl(var(--foreground))' }}\n        />",
   "oldString": "        <Tooltip\n          contentStyle={{\n            backgroundColor: 'hsl(var(--card))',\n            border: '1px solid hsl(var(--border))',\n            borderRadius: '8px'\n          }}\n          labelStyle={{ color: 'hsl(var(--foreground))' }}\n          formatter={(value, name, props) => [\n            `${value} ${Number(value) === 1 ? 'instance' : 'instances'}`,\n            props.payload.fullName\n          ]}\n        />"
 }
 ```
 
 **Output:**
+
 ```
 Edit applied successfully.
 
 LSP errors detected in this file, please fix:
-<diagnostics file="/Users/six/code/mehta/src/components/dashboard/charts/risk-breakdown-chart.tsx">
+<diagnostics file="./src/components/dashboard/charts/risk-breakdown-chart.tsx">
 ERROR [74:11] Type '(value: number, name: string, props: { payload: { fullName: string; }; }) => [string, string]' is not assignable to type 'Formatter<number, string> & ((value: number, name: string, item: Payload<number, string>, index: number, payload: Payload<number, string>[]) => ReactNode | [...])'.
   Type '(value: number, name: string, props: { payload: { fullName: string; }; }) => [string, string]' is not assignable to type 'Formatter<number, string>'.
     Types of parameters 'value' and 'value' are incompatible.
@@ -352,17 +370,19 @@ The error persists. Let me check what's going on. I should simplify the Tooltip.
 **Tool: read**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/six/code/mehta/src/components/dashboard/charts/risk-breakdown-chart.tsx",
+  "filePath": "./src/components/dashboard/charts/risk-breakdown-chart.tsx",
   "limit": 20,
   "offset": 60
 }
 ```
 
 **Output:**
+
 ```
-<path>/Users/six/code/mehta/src/components/dashboard/charts/risk-breakdown-chart.tsx</path>
+<path>./src/components/dashboard/charts/risk-breakdown-chart.tsx</path>
 <type>file</type>
 <content>60:         <YAxis
 61:           type="category"
@@ -400,26 +420,28 @@ The edit was applied. Now let me create the index file to export all charts, and
 **Tool: write**
 
 **Input:**
+
 ```json
 {
   "content": "export { PerformanceBarChart } from './performance-bar-chart';\nexport { RiskTrendChart } from './risk-trend-chart';\nexport { SessionStatusPie } from './session-status-pie';\nexport { WeeklyVolumeChart } from './weekly-volume-chart';\nexport { RiskBreakdownChart } from './risk-breakdown-chart';\n",
-  "filePath": "/Users/six/code/mehta/src/components/dashboard/charts/index.ts"
+  "filePath": "./src/components/dashboard/charts/index.ts"
 }
 ```
 
 **Output:**
+
 ```
 Wrote file successfully.
 
 LSP errors detected in other files:
-<diagnostics file="/Users/six/code/mehta/src/lib/auth.ts">
-ERROR [9:3] Type 'import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").Adapter' is not assignable to type 'import("/Users/six/code/mehta/node_modules/next-auth/adapters").Adapter'.
+<diagnostics file="./src/lib/auth.ts">
+ERROR [9:3] Type 'import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").Adapter' is not assignable to type 'import("./node_modules/next-auth/adapters").Adapter'.
   Types of property 'getUser' are incompatible.
-    Type '((id: string) => import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>) | undefined' is not assignable to type '((id: string) => import("/Users/six/code/mehta/node_modules/next-auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/next-auth/adapters").AdapterUser | null>) | undefined'.
-      Type '(id: string) => import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>' is not assignable to type '(id: string) => import("/Users/six/code/mehta/node_modules/next-auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/next-auth/adapters").AdapterUser | null>'.
-        Type 'import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>' is not assignable to type 'import("/Users/six/code/mehta/node_modules/next-auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/next-auth/adapters").AdapterUser | null>'.
+    Type '((id: string) => import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>) | undefined' is not assignable to type '((id: string) => import("./node_modules/next-auth/core/types").Awaitable<import("./node_modules/next-auth/adapters").AdapterUser | null>) | undefined'.
+      Type '(id: string) => import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>' is not assignable to type '(id: string) => import("./node_modules/next-auth/core/types").Awaitable<import("./node_modules/next-auth/adapters").AdapterUser | null>'.
+        Type 'import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>' is not assignable to type 'import("./node_modules/next-auth/core/types").Awaitable<import("./node_modules/next-auth/adapters").AdapterUser | null>'.
           Type 'AdapterUser' is not assignable to type 'Awaitable<AdapterUser | null>'.
-            Property 'role' is missing in type 'import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser' but required in type 'import("/Users/six/code/mehta/node_modules/next-auth/adapters").AdapterUser'.
+            Property 'role' is missing in type 'import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser' but required in type 'import("./node_modules/next-auth/adapters").AdapterUser'.
 ERROR [9:26] Argument of type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>' is not assignable to parameter of type 'PrismaClient<PrismaClientOptions, never, DefaultArgs> | DynamicClientExtensionThis<TypeMap<InternalArgs & InternalArgs<{ [x: string]: { [x: string]: unknown; }; }, { ...; }, { ...; }, { ...; }>, {}>, TypeMapCb<...>, InternalArgs<...>>'.
   Type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>' is not assignable to type 'DynamicClientExtensionThis<TypeMap<InternalArgs & InternalArgs<{ [x: string]: { [x: string]: unknown; }; }, { [x: string]: { [x: string]: unknown; }; }, { [x: string]: { [x: string]: unknown; }; }, { [x: string]: unknown; }>, {}>, TypeMapCb<...>, InternalArgs<...>>'.
     Type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>' is not assignable to type '{ [x: string]: unknown; }'.
@@ -427,7 +449,7 @@ ERROR [9:26] Argument of type 'PrismaClient<PrismaClientOptions, never, DefaultA
 </diagnostics>
 
 LSP errors detected in other files:
-<diagnostics file="/Users/six/code/mehta/src/components/dashboard/charts/risk-breakdown-chart.tsx">
+<diagnostics file="./src/components/dashboard/charts/risk-breakdown-chart.tsx">
 ERROR [74:11] Type '(value: number, name: string, props: { payload: { fullName: string; }; }) => [string, string]' is not assignable to type 'Formatter<number, string> & ((value: number, name: string, item: Payload<number, string>, index: number, payload: Payload<number, string>[]) => ReactNode | [...])'.
   Type '(value: number, name: string, props: { payload: { fullName: string; }; }) => [string, string]' is not assignable to type 'Formatter<number, string>'.
     Types of parameters 'value' and 'value' are incompatible.
@@ -447,17 +469,19 @@ The error is still there. Let me check the file again - maybe there's a duplicat
 **Tool: read**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/six/code/mehta/src/components/dashboard/charts/risk-breakdown-chart.tsx",
+  "filePath": "./src/components/dashboard/charts/risk-breakdown-chart.tsx",
   "limit": 30,
   "offset": 55
 }
 ```
 
 **Output:**
+
 ```
-<path>/Users/six/code/mehta/src/components/dashboard/charts/risk-breakdown-chart.tsx</path>
+<path>./src/components/dashboard/charts/risk-breakdown-chart.tsx</path>
 <type>file</type>
 <content>55:           type="number"
 56:           tick={{ fontSize: 11 }}
@@ -505,6 +529,7 @@ That looks correct. The LSP error must be stale. Let me continue with updating t
 **Tool: todowrite**
 
 **Input:**
+
 ```json
 {
   "todos": [
@@ -567,6 +592,7 @@ That looks correct. The LSP error must be stale. Let me continue with updating t
 ```
 
 **Output:**
+
 ```
 [
   {
@@ -637,17 +663,19 @@ Now let me update the dashboard page to integrate the charts. I need to add the 
 **Tool: read**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/six/code/mehta/src/app/dashboard/page.tsx",
+  "filePath": "./src/app/dashboard/page.tsx",
   "limit": 20,
   "offset": 33
 }
 ```
 
 **Output:**
+
 ```
-<path>/Users/six/code/mehta/src/app/dashboard/page.tsx</path>
+<path>./src/app/dashboard/page.tsx</path>
 <type>file</type>
 <content>33:   FilterBarSkeleton,
 34:   AnalyticsSkeleton
@@ -656,7 +684,7 @@ Now let me update the dashboard page to integrate the charts. I need to add the 
 37: import { ThemeToggle } from '@/components/dashboard/theme-toggle';
 38: import { Notifications } from '@/components/dashboard/notifications';
 39: import { UserMenu } from '@/components/dashboard/user-menu';
-40: 
+40:
 41: type Analysis = Pick<
 42:   MeetingAnalysis,
 43:   | 'id'
@@ -667,7 +695,7 @@ Now let me update the dashboard page to integrate the charts. I need to add the 
 48:   | 'facilitationQuality'
 49:   | 'protocolSafety'
 50: >;
-51: 
+51:
 52: interface MeetingWithRelation extends Meeting {
 
 (File has more lines. Use 'offset' parameter to read beyond line 52)
@@ -685,15 +713,17 @@ Now I need to add the chart imports and use SWR for real-time updates:
 **Tool: edit**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/six/code/mehta/src/app/dashboard/page.tsx",
+  "filePath": "./src/app/dashboard/page.tsx",
   "newString": "import { ProgressProvider } from '@/components/ui/progress-bar';\nimport { ThemeToggle } from '@/components/dashboard/theme-toggle';\nimport { Notifications } from '@/components/dashboard/notifications';\nimport { UserMenu } from '@/components/dashboard/user-menu';\nimport {\n  PerformanceBarChart,\n  RiskTrendChart,\n  SessionStatusPie,\n  WeeklyVolumeChart,\n  RiskBreakdownChart\n} from '@/components/dashboard/charts';\nimport useSWR from 'swr';",
   "oldString": "import { ProgressProvider } from '@/components/ui/progress-bar';\nimport { ThemeToggle } from '@/components/dashboard/theme-toggle';\nimport { Notifications } from '@/components/dashboard/notifications';\nimport { UserMenu } from '@/components/dashboard/user-menu';"
 }
 ```
 
 **Output:**
+
 ```
 Edit applied successfully.
 ```
@@ -709,17 +739,19 @@ Now I need to update the dashboard to use SWR for real-time data and add the cha
 **Tool: grep**
 
 **Input:**
+
 ```json
 {
-  "path": "/Users/six/code/mehta/src/app/dashboard",
+  "path": "./src/app/dashboard",
   "pattern": "Analytics Section"
 }
 ```
 
 **Output:**
+
 ```
 Found 1 matches
-/Users/six/code/mehta/src/app/dashboard/page.tsx:
+./src/app/dashboard/page.tsx:
   Line 416:         {/* Analytics Section */}
 ```
 
@@ -734,19 +766,21 @@ Now let me read the analytics section to see what we have and add the charts:
 **Tool: read**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/six/code/mehta/src/app/dashboard/page.tsx",
+  "filePath": "./src/app/dashboard/page.tsx",
   "limit": 80,
   "offset": 415
 }
 ```
 
 **Output:**
+
 ```
-<path>/Users/six/code/mehta/src/app/dashboard/page.tsx</path>
+<path>./src/app/dashboard/page.tsx</path>
 <type>file</type>
-<content>415: 
+<content>415:
 416:         {/* Analytics Section */}
 417:         {loading ? (
 418:           <div className="mb-8">
@@ -789,7 +823,7 @@ Now let me read the analytics section to see what we have and add the charts:
 455:                   </div>
 456:                 </CardContent>
 457:               </Card>
-458: 
+458:
 459:               <Card>
 460:                 <CardHeader>
 461:                   <CardTitle>Risk Detection Trend</CardTitle>
@@ -822,7 +856,7 @@ Now let me read the analytics section to see what we have and add the charts:
 488:             </div>
 489:           )
 490:         )}
-491: 
+491:
 492:         {/* Sessions Table */}
 493:         <Card>
 494:           <CardHeader>
@@ -842,15 +876,17 @@ Now I need to update this section to add the charts alongside the existing text-
 **Tool: edit**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/six/code/mehta/src/app/dashboard/page.tsx",
+  "filePath": "./src/app/dashboard/page.tsx",
   "newString": "        {/* Analytics Section */}\n        {loading ? (\n          <div className=\"mb-8\">\n            <AnalyticsSkeleton />\n          </div>\n        ) : (\n          <div className=\"space-y-8\">\n            {/* Charts Row */}\n            {(fellowStats.length > 0 || riskTrend.length > 0) && (\n              <div className=\"grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8\">\n                {fellowStats.length > 0 && (\n                  <Card>\n                    <CardHeader>\n                      <CardTitle>Fellow Performance</CardTitle>\n                      <CardDescription>Average scores by fellow</CardDescription>\n                    </CardHeader>\n                    <CardContent>\n                      <PerformanceBarChart data={fellowStats} />\n                    </CardContent>\n                  </Card>\n                )}\n                \n                {riskTrend.length > 0 && (\n                  <Card>\n                    <CardHeader>\n                      <CardTitle>Risk Trend</CardTitle>\n                      <CardDescription>Risks detected over time</CardDescription>\n                    </CardHeader>\n                    <CardContent>\n                      <RiskTrendChart data={riskTrend} />\n                    </CardContent>\n                  </Card>\n                )}\n                \n                <Card>\n                  <CardHeader>\n                    <CardTitle>Session Status</CardTitle>\n                    <CardDescription>Distribution of session statuses</CardDescription>\n                  </CardHeader>\n                  <CardContent>\n                    <SessionStatusPie data={statusDistribution} />\n                  </CardContent>\n                </Card>\n              </div>\n            )}\n\n            {/* Text-based Summary Cards - Keep these for quick overview */}\n            {fellowStats.length > 0 && (\n              <div className=\"grid gap-6 md:grid-cols-2 mb-8\">\n                <Card>\n                  <CardHeader>\n                    <CardTitle>Fellow Performance Summary</CardTitle>\n                    <CardDescription>Quick overview of fellow metrics</CardDescription>\n                  </CardHeader>\n                  <CardContent>\n                    <div className=\"space-y-4\">\n                      {fellowStats.map(f => (\n                        <div\n                          key={f.name}\n                          className=\"flex items-center justify-between\"\n                        >\n                          <div>\n                            <p className=\"font-medium\">{f.name}</p>\n                            <p className=\"text-xs text-gray-500\">\n                              {f.totalSessions} sessions • {f.riskCount} risks\n                            </p>\n                          </div>\n                          <div className=\"flex gap-2\">\n                            <Badge variant=\"outline\" className=\"text-xs\">\n                              CC: {f.avgContentCoverage.toFixed(1)}\n                            </Badge>\n                            <Badge variant=\"outline\" className=\"text-xs\">\n                              FQ: {f.avgFacilitationQuality.toFixed(1)}\n                            </Badge>\n                            <Badge variant=\"outline\" className=\"text-xs\">\n                              PS: {f.avgProtocolSafety.toFixed(1)}\n                            </Badge>\n                          </div>\n                        </div>\n                      ))}\n                    </div>\n                  </CardContent>\n                </Card>\n\n                <Card>\n                  <CardHeader>\n                    <CardTitle>Risk Detection Summary</CardTitle>\n                    <CardDescription>Recent risk alerts</CardDescription>\n                  </CardHeader>\n                  <CardContent>\n                    {riskTrend.length > 0 ? (\n                      <div className=\"space-y-2\">\n                        {riskTrend.slice(-7).map(t => (\n                          <div\n                            key={t.date}\n                            className=\"flex items-center justify-between\"\n                          >\n                            <span className=\"text-sm text-gray-600\">\n                              {new Date(t.date).toLocaleDateString()}\n                            </span>\n                            <Badge variant=\"destructive\">{t.count} risk(s)</Badge>\n                          </div>\n                        ))}\n                      </div>\n                    ) : (\n                      <p className=\"text-gray-500 text-sm\">\n                        No risk data available in the last 30 days\n                      </p>\n                    )}\n                  </CardContent>\n                </Card>\n              </div>\n            )}\n          </div>\n        )}",
   "oldString": "        {/* Analytics Section */}\n        {loading ? (\n          <div className=\"mb-8\">\n            <AnalyticsSkeleton />\n          </div>\n        ) : (\n          fellowStats.length > 0 && (\n            <div className=\"grid gap-6 md:grid-cols-2 mb-8\">\n              <Card>\n                <CardHeader>\n                  <CardTitle>Fellow Performance</CardTitle>\n                  <CardDescription>Average scores by fellow</CardDescription>\n                </CardHeader>\n                <CardContent>\n                  <div className=\"space-y-4\">\n                    {fellowStats.map(f => (\n                      <div\n                        key={f.name}\n                        className=\"flex items-center justify-between\"\n                      >\n                        <div>\n                          <p className=\"font-medium\">{f.name}</p>\n                          <p className=\"text-xs text-gray-500\">\n                            {f.totalSessions} sessions • {f.riskCount} risks\n                          </p>\n                        </div>\n                        <div className=\"flex gap-2\">\n                          <Badge variant=\"outline\" className=\"text-xs\">\n                            CC: {f.avgContentCoverage.toFixed(1)}\n                          </Badge>\n                          <Badge variant=\"outline\" className=\"text-xs\">\n                            FQ: {f.avgFacilitationQuality.toFixed(1)}\n                          </Badge>\n                          <Badge variant=\"outline\" className=\"text-xs\">\n                            PS: {f.avgProtocolSafety.toFixed(1)}\n                          </Badge>\n                        </div>\n                      </div>\n                    ))}\n                  </div>\n                </CardContent>\n              </Card>\n\n              <Card>\n                <CardHeader>\n                  <CardTitle>Risk Detection Trend</CardTitle>\n                  <CardDescription>\n                    Risks detected in last 30 days\n                  </CardDescription>\n                </CardHeader>\n                <CardContent>\n                  {riskTrend.length > 0 ? (\n                    <div className=\"space-y-2\">\n                      {riskTrend.slice(-7).map(t => (\n                        <div\n                          key={t.date}\n                          className=\"flex items-center justify-between\"\n                        >\n                          <span className=\"text-sm text-gray-600\">\n                            {new Date(t.date).toLocaleDateString()}\n                          </span>\n                          <Badge variant=\"destructive\">{t.count} risk(s)</Badge>\n                        </div>\n                      ))}\n                    </div>\n                  ) : (\n                    <p className=\"text-gray-500 text-sm\">\n                      No risk data available in the last 30 days\n                    </p>\n                  )}\n                </CardContent>\n              </Card>\n            </div>\n          )\n        )}"
 }
 ```
 
 **Output:**
+
 ```
 Edit applied successfully.
 ```
@@ -866,17 +902,19 @@ Now I need to add the statusDistribution computed value and add SWR for real-tim
 **Tool: grep**
 
 **Input:**
+
 ```json
 {
-  "path": "/Users/six/code/mehta/src/app/dashboard",
+  "path": "./src/app/dashboard",
   "pattern": "const stats = useMemo"
 }
 ```
 
 **Output:**
+
 ```
 Found 1 matches
-/Users/six/code/mehta/src/app/dashboard/page.tsx:
+./src/app/dashboard/page.tsx:
   Line 230:   const stats = useMemo(() => {
 ```
 
@@ -891,19 +929,21 @@ Now let me read where stats are computed and add the statusDistribution:
 **Tool: read**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/six/code/mehta/src/app/dashboard/page.tsx",
+  "filePath": "./src/app/dashboard/page.tsx",
   "limit": 25,
   "offset": 228
 }
 ```
 
 **Output:**
+
 ```
-<path>/Users/six/code/mehta/src/app/dashboard/page.tsx</path>
+<path>./src/app/dashboard/page.tsx</path>
 <type>file</type>
-<content>228: 
+<content>228:
 229:   // Compute stats
 230:   const stats = useMemo(() => {
 231:     return {
@@ -916,15 +956,15 @@ Now let me read where stats are computed and add the statusDistribution:
 238:       ).length
 239:     };
 240:   }, [allSessions]);
-241: 
+241:
 242:   // Compute fellow performance stats
 243:   const fellowStats = useMemo((): FellowStats[] => {
 244:     const fellowMap = new Map<string, FellowStats>();
-245: 
+245:
 246:     allSessions.forEach(s => {
 247:       const analysis = s.analyses[0];
 248:       const riskStatus = (analysis?.riskDetection as JsonObject)?.status;
-249: 
+249:
 250:       if (!fellowMap.has(s.fellow.id)) {
 251:         fellowMap.set(s.fellow.id, {
 252:           name: s.fellow.name,
@@ -944,20 +984,22 @@ Now let me add statusDistribution and also set up SWR for real-time updates. Let
 **Tool: edit**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/six/code/mehta/src/app/dashboard/page.tsx",
+  "filePath": "./src/app/dashboard/page.tsx",
   "newString": "  // Compute stats\n  const stats = useMemo(() => {\n    return {\n      total: allSessions.length,\n      processed: allSessions.filter(\n        s => s.status === 'PROCESSED' || s.analyses.length > 0\n      ).length,\n      risks: allSessions.filter(\n        s => (s.analyses[0]?.riskDetection as JsonObject)?.status === 'RISK'\n      ).length\n    };\n  }, [allSessions]);\n\n  // Compute status distribution for pie chart\n  const statusDistribution = useMemo(() => {\n    return {\n      PENDING: allSessions.filter(s => s.status === 'PENDING').length,\n      PROCESSED: allSessions.filter(s => s.status === 'PROCESSED').length,\n      SAFE: allSessions.filter(s => s.status === 'SAFE').length,\n      FLAGGED_FOR_REVIEW: allSessions.filter(s => s.status === 'FLAGGED_FOR_REVIEW').length\n    };\n  }, [allSessions]);",
   "oldString": "  // Compute stats\n  const stats = useMemo(() => {\n    return {\n      total: allSessions.length,\n      processed: allSessions.filter(\n        s => s.status === 'PROCESSED' || s.analyses.length > 0\n      ).length,\n      risks: allSessions.filter(\n        s => (s.analyses[0]?.riskDetection as JsonObject)?.status === 'RISK'\n      ).length\n    };\n  }, [allSessions]);"
 }
 ```
 
 **Output:**
+
 ```
 Edit applied successfully.
 
 LSP errors detected in this file, please fix:
-<diagnostics file="/Users/six/code/mehta/src/app/dashboard/page.tsx">
+<diagnostics file="./src/app/dashboard/page.tsx">
 ERROR [462:45] Cannot find name 'statusDistribution'.
 </diagnostics>
 ```
@@ -973,17 +1015,19 @@ I need to update the fetchSessions function to use SWR for real-time polling. Le
 **Tool: grep**
 
 **Input:**
+
 ```json
 {
-  "path": "/Users/six/code/mehta/src/app/dashboard",
+  "path": "./src/app/dashboard",
   "pattern": "async function fetchSessions"
 }
 ```
 
 **Output:**
+
 ```
 Found 1 matches
-/Users/six/code/mehta/src/app/dashboard/page.tsx:
+./src/app/dashboard/page.tsx:
   Line 97:   async function fetchSessions() {
 ```
 
@@ -998,29 +1042,31 @@ Let me read the fetchSessions function and update it to use SWR:
 **Tool: read**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/six/code/mehta/src/app/dashboard/page.tsx",
+  "filePath": "./src/app/dashboard/page.tsx",
   "limit": 30,
   "offset": 94
 }
 ```
 
 **Output:**
+
 ```
-<path>/Users/six/code/mehta/src/app/dashboard/page.tsx</path>
+<path>./src/app/dashboard/page.tsx</path>
 <type>file</type>
 <content>94:   const [currentPage, setCurrentPage] = useState(1);
 95:   const itemsPerPage = 5;
-96: 
+96:
 97:   async function fetchSessions() {
 98:     const loadingToast = toast.loading('Retrieving latest sessions...', {
 99:       duration: Infinity
 100:     });
-101: 
+101:
 102:     try {
 103:       const response = await fetch('/api/meetings');
-104: 
+104:
 105:       if (response.ok) {
 106:         const result = await response.json();
 107:         toast.success('Loaded sessions successfully');
@@ -1036,7 +1082,7 @@ Let me read the fetchSessions function and update it to use SWR:
 117:       toast.dismiss(loadingToast);
 118:     }
 119:   }
-120: 
+120:
 121:   // Extract unique fellows from sessions
 122:   useEffect(() => {
 123:     const uniqueFellows = Array.from(
@@ -1056,20 +1102,22 @@ Now let me update the fetchSessions to be used with SWR for real-time polling. L
 **Tool: edit**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/six/code/mehta/src/app/dashboard/page.tsx",
+  "filePath": "./src/app/dashboard/page.tsx",
   "newString": "  const [currentPage, setCurrentPage] = useState(1);\n  const itemsPerPage = 5;\n\n  // Real-time data fetching with SWR\n  const fetcher = (url: string) => fetch(url).then(res => res.json());\n  const { data: swrData, error: swrError, isLoading: swrLoading } = useSWR(\n    '/api/meetings',\n    fetcher,\n    {\n      refreshInterval: 30000, // Poll every 30 seconds\n      revalidateOnFocus: true,\n      dedupingInterval: 5000\n    }\n  );\n\n  // Update sessions when SWR data changes\n  useEffect(() => {\n    if (swrData?.sessions) {\n      setAllSessions(swrData.sessions);\n      setSessions(swrData.sessions);\n    }\n  }, [swrData]);\n\n  // Set loading state based on SWR\n  useEffect(() => {\n    setLoading(swrLoading);\n  }, [swrLoading]);\n\n  async function fetchSessions() {\n    const loadingToast = toast.loading('Retrieving latest sessions...', {\n      duration: Infinity\n    });\n\n    try {\n      const response = await fetch('/api/meetings');\n\n      if (response.ok) {\n        const result = await response.json();\n        toast.success('Loaded sessions successfully');\n        return result?.sessions;\n      } else {\n        const error = await response.text();\n        toast.error(error);\n      }\n    } catch (error) {\n      console.error('Sessions fetch error:', error);\n      toast.error('Failed to fetch sessions: ' + (error as Error).message);\n    } finally {\n      toast.dismiss(loadingToast);\n    }\n  }",
   "oldString": "  const [currentPage, setCurrentPage] = useState(1);\n  const itemsPerPage = 5;\n\n  async function fetchSessions() {\n    const loadingToast = toast.loading('Retrieving latest sessions...', {\n      duration: Infinity\n    });\n\n    try {\n      const response = await fetch('/api/meetings');\n\n      if (response.ok) {\n        const result = await response.json();\n        toast.success('Loaded sessions successfully');\n        return result?.sessions;\n      } else {\n        const error = await response.text();\n        toast.error(error);\n      }\n    } catch (error) {\n      console.error('Sessions fetch error:', error);\n      toast.error('Failed to fetch sessions: ' + (error as Error).message);\n    } finally {\n      toast.dismiss(loadingToast);\n    }\n  }"
 }
 ```
 
 **Output:**
+
 ```
 Edit applied successfully.
 
 LSP errors detected in this file, please fix:
-<diagnostics file="/Users/six/code/mehta/src/app/dashboard/page.tsx">
+<diagnostics file="./src/app/dashboard/page.tsx">
 ERROR [462:45] Cannot find name 'statusDistribution'.
 </diagnostics>
 ```
@@ -1085,14 +1133,16 @@ Now I need to update the initial useEffect that fetches sessions on mount to als
 **Tool: grep**
 
 **Input:**
+
 ```json
 {
-  "path": "/Users/six/code/mehta/src/app/dashboard",
+  "path": "./src/app/dashboard",
   "pattern": "setLoading\\(false\\)\"\\)"
 }
 ```
 
 **Output:**
+
 ```
 No files found
 ```
@@ -1108,14 +1158,16 @@ Let me find the useEffect that fetches sessions on mount:
 **Tool: grep**
 
 **Input:**
+
 ```json
 {
-  "path": "/Users/six/code/mehta/src/app/dashboard",
+  "path": "./src/app/dashboard",
   "pattern": "useEffect.*fetchSessions"
 }
 ```
 
 **Output:**
+
 ```
 No files found
 ```
@@ -1131,17 +1183,19 @@ Let me search for where fetchSessions is called:
 **Tool: grep**
 
 **Input:**
+
 ```json
 {
-  "path": "/Users/six/code/mehta/src/app/dashboard",
+  "path": "./src/app/dashboard",
   "pattern": "\\.then\\(sessions"
 }
 ```
 
 **Output:**
+
 ```
 Found 1 matches
-/Users/six/code/mehta/src/app/dashboard/page.tsx:
+./src/app/dashboard/page.tsx:
   Line 352:       .then(sessions => {
 ```
 
@@ -1156,19 +1210,21 @@ Let me find and read that section:
 **Tool: read**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/six/code/mehta/src/app/dashboard/page.tsx",
+  "filePath": "./src/app/dashboard/page.tsx",
   "limit": 15,
   "offset": 348
 }
 ```
 
 **Output:**
+
 ```
-<path>/Users/six/code/mehta/src/app/dashboard/page.tsx</path>
+<path>./src/app/dashboard/page.tsx</path>
 <type>file</type>
-<content>348: 
+<content>348:
 349:   useEffect(() => {
 350:     setLoading(true);
 351:     fetchSessions()
@@ -1177,7 +1233,7 @@ Let me find and read that section:
 354:       })
 355:       .finally(() => setLoading(false));
 356:   }, []);
-357: 
+357:
 358:   const statusOptions = [
 359:     { value: 'PENDING', label: 'Pending' },
 360:     { value: 'PROCESSED', label: 'Processed' },
@@ -1199,20 +1255,22 @@ Now I need to update this useEffect to also use SWR for real-time data. Since we
 **Tool: edit**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/six/code/mehta/src/app/dashboard/page.tsx",
+  "filePath": "./src/app/dashboard/page.tsx",
   "newString": "  // Initial load handled by SWR - no need for separate useEffect\n  // SWR handles: refreshInterval: 30000, revalidateOnFocus: true",
   "oldString": "  useEffect(() => {\n    setLoading(true);\n    fetchSessions()\n      .then(sessions => {\n        setAllSessions(sessions || []);\n      })\n      .finally(() => setLoading(false));\n  }, []);"
 }
 ```
 
 **Output:**
+
 ```
 Edit applied successfully.
 
 LSP errors detected in this file, please fix:
-<diagnostics file="/Users/six/code/mehta/src/app/dashboard/page.tsx">
+<diagnostics file="./src/app/dashboard/page.tsx">
 ERROR [113:7] Cannot find name 'setSessions'. Did you mean 'setAllSessions'?
 </diagnostics>
 ```
@@ -1228,17 +1286,19 @@ There's an error - I need to also update where `setSessions` was being used. Let
 **Tool: grep**
 
 **Input:**
+
 ```json
 {
-  "path": "/Users/six/code/mehta/src/app/dashboard",
+  "path": "./src/app/dashboard",
   "pattern": "setSessions\\("
 }
 ```
 
 **Output:**
+
 ```
 Found 1 matches
-/Users/six/code/mehta/src/app/dashboard/page.tsx:
+./src/app/dashboard/page.tsx:
   Line 113:       setSessions(swrData.sessions);
 ```
 
@@ -1253,19 +1313,21 @@ I need to remove setSessions since it doesn't exist in the state. Let me read mo
 **Tool: read**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/six/code/mehta/src/app/dashboard/page.tsx",
+  "filePath": "./src/app/dashboard/page.tsx",
   "limit": 15,
   "offset": 108
 }
 ```
 
 **Output:**
+
 ```
-<path>/Users/six/code/mehta/src/app/dashboard/page.tsx</path>
+<path>./src/app/dashboard/page.tsx</path>
 <type>file</type>
-<content>108: 
+<content>108:
 109:   // Update sessions when SWR data changes
 110:   useEffect(() => {
 111:     if (swrData?.sessions) {
@@ -1273,12 +1335,12 @@ I need to remove setSessions since it doesn't exist in the state. Let me read mo
 113:       setSessions(swrData.sessions);
 114:     }
 115:   }, [swrData]);
-116: 
+116:
 117:   // Set loading state based on SWR
 118:   useEffect(() => {
 119:     setLoading(swrLoading);
 120:   }, [swrLoading]);
-121: 
+121:
 122:   async function fetchSessions() {
 
 (File has more lines. Use 'offset' parameter to read beyond line 122)
@@ -1296,14 +1358,16 @@ I need to check what the state looks like. Let me search for `useState` to see w
 **Tool: grep**
 
 **Input:**
+
 ```json
 {
-  "path": "/Users/six/code/mehta/src/app/dashboard",
+  "path": "./src/app/dashboard",
   "pattern": "useState.*sessions"
 }
 ```
 
 **Output:**
+
 ```
 No files found
 ```
@@ -1319,14 +1383,16 @@ Let me search for where sessions is declared:
 **Tool: grep**
 
 **Input:**
+
 ```json
 {
-  "path": "/Users/six/code/mehta/src/app/dashboard",
+  "path": "./src/app/dashboard",
   "pattern": "setSessions.*useState"
 }
 ```
 
 **Output:**
+
 ```
 No files found
 ```
@@ -1342,14 +1408,16 @@ Let me search differently:
 **Tool: grep**
 
 **Input:**
+
 ```json
 {
-  "path": "/Users/six/code/mehta/src/app/dashboard",
+  "path": "./src/app/dashboard",
   "pattern": "sessions, setSessions"
 }
 ```
 
 **Output:**
+
 ```
 No files found
 ```
@@ -1365,17 +1433,19 @@ Let me look at what's in the state:
 **Tool: grep**
 
 **Input:**
+
 ```json
 {
-  "path": "/Users/six/code/mehta/src/app/dashboard",
+  "path": "./src/app/dashboard",
   "pattern": "const \\[.*, set"
 }
 ```
 
 **Output:**
+
 ```
 Found 19 matches
-/Users/six/code/mehta/src/app/dashboard/page.tsx:
+./src/app/dashboard/page.tsx:
   Line 76:   const [loading, setLoading] = useState(false);
   Line 77:   const [allSessions, setAllSessions] = useState<MeetingWithRelation[]>([]);
   Line 78:   const [fellows, setFellows] = useState<Array<{ id: string; name: string }>>(
@@ -1387,7 +1457,7 @@ Found 19 matches
   Line 91:   const [sortOrder, setSortOrder] = useState('desc');
   Line 94:   const [currentPage, setCurrentPage] = useState(1);
 
-/Users/six/code/mehta/src/app/dashboard/sessions/[id]/page.tsx:
+./src/app/dashboard/sessions/[id]/page.tsx:
   Line 67:   const [session, setSession] = useState<Session | null>(null);
   Line 68:   const [loading, setLoading] = useState(true);
   Line 69:   const [analyzing, setAnalyzing] = useState(false);
@@ -1410,20 +1480,22 @@ I see - there's only `allSessions` and `sessions` is just `allSessions` filtered
 **Tool: edit**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/six/code/mehta/src/app/dashboard/page.tsx",
+  "filePath": "./src/app/dashboard/page.tsx",
   "newString": "  // Update sessions when SWR data changes\n  useEffect(() => {\n    if (swrData?.sessions) {\n      setAllSessions(swrData.sessions);\n    }\n  }, [swrData]);",
   "oldString": "  // Update sessions when SWR data changes\n  useEffect(() => {\n    if (swrData?.sessions) {\n      setAllSessions(swrData.sessions);\n      setSessions(swrData.sessions);\n    }\n  }, [swrData]);"
 }
 ```
 
 **Output:**
+
 ```
 Edit applied successfully.
 
 LSP errors detected in this file, please fix:
-<diagnostics file="/Users/six/code/mehta/src/app/dashboard/page.tsx">
+<diagnostics file="./src/app/dashboard/page.tsx">
 ERROR [113:7] Cannot find name 'setSessions'. Did you mean 'setAllSessions'?
 </diagnostics>
 ```
@@ -1439,14 +1511,16 @@ The error is still there, which means there's another reference. Let me check:
 **Tool: grep**
 
 **Input:**
+
 ```json
 {
-  "path": "/Users/six/code/mehta/src/app/dashboard",
+  "path": "./src/app/dashboard",
   "pattern": "setSessions"
 }
 ```
 
 **Output:**
+
 ```
 No files found
 ```
@@ -1472,6 +1546,7 @@ Let me check the current state of the file to see if the error still exists.
 **Tool: bash**
 
 **Input:**
+
 ```json
 {
   "command": "cd /Users/six/code/mehta && npm run dev 2>&1 &\nsleep 10\ncurl -s http://localhost:3000/dashboard 2>/dev/null | head -5",
@@ -1481,6 +1556,7 @@ Let me check the current state of the file to see if the error still exists.
 ```
 
 **Output:**
+
 ```
 
 > mehta@0.1.0 dev
@@ -1507,17 +1583,19 @@ The server is running. Let me check if there's still a TypeScript error by check
 **Tool: grep**
 
 **Input:**
+
 ```json
 {
-  "path": "/Users/six/code/mehta/src/app/dashboard",
+  "path": "./src/app/dashboard",
   "pattern": "statusDistribution"
 }
 ```
 
 **Output:**
+
 ```
 Found 2 matches
-/Users/six/code/mehta/src/app/dashboard/page.tsx:
+./src/app/dashboard/page.tsx:
   Line 267:   const statusDistribution = useMemo(() => {
   Line 492:                     <SessionStatusPie data={statusDistribution} />
 ```
@@ -1533,6 +1611,7 @@ The statusDistribution is defined at line 267 and used at line 492. That should 
 **Tool: todowrite**
 
 **Input:**
+
 ```json
 {
   "todos": [
@@ -1595,6 +1674,7 @@ The statusDistribution is defined at line 267 and used at line 492. That should 
 ```
 
 **Output:**
+
 ```
 [
   {
@@ -1665,6 +1745,7 @@ Let me commit the changes.
 **Tool: bash**
 
 **Input:**
+
 ```json
 {
   "command": "git status",
@@ -1673,6 +1754,7 @@ Let me commit the changes.
 ```
 
 **Output:**
+
 ```
 On branch feat/dashboard-enhancements
 Changes not staged for commit:
@@ -1703,6 +1785,7 @@ Now let me commit all the changes.
 **Tool: bash**
 
 **Input:**
+
 ```json
 {
   "command": "git add -A && git commit -m \"✨ feat(dashboard): add charts and real-time data with Recharts\n\n🎨 Charts Implemented:\n- PerformanceBarChart: Horizontal grouped bar for fellow scores (CC, FQ, PS)\n- RiskTrendChart: Area chart showing risks over time with gradient fill\n- SessionStatusPie: Donut chart for PENDING/PROCESSED/SAFE/FLAGGED distribution\n- WeeklyVolumeChart: Bar chart for weekly session volume\n- RiskBreakdownChart: Horizontal bar for risk categories\n\n📊 Dashboard Updates:\n- Add charts section with 3-column grid layout\n- Keep text summary cards for quick overview\n- Add statusDistribution computed property for pie chart\n\n🔄 Real-time Updates:\n- Add SWR for data fetching with 30-second polling\n- Auto-refresh on window focus\n- Loading states handled by SWR\n\n📦 Dependencies Added:\n- recharts: React charting library\n- swr: Stale-while-revalidate for real-time data\n\n📁 Files Created:\n- src/components/ui/chart.tsx: Chart wrapper utilities\n- src/components/dashboard/charts/index.ts: Export all charts\n- src/components/dashboard/charts/performance-bar-chart.tsx\n- src/components/dashboard/charts/risk-trend-chart.tsx\n- src/components/dashboard/charts/session-status-pie.tsx\n- src/components/dashboard/charts/weekly-volume-chart.tsx\n- src/components/dashboard/charts/risk-breakdown-chart.tsx\"",
@@ -1711,6 +1794,7 @@ Now let me commit all the changes.
 ```
 
 **Output:**
+
 ```
 [feat/dashboard-enhancements 6263aae] ✨ feat(dashboard): add charts and real-time data with Recharts
  11 files changed, 1098 insertions(+), 75 deletions(-)
@@ -1738,14 +1822,14 @@ Now let me provide a summary to the user.
 
 ### Summary
 
-| Feature | Status | Implementation |
-|---------|--------|----------------|
-| **PerformanceBarChart** | ✅ | Horizontal grouped bar for fellow scores |
-| **RiskTrendChart** | ✅ | Area chart with gradient fill |
-| **SessionStatusPie** | ✅ | Donut chart for status distribution |
-| **WeeklyVolumeChart** | ✅ | Bar chart for weekly volume |
-| **RiskBreakdownChart** | ✅ | Horizontal bar for risk categories |
-| **Real-time Polling** | ✅ | SWR with 30-second refresh |
+| Feature                 | Status | Implementation                           |
+| ----------------------- | ------ | ---------------------------------------- |
+| **PerformanceBarChart** | ✅     | Horizontal grouped bar for fellow scores |
+| **RiskTrendChart**      | ✅     | Area chart with gradient fill            |
+| **SessionStatusPie**    | ✅     | Donut chart for status distribution      |
+| **WeeklyVolumeChart**   | ✅     | Bar chart for weekly volume              |
+| **RiskBreakdownChart**  | ✅     | Horizontal bar for risk categories       |
+| **Real-time Polling**   | ✅     | SWR with 30-second refresh               |
 
 ### Files Created
 
@@ -1765,6 +1849,7 @@ src/components/dashboard/charts/
 - **Summary Cards Row**: Text-based Fellow Performance + Risk Detection Summary (kept for quick overview)
 
 ### Real-time Configuration
+
 - Poll interval: 30 seconds
 - Revalidate on focus: enabled
 - Dedupe interval: 5 seconds
@@ -1790,6 +1875,7 @@ _Thinking:_
 The user wants me to create an implementation plan for adding view toggles to the dashboard charts. They're currently in Plan Mode which means I should only create a plan, not implement it.
 
 Let me understand what they want:
+
 1. For fellow performance summary card - toggle between text view and bar chart
 2. For risk trend summary card - toggle between text view and risk trend chart
 3. For session status pie - toggle between chart and text view
@@ -1802,11 +1888,14 @@ This is a straightforward UI enhancement. I should create a clear implementation
 ## Implementation Plan: View Toggle for Dashboard Cards
 
 ### Current State
+
 The dashboard currently displays:
+
 - Charts row with PerformanceBarChart, RiskTrendChart, SessionStatusPie
 - Summary cards row with text-based Fellow Performance and Risk Detection
 
 ### Proposed Enhancement
+
 Add toggle switches to each card, allowing users to switch between chart and text views.
 
 ---
@@ -1818,6 +1907,7 @@ Add toggle switches to each card, allowing users to switch between chart and tex
 **New File:** `src/components/ui/toggle.tsx`
 
 Use shadcn/ui's toggle component:
+
 ```bash
 npx shadcn@latest add toggle -y
 ```
@@ -1830,21 +1920,22 @@ npx shadcn@latest add toggle -y
 
 Add state and toggle buttons to each card:
 
-| Card | Toggle State | Icons |
-|------|-------------|-------|
+| Card               | Toggle State                    | Icons   |
+| ------------------ | ------------------------------- | ------- |
 | Fellow Performance | `showPerformanceChart: boolean` | 📊 / 📝 |
-| Risk Trend | `showRiskChart: boolean` | 📈 / 📋 |
-| Session Status | `showStatusChart: boolean` | 🥧 / 📊 |
+| Risk Trend         | `showRiskChart: boolean`        | 📈 / 📋 |
+| Session Status     | `showStatusChart: boolean`      | 🥧 / 📊 |
 
 **Implementation Pattern:**
+
 ```tsx
 const [showPerformanceChart, setShowPerformanceChart] = useState(false);
 
 // In card header:
 <div className="flex items-center justify-between">
   <CardTitle>...</CardTitle>
-  <Toggle 
-    pressed={showPerformanceChart} 
+  <Toggle
+    pressed={showPerformanceChart}
     onPressedChange={setShowPerformanceChart}
     aria-label="Toggle chart view"
   >
@@ -1864,20 +1955,20 @@ const [showPerformanceChart, setShowPerformanceChart] = useState(false);
 
 #### Step 3: Icons to Use
 
-| Card | Chart Icon | List Icon |
-|------|------------|-----------|
-| Fellow Performance | BarChart3 | List |
-| Risk Trend | TrendingUp | List |
-| Session Status | PieChart | List |
+| Card               | Chart Icon | List Icon |
+| ------------------ | ---------- | --------- |
+| Fellow Performance | BarChart3  | List      |
+| Risk Trend         | TrendingUp | List      |
+| Session Status     | PieChart   | List      |
 
 ---
 
 ### Files Summary
 
-| File | Action |
-|------|--------|
-| `src/components/ui/toggle.tsx` | New (via shadcn CLI) |
-| `src/app/dashboard/page.tsx` | Modify - Add toggle states and buttons |
+| File                           | Action                                 |
+| ------------------------------ | -------------------------------------- |
+| `src/components/ui/toggle.tsx` | New (via shadcn CLI)                   |
+| `src/app/dashboard/page.tsx`   | Modify - Add toggle states and buttons |
 
 ---
 
@@ -1932,6 +2023,7 @@ const [showStatusChart, setShowStatusChart] = useState(true); // Default to char
 _Thinking:_
 
 The user wants me to update the implementation plan based on their preferences:
+
 1. Default view should be chart
 2. Toggle preference should persist to localStorage
 
@@ -1942,6 +2034,7 @@ I need to update the plan to reflect these changes. Let me revise the implementa
 ## Implementation Plan: View Toggle for Dashboard Cards (Updated)
 
 ### User Preferences
+
 - ✅ Default view: Chart
 - ✅ Persist preferences to localStorage
 
@@ -1976,7 +2069,8 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
 
   const setValue = (value: T | ((val: T) => T)) => {
     try {
-      const valueToStore = value instanceof Function ? value(storedValue) : value;
+      const valueToStore =
+        value instanceof Function ? value(storedValue) : value;
       setStoredValue(valueToStore);
       if (typeof window !== 'undefined') {
         window.localStorage.setItem(key, JSON.stringify(valueToStore));
@@ -2002,9 +2096,18 @@ import { Toggle } from '@/components/ui/toggle';
 import { BarChart3, List, TrendingUp, PieChart } from 'lucide-react';
 
 // Add state with localStorage persistence
-const [showPerformanceChart, setShowPerformanceChart] = useLocalStorage('dashboard-showPerformanceChart', true);
-const [showRiskChart, setShowRiskChart] = useLocalStorage('dashboard-showRiskChart', true);
-const [showStatusChart, setShowStatusChart] = useLocalStorage('dashboard-showStatusChart', true);
+const [showPerformanceChart, setShowPerformanceChart] = useLocalStorage(
+  'dashboard-showPerformanceChart',
+  true
+);
+const [showRiskChart, setShowRiskChart] = useLocalStorage(
+  'dashboard-showRiskChart',
+  true
+);
+const [showStatusChart, setShowStatusChart] = useLocalStorage(
+  'dashboard-showStatusChart',
+  true
+);
 
 // Add toggle button in each card header
 ```
@@ -2013,37 +2116,38 @@ const [showStatusChart, setShowStatusChart] = useLocalStorage('dashboard-showSta
 
 #### Step 4: Update Toggle Icons
 
-| Card | Chart Icon | List Icon |
-|------|------------|-----------|
-| Fellow Performance | `BarChart3` | `List` |
-| Risk Trend | `TrendingUp` | `List` |
-| Session Status | `PieChart` | `List` |
+| Card               | Chart Icon   | List Icon |
+| ------------------ | ------------ | --------- |
+| Fellow Performance | `BarChart3`  | `List`    |
+| Risk Trend         | `TrendingUp` | `List`    |
+| Session Status     | `PieChart`   | `List`    |
 
 ---
 
 ### Files Summary
 
-| File | Action |
-|------|--------|
-| `src/components/ui/toggle.tsx` | New (via shadcn CLI) |
-| `src/hooks/use-local-storage.ts` | New - Persist toggle preferences |
-| `src/app/dashboard/page.tsx` | Modify - Add toggle states and buttons |
+| File                             | Action                                 |
+| -------------------------------- | -------------------------------------- |
+| `src/components/ui/toggle.tsx`   | New (via shadcn CLI)                   |
+| `src/hooks/use-local-storage.ts` | New - Persist toggle preferences       |
+| `src/app/dashboard/page.tsx`     | Modify - Add toggle states and buttons |
 
 ---
 
 ### Additional Card Suggestions (For Future)
 
-| Card | Description | Priority |
-|------|-------------|----------|
-| **Weekly Volume** | Toggle between weekly bar chart and table view | Medium |
-| **Risk Breakdown** | Toggle between horizontal bar and category list | Medium |
-| **Recent Sessions** | Toggle between table and compact card list | Low |
+| Card                | Description                                     | Priority |
+| ------------------- | ----------------------------------------------- | -------- |
+| **Weekly Volume**   | Toggle between weekly bar chart and table view  | Medium   |
+| **Risk Breakdown**  | Toggle between horizontal bar and category list | Medium   |
+| **Recent Sessions** | Toggle between table and compact card list      | Low      |
 
 ---
 
 ### Questions
 
 None - plan is ready based on your specifications:
+
 - ✅ Default view: Chart
 - ✅ Persist preferences to localStorage
 
@@ -2062,6 +2166,7 @@ yes
 _Thinking:_
 
 The user confirmed "yes" - I should proceed with implementing the view toggles. Let me:
+
 1. Install toggle component
 2. Create useLocalStorage hook
 3. Update dashboard with toggle states and buttons
@@ -2069,6 +2174,7 @@ The user confirmed "yes" - I should proceed with implementing the view toggles. 
 **Tool: todowrite**
 
 **Input:**
+
 ```json
 {
   "todos": [
@@ -2113,6 +2219,7 @@ The user confirmed "yes" - I should proceed with implementing the view toggles. 
 ```
 
 **Output:**
+
 ```
 [
   {
@@ -2165,6 +2272,7 @@ Let me install the toggle component:
 **Tool: bash**
 
 **Input:**
+
 ```json
 {
   "command": "cd /Users/six/code/mehta && npx shadcn@latest add toggle -y",
@@ -2174,6 +2282,7 @@ Let me install the toggle component:
 ```
 
 **Output:**
+
 ```
 - Checking registry.
 ✔ Checking registry.
@@ -2198,6 +2307,7 @@ Now let me create the useLocalStorage hook:
 **Tool: todowrite**
 
 **Input:**
+
 ```json
 {
   "todos": [
@@ -2242,6 +2352,7 @@ Now let me create the useLocalStorage hook:
 ```
 
 **Output:**
+
 ```
 [
   {
@@ -2294,6 +2405,7 @@ Let me create the hooks directory and useLocalStorage hook:
 **Tool: bash**
 
 **Input:**
+
 ```json
 {
   "command": "mkdir -p src/hooks",
@@ -2312,26 +2424,28 @@ Now let me write the useLocalStorage hook:
 **Tool: write**
 
 **Input:**
+
 ```json
 {
   "content": "'use client';\n\nimport { useState, useEffect } from 'react';\n\nexport function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((val: T) => T)) => void] {\n  const [storedValue, setStoredValue] = useState<T>(initialValue);\n  const [isClient, setIsClient] = useState(false);\n\n  useEffect(() => {\n    setIsClient(true);\n  }, []);\n\n  useEffect(() => {\n    if (!isClient) return;\n    \n    try {\n      const item = window.localStorage.getItem(key);\n      if (item) {\n        setStoredValue(JSON.parse(item));\n      }\n    } catch (error) {\n      console.error(`Error reading localStorage key \"${key}\":`, error);\n    }\n  }, [key, isClient]);\n\n  const setValue = (value: T | ((val: T) => T)) => {\n    try {\n      const valueToStore = value instanceof Function ? value(storedValue) : value;\n      setStoredValue(valueToStore);\n      if (typeof window !== 'undefined') {\n        window.localStorage.setItem(key, JSON.stringify(valueToStore));\n      }\n    } catch (error) {\n      console.error(`Error setting localStorage key \"${key}\":`, error);\n    }\n  };\n\n  return [storedValue, setValue];\n}\n",
-  "filePath": "/Users/six/code/mehta/src/hooks/use-local-storage.ts"
+  "filePath": "./src/hooks/use-local-storage.ts"
 }
 ```
 
 **Output:**
+
 ```
 Wrote file successfully.
 
 LSP errors detected in other files:
-<diagnostics file="/Users/six/code/mehta/src/lib/auth.ts">
-ERROR [9:3] Type 'import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").Adapter' is not assignable to type 'import("/Users/six/code/mehta/node_modules/next-auth/adapters").Adapter'.
+<diagnostics file="./src/lib/auth.ts">
+ERROR [9:3] Type 'import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").Adapter' is not assignable to type 'import("./node_modules/next-auth/adapters").Adapter'.
   Types of property 'getUser' are incompatible.
-    Type '((id: string) => import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>) | undefined' is not assignable to type '((id: string) => import("/Users/six/code/mehta/node_modules/next-auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/next-auth/adapters").AdapterUser | null>) | undefined'.
-      Type '(id: string) => import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>' is not assignable to type '(id: string) => import("/Users/six/code/mehta/node_modules/next-auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/next-auth/adapters").AdapterUser | null>'.
-        Type 'import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>' is not assignable to type 'import("/Users/six/code/mehta/node_modules/next-auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/next-auth/adapters").AdapterUser | null>'.
+    Type '((id: string) => import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>) | undefined' is not assignable to type '((id: string) => import("./node_modules/next-auth/core/types").Awaitable<import("./node_modules/next-auth/adapters").AdapterUser | null>) | undefined'.
+      Type '(id: string) => import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>' is not assignable to type '(id: string) => import("./node_modules/next-auth/core/types").Awaitable<import("./node_modules/next-auth/adapters").AdapterUser | null>'.
+        Type 'import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>' is not assignable to type 'import("./node_modules/next-auth/core/types").Awaitable<import("./node_modules/next-auth/adapters").AdapterUser | null>'.
           Type 'AdapterUser' is not assignable to type 'Awaitable<AdapterUser | null>'.
-            Property 'role' is missing in type 'import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser' but required in type 'import("/Users/six/code/mehta/node_modules/next-auth/adapters").AdapterUser'.
+            Property 'role' is missing in type 'import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser' but required in type 'import("./node_modules/next-auth/adapters").AdapterUser'.
 ERROR [9:26] Argument of type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>' is not assignable to parameter of type 'PrismaClient<PrismaClientOptions, never, DefaultArgs> | DynamicClientExtensionThis<TypeMap<InternalArgs & InternalArgs<{ [x: string]: { [x: string]: unknown; }; }, { ...; }, { ...; }, { ...; }>, {}>, TypeMapCb<...>, InternalArgs<...>>'.
   Type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>' is not assignable to type 'DynamicClientExtensionThis<TypeMap<InternalArgs & InternalArgs<{ [x: string]: { [x: string]: unknown; }; }, { [x: string]: { [x: string]: unknown; }; }, { [x: string]: { [x: string]: unknown; }; }, { [x: string]: unknown; }>, {}>, TypeMapCb<...>, InternalArgs<...>>'.
     Type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>' is not assignable to type '{ [x: string]: unknown; }'.
@@ -2352,17 +2466,19 @@ Now let me update the dashboard page with toggle states and buttons:
 **Tool: read**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/six/code/mehta/src/app/dashboard/page.tsx",
+  "filePath": "./src/app/dashboard/page.tsx",
   "limit": 25,
   "offset": 37
 }
 ```
 
 **Output:**
+
 ```
-<path>/Users/six/code/mehta/src/app/dashboard/page.tsx</path>
+<path>./src/app/dashboard/page.tsx</path>
 <type>file</type>
 <content>37: import { ThemeToggle } from '@/components/dashboard/theme-toggle';
 38: import { Notifications } from '@/components/dashboard/notifications';
@@ -2375,7 +2491,7 @@ Now let me update the dashboard page with toggle states and buttons:
 45:   RiskBreakdownChart
 46: } from '@/components/dashboard/charts';
 47: import useSWR from 'swr';
-48: 
+48:
 49: type Analysis = Pick<
 50:   MeetingAnalysis,
 51:   | 'id'
@@ -2386,7 +2502,7 @@ Now let me update the dashboard page with toggle states and buttons:
 56:   | 'facilitationQuality'
 57:   | 'protocolSafety'
 58: >;
-59: 
+59:
 60: interface MeetingWithRelation extends Meeting {
 61:   analyses: Array<Analysis>;
 
@@ -2405,15 +2521,17 @@ Now let me add the imports for Toggle and icons:
 **Tool: edit**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/six/code/mehta/src/app/dashboard/page.tsx",
+  "filePath": "./src/app/dashboard/page.tsx",
   "newString": "import { ThemeToggle } from '@/components/dashboard/theme-toggle';\nimport { Notifications } from '@/components/dashboard/notifications';\nimport { UserMenu } from '@/components/dashboard/user-menu';\nimport {\n  PerformanceBarChart,\n  RiskTrendChart,\n  SessionStatusPie,\n  WeeklyVolumeChart,\n  RiskBreakdownChart\n} from '@/components/dashboard/charts';\nimport useSWR from 'swr';\nimport { Toggle } from '@/components/ui/toggle';\nimport { BarChart3, List, TrendingUp, PieChart } from 'lucide-react';\nimport { useLocalStorage } from '@/hooks/use-local-storage';",
   "oldString": "import { ThemeToggle } from '@/components/dashboard/theme-toggle';\nimport { Notifications } from '@/components/dashboard/notifications';\nimport { UserMenu } from '@/components/dashboard/user-menu';\nimport {\n  PerformanceBarChart,\n  RiskTrendChart,\n  SessionStatusPie,\n  WeeklyVolumeChart,\n  RiskBreakdownChart\n} from '@/components/dashboard/charts';\nimport useSWR from 'swr';"
 }
 ```
 
 **Output:**
+
 ```
 Edit applied successfully.
 ```
@@ -2431,17 +2549,19 @@ Now add the toggle states:
 **Tool: grep**
 
 **Input:**
+
 ```json
 {
-  "path": "/Users/six/code/mehta/src/app/dashboard",
+  "path": "./src/app/dashboard",
   "pattern": "const \\[currentPage"
 }
 ```
 
 **Output:**
+
 ```
 Found 1 matches
-/Users/six/code/mehta/src/app/dashboard/page.tsx:
+./src/app/dashboard/page.tsx:
   Line 97:   const [currentPage, setCurrentPage] = useState(1);
 ```
 
@@ -2456,24 +2576,26 @@ Let me read around that line to add the toggle states:
 **Tool: read**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/six/code/mehta/src/app/dashboard/page.tsx",
+  "filePath": "./src/app/dashboard/page.tsx",
   "limit": 10,
   "offset": 94
 }
 ```
 
 **Output:**
+
 ```
-<path>/Users/six/code/mehta/src/app/dashboard/page.tsx</path>
+<path>./src/app/dashboard/page.tsx</path>
 <type>file</type>
 <content>94:   const [sortOrder, setSortOrder] = useState('desc');
-95: 
+95:
 96:   // Pagination
 97:   const [currentPage, setCurrentPage] = useState(1);
 98:   const itemsPerPage = 5;
-99: 
+99:
 100:   // Real-time data fetching with SWR
 101:   const fetcher = (url: string) => fetch(url).then(res => res.json());
 102:   const {
@@ -2494,15 +2616,17 @@ Let me add the toggle states after the pagination:
 **Tool: edit**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/six/code/mehta/src/app/dashboard/page.tsx",
+  "filePath": "./src/app/dashboard/page.tsx",
   "newString": "  // Pagination\n  const [currentPage, setCurrentPage] = useState(1);\n  const itemsPerPage = 5;\n\n  // Chart/List toggle states with localStorage persistence\n  const [showPerformanceChart, setShowPerformanceChart] = useLocalStorage('dashboard-showPerformanceChart', true);\n  const [showRiskChart, setShowRiskChart] = useLocalStorage('dashboard-showRiskChart', true);\n  const [showStatusChart, setShowStatusChart] = useLocalStorage('dashboard-showStatusChart', true);",
   "oldString": "  // Pagination\n  const [currentPage, setCurrentPage] = useState(1);\n  const itemsPerPage = 5;"
 }
 ```
 
 **Output:**
+
 ```
 Edit applied successfully.
 ```
@@ -2518,6 +2642,7 @@ Now let me find the Fellow Performance card and add the toggle button to it:
 **Tool: todowrite**
 
 **Input:**
+
 ```json
 {
   "todos": [
@@ -2562,6 +2687,7 @@ Now let me find the Fellow Performance card and add the toggle button to it:
 ```
 
 **Output:**
+
 ```
 [
   {
@@ -2614,17 +2740,19 @@ Let me find the charts section in the dashboard:
 **Tool: grep**
 
 **Input:**
+
 ```json
 {
-  "path": "/Users/six/code/mehta/src/app/dashboard",
+  "path": "./src/app/dashboard",
   "pattern": "Fellow Performance"
 }
 ```
 
 **Output:**
+
 ```
 Found 2 matches
-/Users/six/code/mehta/src/app/dashboard/page.tsx:
+./src/app/dashboard/page.tsx:
   Line 476:                       <CardTitle>Fellow Performance</CardTitle>
   Line 520:                     <CardTitle>Fellow Performance Summary</CardTitle>
 ```
@@ -2640,17 +2768,19 @@ Let me read around line 476 to see the Fellow Performance card:
 **Tool: read**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/six/code/mehta/src/app/dashboard/page.tsx",
+  "filePath": "./src/app/dashboard/page.tsx",
   "limit": 40,
   "offset": 470
 }
 ```
 
 **Output:**
+
 ```
-<path>/Users/six/code/mehta/src/app/dashboard/page.tsx</path>
+<path>./src/app/dashboard/page.tsx</path>
 <type>file</type>
 <content>470:             {/* Charts Row */}
 471:             {(fellowStats.length > 0 || riskTrend.length > 0) && (
@@ -2668,7 +2798,7 @@ Let me read around line 476 to see the Fellow Performance card:
 483:                     </CardContent>
 484:                   </Card>
 485:                 )}
-486: 
+486:
 487:                 {riskTrend.length > 0 && (
 488:                   <Card>
 489:                     <CardHeader>
@@ -2682,7 +2812,7 @@ Let me read around line 476 to see the Fellow Performance card:
 497:                     </CardContent>
 498:                   </Card>
 499:                 )}
-500: 
+500:
 501:                 <Card>
 502:                   <CardHeader>
 503:                     <CardTitle>Session Status</CardTitle>
@@ -2708,15 +2838,17 @@ Now I'll update all three cards with toggle buttons. Let me edit them:
 **Tool: edit**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/six/code/mehta/src/app/dashboard/page.tsx",
+  "filePath": "./src/app/dashboard/page.tsx",
   "newString": "            {/* Charts Row */}\n            {(fellowStats.length > 0 || riskTrend.length > 0) && (\n              <div className=\"grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8\">\n                {fellowStats.length > 0 && (\n                  <Card>\n                    <CardHeader>\n                      <div className=\"flex items-center justify-between\">\n                        <div>\n                          <CardTitle>Fellow Performance</CardTitle>\n                          <CardDescription>\n                            Average scores by fellow\n                          </CardDescription>\n                        </div>\n                        <Toggle\n                          pressed={showPerformanceChart}\n                          onPressedChange={setShowPerformanceChart}\n                          aria-label=\"Toggle chart view\"\n                          className=\"rounded-none\"\n                        >\n                          {showPerformanceChart ? <BarChart3 className=\"h-4 w-4\" /> : <List className=\"h-4 w-4\" />}\n                        </Toggle>\n                      </div>\n                    </CardHeader>\n                    <CardContent>\n                      {showPerformanceChart ? (\n                        <PerformanceBarChart data={fellowStats} />\n                      ) : (\n                        <div className=\"space-y-4\">\n                          {fellowStats.map(f => (\n                            <div key={f.name} className=\"flex items-center justify-between\">\n                              <div>\n                                <p className=\"font-medium\">{f.name}</p>\n                                <p className=\"text-xs text-gray-500\">\n                                  {f.totalSessions} sessions • {f.riskCount} risks\n                                </p>\n                              </div>\n                              <div className=\"flex gap-2\">\n                                <Badge variant=\"outline\" className=\"text-xs\">\n                                  CC: {f.avgContentCoverage.toFixed(1)}\n                                </Badge>\n                                <Badge variant=\"outline\" className=\"text-xs\">\n                                  FQ: {f.avgFacilitationQuality.toFixed(1)}\n                                </Badge>\n                                <Badge variant=\"outline\" className=\"text-xs\">\n                                  PS: {f.avgProtocolSafety.toFixed(1)}\n                                </Badge>\n                              </div>\n                            </div>\n                          ))}\n                        </div>\n                      )}\n                    </CardContent>\n                  </Card>\n                )}\n\n                {riskTrend.length > 0 && (\n                  <Card>\n                    <CardHeader>\n                      <div className=\"flex items-center justify-between\">\n                        <div>\n                          <CardTitle>Risk Trend</CardTitle>\n                          <CardDescription>\n                            Risks detected over time\n                          </CardDescription>\n                        </div>\n                        <Toggle\n                          pressed={showRiskChart}\n                          onPressedChange={setShowRiskChart}\n                          aria-label=\"Toggle chart view\"\n                          className=\"rounded-none\"\n                        >\n                          {showRiskChart ? <TrendingUp className=\"h-4 w-4\" /> : <List className=\"h-4 w-4\" />}\n                        </Toggle>\n                      </div>\n                    </CardHeader>\n                    <CardContent>\n                      {showRiskChart ? (\n                        <RiskTrendChart data={riskTrend} />\n                      ) : (\n                        <div className=\"space-y-2\">\n                          {riskTrend.slice(-7).map(t => (\n                            <div key={t.date} className=\"flex items-center justify-between\">\n                              <span className=\"text-sm text-gray-600\">\n                                {new Date(t.date).toLocaleDateString()}\n                              </span>\n                              <Badge variant=\"destructive\">{t.count} risk(s)</Badge>\n                            </div>\n                          ))}\n                        </div>\n                      )}\n                    </CardContent>\n                  </Card>\n                )}\n\n                <Card>\n                  <CardHeader>\n                    <div className=\"flex items-center justify-between\">\n                      <div>\n                        <CardTitle>Session Status</CardTitle>\n                        <CardDescription>\n                          Distribution of session statuses\n                        </CardDescription>\n                      </div>\n                      <Toggle\n                        pressed={showStatusChart}\n                        onPressedChange={setShowStatusChart}\n                        aria-label=\"Toggle chart view\"\n                        className=\"rounded-none\"\n                      >\n                        {showStatusChart ? <PieChart className=\"h-4 w-4\" /> : <List className=\"h-4 w-4\" />}\n                      </Toggle>\n                    </div>\n                  </CardHeader>\n                  <CardContent>\n                    {showStatusChart ? (\n                      <SessionStatusPie data={statusDistribution} />\n                    ) : (\n                      <div className=\"space-y-2\">\n                        <div className=\"flex items-center justify-between\">\n                          <span className=\"text-sm\">Pending</span>\n                          <Badge variant=\"secondary\">{statusDistribution.PENDING}</Badge>\n                        </div>\n                        <div className=\"flex items-center justify-between\">\n                          <span className=\"text-sm\">Processed</span>\n                          <Badge variant=\"outline\">{statusDistribution.PROCESSED}</Badge>\n                        </div>\n                        <div className=\"flex items-center justify-between\">\n                          <span className=\"text-sm\">Safe</span>\n                          <Badge className=\"bg-green-500\">{statusDistribution.SAFE}</Badge>\n                        </div>\n                        <div className=\"flex items-center justify-between\">\n                          <span className=\"text-sm\">Flagged</span>\n                          <Badge variant=\"destructive\">{statusDistribution.FLAGGED_FOR_REVIEW}</Badge>\n                        </div>\n                      </div>\n                    )}\n                  </CardContent>\n                </Card>",
   "oldString": "            {/* Charts Row */}\n            {(fellowStats.length > 0 || riskTrend.length > 0) && (\n              <div className=\"grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8\">\n                {fellowStats.length > 0 && (\n                  <Card>\n                    <CardHeader>\n                      <CardTitle>Fellow Performance</CardTitle>\n                      <CardDescription>\n                        Average scores by fellow\n                      </CardDescription>\n                    </CardHeader>\n                    <CardContent>\n                      <PerformanceBarChart data={fellowStats} />\n                    </CardContent>\n                  </Card>\n                )}\n\n                {riskTrend.length > 0 && (\n                  <Card>\n                    <CardHeader>\n                      <CardTitle>Risk Trend</CardTitle>\n                      <CardDescription>\n                        Risks detected over time\n                      </CardDescription>\n                    </CardHeader>\n                    <CardContent>\n                      <RiskTrendChart data={riskTrend} />\n                    </CardContent>\n                  </Card>\n                )}\n\n                <Card>\n                  <CardHeader>\n                    <CardTitle>Session Status</CardTitle>\n                    <CardDescription>\n                      Distribution of session statuses\n                    </CardDescription>\n                  </CardHeader>\n                  <CardContent>\n                    <SessionStatusPie data={statusDistribution} />"
 }
 ```
 
 **Output:**
+
 ```
 Edit applied successfully.
 ```
@@ -2732,17 +2864,19 @@ Now I need to close the cards properly. Let me find the end of the SessionStatus
 **Tool: read**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/six/code/mehta/src/app/dashboard/page.tsx",
+  "filePath": "./src/app/dashboard/page.tsx",
   "limit": 20,
   "offset": 545
 }
 ```
 
 **Output:**
+
 ```
-<path>/Users/six/code/mehta/src/app/dashboard/page.tsx</path>
+<path>./src/app/dashboard/page.tsx</path>
 <type>file</type>
 <content>545:                     <CardContent>
 546:                       {showRiskChart ? (
@@ -2762,7 +2896,7 @@ Now I need to close the cards properly. Let me find the end of the SessionStatus
 560:                     </CardContent>
 561:                   </Card>
 562:                 )}
-563: 
+563:
 564:                 <Card>
 
 (File has more lines. Use 'offset' parameter to read beyond line 564)
@@ -2780,22 +2914,24 @@ Let me continue reading to find the end of the Session Status card:
 **Tool: read**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/six/code/mehta/src/app/dashboard/page.tsx",
+  "filePath": "./src/app/dashboard/page.tsx",
   "limit": 30,
   "offset": 560
 }
 ```
 
 **Output:**
+
 ```
-<path>/Users/six/code/mehta/src/app/dashboard/page.tsx</path>
+<path>./src/app/dashboard/page.tsx</path>
 <type>file</type>
 <content>560:                     </CardContent>
 561:                   </Card>
 562:                 )}
-563: 
+563:
 564:                 <Card>
 565:                   <CardHeader>
 566:                     <div className="flex items-center justify-between">
@@ -2838,17 +2974,19 @@ The cards look good. Let me check if the Session Status card is properly closed:
 **Tool: read**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/six/code/mehta/src/app/dashboard/page.tsx",
+  "filePath": "./src/app/dashboard/page.tsx",
   "limit": 30,
   "offset": 590
 }
 ```
 
 **Output:**
+
 ```
-<path>/Users/six/code/mehta/src/app/dashboard/page.tsx</path>
+<path>./src/app/dashboard/page.tsx</path>
 <type>file</type>
 <content>590:                           <Badge variant="secondary">{statusDistribution.PENDING}</Badge>
 591:                         </div>
@@ -2872,7 +3010,7 @@ The cards look good. Let me check if the Session Status card is properly closed:
 609:                 </Card>
 610:               </div>
 611:             )}
-612: 
+612:
 613:             {/* Text-based Summary Cards - Keep these for quick overview */}
 614:             {fellowStats.length > 0 && (
 615:               <div className="grid gap-6 md:grid-cols-2 mb-8">
@@ -2896,15 +3034,17 @@ There's an issue - there's an extra `</CardContent></Card>` at lines 608-609. Le
 **Tool: edit**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/six/code/mehta/src/app/dashboard/page.tsx",
+  "filePath": "./src/app/dashboard/page.tsx",
   "newString": "                      </div>\n                    )}\n                  </CardContent>\n                </Card>\n              </div>\n            )}\n\n            {/* Text-based Summary Cards - Keep these for quick overview */}",
   "oldString": "                      </div>\n                    )}\n                  </CardContent>\n                </Card>\n                  </CardContent>\n                </Card>\n              </div>\n            )}\n\n            {/* Text-based Summary Cards - Keep these for quick overview */}"
 }
 ```
 
 **Output:**
+
 ```
 Edit applied successfully.
 ```
@@ -2920,6 +3060,7 @@ Now let me test if the dev server runs:
 **Tool: bash**
 
 **Input:**
+
 ```json
 {
   "command": "cd /Users/six/code/mehta && npm run dev 2>&1 &\nsleep 10\ncurl -s http://localhost:3000/dashboard 2>/dev/null | head -5",
@@ -2929,6 +3070,7 @@ Now let me test if the dev server runs:
 ```
 
 **Output:**
+
 ```
 
 > mehta@0.1.0 dev
@@ -2955,6 +3097,7 @@ The dev server runs. Let me update the todo list and commit the changes:
 **Tool: todowrite**
 
 **Input:**
+
 ```json
 {
   "todos": [
@@ -2999,6 +3142,7 @@ The dev server runs. Let me update the todo list and commit the changes:
 ```
 
 **Output:**
+
 ```
 [
   {
@@ -3051,6 +3195,7 @@ Now let me commit the changes:
 **Tool: bash**
 
 **Input:**
+
 ```json
 {
   "command": "git status",
@@ -3059,6 +3204,7 @@ Now let me commit the changes:
 ```
 
 **Output:**
+
 ```
 On branch feat/dashboard-enhancements
 Changes not staged for commit:
@@ -3086,6 +3232,7 @@ Let me commit all changes:
 **Tool: bash**
 
 **Input:**
+
 ```json
 {
   "command": "git add -A && git commit -m \"✨ feat(dashboard): add view toggles for chart/list switching\n\n🎛️ View Toggles Added:\n- Fellow Performance: Toggle between bar chart and text list view\n- Risk Trend: Toggle between area chart and text list view  \n- Session Status: Toggle between donut chart and text list view\n\n💾 Persistence:\n- Toggle preferences saved to localStorage\n- Uses custom useLocalStorage hook\n- Preferences persist across page reloads\n\n🔘 Toggle Icons:\n- BarChart3 icon for chart view\n- List icon for text view\n- TrendingUp for Risk Trend chart\n- PieChart for Session Status chart\n\n📦 New Dependencies:\n- shadcn toggle component\n\n📁 Files Created:\n- src/components/ui/toggle.tsx\n- src/hooks/use-local-storage.ts\"",
@@ -3094,6 +3241,7 @@ Let me commit all changes:
 ```
 
 **Output:**
+
 ```
 [feat/dashboard-enhancements 44e6e7b] ✨ feat(dashboard): add view toggles for chart/list switching
  3 files changed, 247 insertions(+), 15 deletions(-)
@@ -3116,12 +3264,12 @@ Done! Let me provide a summary.
 
 ### Summary
 
-| Feature | Status | Implementation |
-|---------|--------|----------------|
-| **Fellow Performance Toggle** | ✅ | BarChart3 ↔ List |
-| **Risk Trend Toggle** | ✅ | TrendingUp ↔ List |
-| **Session Status Toggle** | ✅ | PieChart ↔ List |
-| **localStorage Persistence** | ✅ | Preferences saved across sessions |
+| Feature                       | Status | Implementation                    |
+| ----------------------------- | ------ | --------------------------------- |
+| **Fellow Performance Toggle** | ✅     | BarChart3 ↔ List                  |
+| **Risk Trend Toggle**         | ✅     | TrendingUp ↔ List                 |
+| **Session Status Toggle**     | ✅     | PieChart ↔ List                   |
+| **localStorage Persistence**  | ✅     | Preferences saved across sessions |
 
 ### Files Created
 
@@ -3132,6 +3280,7 @@ src/
 ```
 
 ### Toggle States (localStorage keys)
+
 - `dashboard-showPerformanceChart` (default: true)
 - `dashboard-showRiskChart` (default: true)
 - `dashboard-showStatusChart` (default: true)
@@ -3167,18 +3316,20 @@ Let me analyze the current chart implementation to understand the bugs and explo
 **Tool: read**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/six/code/mehta/src/components/dashboard/charts/performance-bar-chart.tsx"
+  "filePath": "./src/components/dashboard/charts/performance-bar-chart.tsx"
 }
 ```
 
 **Output:**
+
 ```
-<path>/Users/six/code/mehta/src/components/dashboard/charts/performance-bar-chart.tsx</path>
+<path>./src/components/dashboard/charts/performance-bar-chart.tsx</path>
 <type>file</type>
 <content>1: 'use client';
-2: 
+2:
 3: import {
 4:   BarChart,
 5:   Bar,
@@ -3189,7 +3340,7 @@ Let me analyze the current chart implementation to understand the bugs and explo
 10:   Legend,
 11:   ResponsiveContainer
 12: } from 'recharts';
-13: 
+13:
 14: interface FellowPerformance {
 15:   name: string;
 16:   totalSessions: number;
@@ -3198,17 +3349,17 @@ Let me analyze the current chart implementation to understand the bugs and explo
 19:   avgProtocolSafety: number;
 20:   riskCount: number;
 21: }
-22: 
+22:
 23: interface PerformanceBarChartProps {
 24:   data: FellowPerformance[];
 25: }
-26: 
+26:
 27: const CHART_COLORS = {
 28:   contentCoverage: 'hsl(var(--chart-1))',
 29:   facilitationQuality: 'hsl(var(--chart-2))',
 30:   protocolSafety: 'hsl(var(--chart-3))'
 31: };
-32: 
+32:
 33: export function PerformanceBarChart({ data }: PerformanceBarChartProps) {
 34:   if (!data || data.length === 0) {
 35:     return (
@@ -3217,14 +3368,14 @@ Let me analyze the current chart implementation to understand the bugs and explo
 38:       </div>
 39:     );
 40:   }
-41: 
+41:
 42:   const chartData = data.map(f => ({
 43:     name: f.name.length > 12 ? f.name.slice(0, 12) + '...' : f.name,
 44:     'Content Coverage': Number(f.avgContentCoverage.toFixed(1)),
 45:     'Facilitation Quality': Number(f.avgFacilitationQuality.toFixed(1)),
 46:     'Protocol Safety': Number(f.avgProtocolSafety.toFixed(1))
 47:   }));
-48: 
+48:
 49:   return (
 50:     <ResponsiveContainer width="100%" height={300}>
 51:       <BarChart
@@ -3274,7 +3425,7 @@ Let me analyze the current chart implementation to understand the bugs and explo
 95:     </ResponsiveContainer>
 96:   );
 97: }
-98: 
+98:
 
 (End of file - total 98 lines)
 </content>
@@ -3291,17 +3442,19 @@ I see the issue - the colors are using `hsl(var(--chart-1))` which is CSS variab
 **Tool: read**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/six/code/mehta/src/app/globals.css",
+  "filePath": "./src/app/globals.css",
   "limit": 30,
   "offset": 65
 }
 ```
 
 **Output:**
+
 ```
-<path>/Users/six/code/mehta/src/app/globals.css</path>
+<path>./src/app/globals.css</path>
 <type>file</type>
 <content>65:   --accent-foreground: oklch(0.205 0 0);
 66:   --destructive: oklch(0.577 0.245 27.325);
@@ -3322,7 +3475,7 @@ I see the issue - the colors are using `hsl(var(--chart-1))` which is CSS variab
 81:   --sidebar-border: oklch(0.922 0 0);
 82:   --sidebar-ring: oklch(0.708 0 0);
 83: }
-84: 
+84:
 85: .dark {
 86:   --background: oklch(0.145 0 0);
 87:   --foreground: oklch(0.985 0 0);
@@ -3351,18 +3504,20 @@ Let me also check what the tooltip issue is in the session status pie chart.
 **Tool: read**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/six/code/mehta/src/components/dashboard/charts/session-status-pie.tsx"
+  "filePath": "./src/components/dashboard/charts/session-status-pie.tsx"
 }
 ```
 
 **Output:**
+
 ```
-<path>/Users/six/code/mehta/src/components/dashboard/charts/session-status-pie.tsx</path>
+<path>./src/components/dashboard/charts/session-status-pie.tsx</path>
 <type>file</type>
 <content>1: 'use client';
-2: 
+2:
 3: import {
 4:   PieChart,
 5:   Pie,
@@ -3371,13 +3526,13 @@ Let me also check what the tooltip issue is in the session status pie chart.
 8:   Legend,
 9:   ResponsiveContainer
 10: } from 'recharts';
-11: 
+11:
 12: interface SessionStatusData {
 13:   name: string;
 14:   value: number;
 15:   color: string;
 16: }
-17: 
+17:
 18: interface SessionStatusPieProps {
 19:   data: {
 20:     PENDING: number;
@@ -3386,21 +3541,21 @@ Let me also check what the tooltip issue is in the session status pie chart.
 23:     FLAGGED_FOR_REVIEW: number;
 24:   };
 25: }
-26: 
+26:
 27: const STATUS_COLORS = {
 28:   PENDING: 'hsl(var(--chart-5))',
 29:   PROCESSED: 'hsl(var(--chart-2))',
 30:   SAFE: 'hsl(var(--chart-1))',
 31:   FLAGGED_FOR_REVIEW: 'hsl(var(--chart-4))'
 32: };
-33: 
+33:
 34: const STATUS_LABELS: Record<string, string> = {
 35:   PENDING: 'Pending',
 36:   PROCESSED: 'Processed',
 37:   SAFE: 'Safe',
 38:   FLAGGED_FOR_REVIEW: 'Flagged'
 39: };
-40: 
+40:
 41: export function SessionStatusPie({ data }: SessionStatusPieProps) {
 42:   if (!data) {
 43:     return (
@@ -3409,7 +3564,7 @@ Let me also check what the tooltip issue is in the session status pie chart.
 46:       </div>
 47:     );
 48:   }
-49: 
+49:
 50:   const chartData: SessionStatusData[] = [
 51:     { name: 'Pending', value: data.PENDING || 0, color: STATUS_COLORS.PENDING },
 52:     {
@@ -3424,7 +3579,7 @@ Let me also check what the tooltip issue is in the session status pie chart.
 61:       color: STATUS_COLORS.FLAGGED_FOR_REVIEW
 62:     }
 63:   ].filter(d => d.value > 0);
-64: 
+64:
 65:   if (chartData.length === 0) {
 66:     return (
 67:       <div className="flex items-center justify-center h-64 text-muted-foreground">
@@ -3432,7 +3587,7 @@ Let me also check what the tooltip issue is in the session status pie chart.
 69:       </div>
 70:     );
 71:   }
-72: 
+72:
 73:   return (
 74:     <ResponsiveContainer width="100%" height={280}>
 75:       <PieChart>
@@ -3468,7 +3623,7 @@ Let me also check what the tooltip issue is in the session status pie chart.
 105:     </ResponsiveContainer>
 106:   );
 107: }
-108: 
+108:
 
 (End of file - total 108 lines)
 </content>
@@ -3485,18 +3640,20 @@ I see the issues now:1. **Color Bug**: The CSS variables use `hsl(var(--chart-X)
 **Tool: read**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/six/code/mehta/src/components/dashboard/charts/risk-trend-chart.tsx"
+  "filePath": "./src/components/dashboard/charts/risk-trend-chart.tsx"
 }
 ```
 
 **Output:**
+
 ```
-<path>/Users/six/code/mehta/src/components/dashboard/charts/risk-trend-chart.tsx</path>
+<path>./src/components/dashboard/charts/risk-trend-chart.tsx</path>
 <type>file</type>
 <content>1: 'use client';
-2: 
+2:
 3: import {
 4:   AreaChart,
 5:   Area,
@@ -3506,16 +3663,16 @@ I see the issues now:1. **Color Bug**: The CSS variables use `hsl(var(--chart-X)
 9:   Tooltip,
 10:   ResponsiveContainer
 11: } from 'recharts';
-12: 
+12:
 13: interface RiskTrendData {
 14:   date: string;
 15:   count: number;
 16: }
-17: 
+17:
 18: interface RiskTrendChartProps {
 19:   data: RiskTrendData[];
 20: }
-21: 
+21:
 22: export function RiskTrendChart({ data }: RiskTrendChartProps) {
 23:   if (!data || data.length === 0) {
 24:     return (
@@ -3524,7 +3681,7 @@ I see the issues now:1. **Color Bug**: The CSS variables use `hsl(var(--chart-X)
 27:       </div>
 28:     );
 29:   }
-30: 
+30:
 31:   const chartData = data.map(d => ({
 32:     date: new Date(d.date).toLocaleDateString('en-US', {
 33:       month: 'short',
@@ -3532,7 +3689,7 @@ I see the issues now:1. **Color Bug**: The CSS variables use `hsl(var(--chart-X)
 35:     }),
 36:     Risks: d.count
 37:   }));
-38: 
+38:
 39:   return (
 40:     <ResponsiveContainer width="100%" height={250}>
 41:       <AreaChart
@@ -3584,7 +3741,7 @@ I see the issues now:1. **Color Bug**: The CSS variables use `hsl(var(--chart-X)
 87:     </ResponsiveContainer>
 88:   );
 89: }
-90: 
+90:
 
 (End of file - total 90 lines)
 </content>
@@ -3599,16 +3756,19 @@ _Thinking:_
 Now I have a clear picture. Let me create a comprehensive implementation plan:
 
 **Bug 1: Colors not showing (all black)**
+
 - The CSS variables use OKLCH format: `oklch(0.646 0.222 41.116)`
 - But the charts use: `hsl(var(--chart-1))` - which doesn't resolve properly in JS
 - Solution: Use actual hex colors or resolve CSS variables at runtime
 
 **Bug 2: Tooltip text not ideal**
+
 - In SessionStatusPie, the tooltip only shows "X sessions" but not WHICH status
 - Need to show both the status name and count
 
 **Better visualization suggestions:**
 Instead of just Fellow average performance, suggest:
+
 1. Session-by-session performance over time
 2. Risk distribution by category
 3. Score distribution histograms
@@ -3625,12 +3785,14 @@ Let me create the plan.
 
 #### Bug 1: Colors Not Showing (All Black)
 
-**Root Cause:** 
+**Root Cause:**
+
 - CSS variables in `globals.css` use OKLCH format: `oklch(0.646 0.222 41.116)`
 - Charts use `hsl(var(--chart-1))` which doesn't resolve in JavaScript
 - Need actual hex/rgb color values or resolve CSS variables at runtime
 
 **Affected Files:**
+
 - `src/components/dashboard/charts/performance-bar-chart.tsx`
 - `src/components/dashboard/charts/risk-trend-chart.tsx`
 - `src/components/dashboard/charts/session-status-pie.tsx`
@@ -3638,6 +3800,7 @@ Let me create the plan.
 #### Bug 2: Tooltip Text Not Ideal
 
 **Root Cause:**
+
 - SessionStatusPie tooltip shows only count, not status name
 - Missing proper label formatting
 
@@ -3648,13 +3811,14 @@ Let me create the plan.
 #### Step 1: Fix Color Coding
 
 **Option A: Use Actual Hex Colors (Recommended)**
+
 ```tsx
 // Replace CSS variable approach with actual hex colors
 const CHART_COLORS = {
-  contentCoverage: '#3b82f6',  // blue-500
-  facilitationQuality: '#22c55e', // green-500  
-  protocolSafety: '#a855f7',   // purple-500
-  risk: '#ef4444',              // red-500
+  contentCoverage: '#3b82f6', // blue-500
+  facilitationQuality: '#22c55e', // green-500
+  protocolSafety: '#a855f7', // purple-500
+  risk: '#ef4444' // red-500
   // ...
 };
 ```
@@ -3665,13 +3829,13 @@ Add custom chart colors to globals.css using Tailwind utility classes.
 #### Step 2: Fix Tooltips
 
 **Fix SessionStatusPie tooltip:**
+
 ```tsx
-<Tooltip
-  formatter={(value, name) => [`${value} sessions`, name]}
-/>
+<Tooltip formatter={(value, name) => [`${value} sessions`, name]} />
 ```
 
 **Improve all tooltips with:**
+
 - Show metric name
 - Show value with units
 - Add percentage for pie charts
@@ -3682,25 +3846,25 @@ Add custom chart colors to globals.css using Tailwind utility classes.
 
 Current: Fellow Average Performance (static, one view)
 
-| Alternative | Description | Priority |
-|------------|-------------|----------|
-| **Session Timeline** | Show performance scores across sessions over time | High |
-| **Score Distribution** | Histogram showing distribution of CC/FQ/PS scores | High |
-| **Validation Rate** | % of sessions validated vs rejected over time | Medium |
-| **Risk by Category** | Breakdown of risk types (protocol breach, student distress, etc.) | Medium |
-| **Fellow Radar Chart** | Multi-axis comparison of fellows across all metrics | Medium |
+| Alternative            | Description                                                       | Priority |
+| ---------------------- | ----------------------------------------------------------------- | -------- |
+| **Session Timeline**   | Show performance scores across sessions over time                 | High     |
+| **Score Distribution** | Histogram showing distribution of CC/FQ/PS scores                 | High     |
+| **Validation Rate**    | % of sessions validated vs rejected over time                     | Medium   |
+| **Risk by Category**   | Breakdown of risk types (protocol breach, student distress, etc.) | Medium   |
+| **Fellow Radar Chart** | Multi-axis comparison of fellows across all metrics               | Medium   |
 
 ---
 
 ### Files to Modify
 
-| File | Changes |
-|------|---------|
+| File                                                        | Changes                     |
+| ----------------------------------------------------------- | --------------------------- |
 | `src/components/dashboard/charts/performance-bar-chart.tsx` | Fix colors, improve tooltip |
-| `src/components/dashboard/charts/risk-trend-chart.tsx` | Fix colors |
-| `src/components/dashboard/charts/session-status-pie.tsx` | Fix colors + tooltip |
-| `src/components/dashboard/charts/weekly-volume-chart.tsx` | Fix colors |
-| `src/components/dashboard/charts/risk-breakdown-chart.tsx` | Fix colors |
+| `src/components/dashboard/charts/risk-trend-chart.tsx`      | Fix colors                  |
+| `src/components/dashboard/charts/session-status-pie.tsx`    | Fix colors + tooltip        |
+| `src/components/dashboard/charts/weekly-volume-chart.tsx`   | Fix colors                  |
+| `src/components/dashboard/charts/risk-breakdown-chart.tsx`  | Fix colors                  |
 
 ---
 
@@ -3748,9 +3912,11 @@ I should create a comprehensive implementation plan.
 ### Bug Fixes
 
 #### Bug 1: Colors Not Showing (All Black)
+
 **Fix:** Replace CSS variables with actual hex colors in all chart components.
 
 #### Bug 2: Tooltip Text Not Ideal
+
 **Fix:** Add proper label formatting to tooltips.
 
 ---
@@ -3758,6 +3924,7 @@ I should create a comprehensive implementation plan.
 ### Part 1: Fix Colors & Tooltips
 
 **Files to Modify:**
+
 - `src/components/dashboard/charts/performance-bar-chart.tsx`
 - `src/components/dashboard/charts/risk-trend-chart.tsx`
 - `src/components/dashboard/charts/session-status-pie.tsx`
@@ -3765,16 +3932,17 @@ I should create a comprehensive implementation plan.
 - `src/components/dashboard/charts/risk-breakdown-chart.tsx`
 
 **Color Palette:**
+
 ```tsx
 const CHART_COLORS = {
-  contentCoverage: '#3b82f6',  // blue
+  contentCoverage: '#3b82f6', // blue
   facilitationQuality: '#22c55e', // green
-  protocolSafety: '#a855f7',    // purple
-  risk: '#ef4444',              // red
-  pending: '#6b7280',           // gray
-  processed: '#22c55e',          // green
-  safe: '#10b981',              // emerald
-  flagged: '#f59e0b',           // amber
+  protocolSafety: '#a855f7', // purple
+  risk: '#ef4444', // red
+  pending: '#6b7280', // gray
+  processed: '#22c55e', // green
+  safe: '#10b981', // emerald
+  flagged: '#f59e0b' // amber
 };
 ```
 
@@ -3792,6 +3960,7 @@ const CHART_COLORS = {
   - High (2-3): Green
 
 **Implementation:**
+
 - Replace "Fellow Performance Summary" card with Score Distribution chart
 - Keep chart in the charts row with toggle
 
@@ -3802,6 +3971,7 @@ const CHART_COLORS = {
 **Modify:** `src/app/dashboard/sessions/[id]/page.tsx`
 
 #### A. Add Fellow Radar Chart
+
 **New File:** `src/components/dashboard/charts/fellow-radar-chart.tsx`
 
 - Multi-axis radar chart showing fellow performance across all metrics
@@ -3811,6 +3981,7 @@ const CHART_COLORS = {
 #### B. Add Clickable Session List (2-Column Layout)
 
 **Layout Change:**
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  Session Details          │  All Sessions                  │
@@ -3822,6 +3993,7 @@ const CHART_COLORS = {
 ```
 
 **Implementation:**
+
 - Add left sidebar showing list of all sessions for the fellow
 - Each item shows: Group ID, Date, Status badge
 - Click to navigate between sessions
@@ -3831,22 +4003,23 @@ const CHART_COLORS = {
 
 ### Files Summary
 
-| File | Action |
-|------|--------|
-| `performance-bar-chart.tsx` | Fix colors + tooltip |
-| `risk-trend-chart.tsx` | Fix colors |
-| `session-status-pie.tsx` | Fix colors + tooltip |
-| `weekly-volume-chart.tsx` | Fix colors |
-| `risk-breakdown-chart.tsx` | Fix colors |
-| `src/components/dashboard/charts/score-distribution-chart.tsx` | New |
-| `src/components/dashboard/charts/fellow-radar-chart.tsx` | New |
-| `src/app/dashboard/sessions/[id]/page.tsx` | Add sidebar + radar chart |
+| File                                                           | Action                    |
+| -------------------------------------------------------------- | ------------------------- |
+| `performance-bar-chart.tsx`                                    | Fix colors + tooltip      |
+| `risk-trend-chart.tsx`                                         | Fix colors                |
+| `session-status-pie.tsx`                                       | Fix colors + tooltip      |
+| `weekly-volume-chart.tsx`                                      | Fix colors                |
+| `risk-breakdown-chart.tsx`                                     | Fix colors                |
+| `src/components/dashboard/charts/score-distribution-chart.tsx` | New                       |
+| `src/components/dashboard/charts/fellow-radar-chart.tsx`       | New                       |
+| `src/app/dashboard/sessions/[id]/page.tsx`                     | Add sidebar + radar chart |
 
 ---
 
 ### Questions
 
 None - plan is ready based on your specifications:
+
 - ✅ Hex colors for all charts
 - ✅ Score distribution (replace fellow overview)
 - ✅ Session page: radar chart + clickable session list (2-column)
@@ -3878,6 +4051,7 @@ Let me start with fixing the colors in all chart components.
 **Tool: todowrite**
 
 **Input:**
+
 ```json
 {
   "todos": [
@@ -3922,6 +4096,7 @@ Let me start with fixing the colors in all chart components.
 ```
 
 **Output:**
+
 ```
 [
   {
@@ -3974,15 +4149,17 @@ Let me fix the colors in all chart components. I'll use hex colors instead of CS
 **Tool: edit**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/six/code/mehta/src/components/dashboard/charts/performance-bar-chart.tsx",
+  "filePath": "./src/components/dashboard/charts/performance-bar-chart.tsx",
   "newString": "const CHART_COLORS = {\n  contentCoverage: '#3b82f6',  // blue\n  facilitationQuality: '#22c55e', // green\n  protocolSafety: '#a855f7'      // purple\n};",
   "oldString": "const CHART_COLORS = {\n  contentCoverage: 'hsl(var(--chart-1))',\n  facilitationQuality: 'hsl(var(--chart-2))',\n  protocolSafety: 'hsl(var(--chart-3))'\n};"
 }
 ```
 
 **Output:**
+
 ```
 Edit applied successfully.
 ```
@@ -3998,20 +4175,22 @@ Now fix the tooltips and improve them. Let me also add better tooltip content.
 **Tool: edit**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/six/code/mehta/src/components/dashboard/charts/performance-bar-chart.tsx",
+  "filePath": "./src/components/dashboard/charts/performance-bar-chart.tsx",
   "newString": "        <Tooltip\n          contentStyle={{\n            backgroundColor: 'hsl(var(--card))',\n            border: '1px solid hsl(var(--border))',\n            borderRadius: '8px'\n          }}\n          labelStyle={{ color: 'hsl(var(--foreground))' }}\n          formatter={(value, name) => [value.toFixed(1), name]}\n        />",
   "oldString": "        <Tooltip\n          contentStyle={{\n            backgroundColor: 'hsl(var(--card))',\n            border: '1px solid hsl(var(--border))',\n            borderRadius: '8px'\n          }}\n          labelStyle={{ color: 'hsl(var(--foreground))' }}\n        />"
 }
 ```
 
 **Output:**
+
 ```
 Edit applied successfully.
 
 LSP errors detected in this file, please fix:
-<diagnostics file="/Users/six/code/mehta/src/components/dashboard/charts/performance-bar-chart.tsx">
+<diagnostics file="./src/components/dashboard/charts/performance-bar-chart.tsx">
 ERROR [77:40] 'value' is possibly 'undefined'.
 ERROR [77:46] Property 'toFixed' does not exist on type 'ValueType'.
   Property 'toFixed' does not exist on type 'string'.
@@ -4029,15 +4208,17 @@ Let me fix the TypeScript error in the tooltip formatter.
 **Tool: edit**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/six/code/mehta/src/components/dashboard/charts/performance-bar-chart.tsx",
+  "filePath": "./src/components/dashboard/charts/performance-bar-chart.tsx",
   "newString": "        <Tooltip\n          contentStyle={{\n            backgroundColor: 'hsl(var(--card))',\n            border: '1px solid hsl(var(--border))',\n            borderRadius: '8px'\n          }}\n          labelStyle={{ color: 'hsl(var(--foreground))' }}\n        />",
   "oldString": "        <Tooltip\n          contentStyle={{\n            backgroundColor: 'hsl(var(--card))',\n            border: '1px solid hsl(var(--border))',\n            borderRadius: '8px'\n          }}\n          labelStyle={{ color: 'hsl(var(--foreground))' }}\n          formatter={(value, name) => [value.toFixed(1), name]}\n        />"
 }
 ```
 
 **Output:**
+
 ```
 Edit applied successfully.
 ```
@@ -4053,15 +4234,17 @@ Now fix the session-status-pie.tsx with hex colors and better tooltips.
 **Tool: edit**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/six/code/mehta/src/components/dashboard/charts/session-status-pie.tsx",
+  "filePath": "./src/components/dashboard/charts/session-status-pie.tsx",
   "newString": "const STATUS_COLORS = {\n  PENDING: '#6b7280',        // gray\n  PROCESSED: '#22c55e',       // green\n  SAFE: '#10b981',           // emerald\n  FLAGGED_FOR_REVIEW: '#f59e0b' // amber\n};",
   "oldString": "const STATUS_COLORS = {\n  PENDING: 'hsl(var(--chart-5))',\n  PROCESSED: 'hsl(var(--chart-2))',\n  SAFE: 'hsl(var(--chart-1))',\n  FLAGGED_FOR_REVIEW: 'hsl(var(--chart-4))'\n};"
 }
 ```
 
 **Output:**
+
 ```
 Edit applied successfully.
 ```
@@ -4077,15 +4260,17 @@ Now fix the tooltip in session-status-pie.tsx to show proper labels.
 **Tool: edit**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/six/code/mehta/src/components/dashboard/charts/session-status-pie.tsx",
+  "filePath": "./src/components/dashboard/charts/session-status-pie.tsx",
   "newString": "        <Tooltip\n          contentStyle={{\n            backgroundColor: 'hsl(var(--card))',\n            border: '1px solid hsl(var(--border))',\n            borderRadius: '8px'\n          }}\n          formatter={(value, name) => [`${value} sessions`, name]}\n        />",
   "oldString": "        <Tooltip\n          contentStyle={{\n            backgroundColor: 'hsl(var(--card))',\n            border: '1px solid hsl(var(--border))',\n            borderRadius: '8px'\n          }}\n          formatter={value => [`${value} sessions`, '']}\n        />"
 }
 ```
 
 **Output:**
+
 ```
 Edit applied successfully.
 ```
@@ -4101,15 +4286,17 @@ Now fix the risk-trend-chart.tsx with hex colors.
 **Tool: edit**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/six/code/mehta/src/components/dashboard/charts/risk-trend-chart.tsx",
+  "filePath": "./src/components/dashboard/charts/risk-trend-chart.tsx",
   "newString": "        <defs>\n          <linearGradient id=\"riskGradient\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\">\n            <stop\n              offset=\"5%\"\n              stopColor=\"#ef4444\"\n              stopOpacity={0.3}\n            />\n            <stop\n              offset=\"95%\"\n              stopColor=\"#ef4444\"\n              stopOpacity={0}\n            />\n          </linearGradient>\n        </defs>",
   "oldString": "        <defs>\n          <linearGradient id=\"riskGradient\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\">\n            <stop\n              offset=\"5%\"\n              stopColor=\"hsl(var(--chart-4))\"\n              stopOpacity={0.3}\n            />\n            <stop\n              offset=\"95%\"\n              stopColor=\"hsl(var(--chart-4))\"\n              stopOpacity={0}\n            />\n          </linearGradient>\n        </defs>"
 }
 ```
 
 **Output:**
+
 ```
 Edit applied successfully.
 ```
@@ -4125,15 +4312,17 @@ Now fix the stroke color in the risk trend chart area.
 **Tool: edit**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/six/code/mehta/src/components/dashboard/charts/risk-trend-chart.tsx",
+  "filePath": "./src/components/dashboard/charts/risk-trend-chart.tsx",
   "newString": "        <Area\n          type=\"monotone\"\n          dataKey=\"Risks\"\n          stroke=\"#ef4444\"\n          fillOpacity={1}\n          fill=\"url(#riskGradient)\"\n          strokeWidth={2}\n        />",
   "oldString": "        <Area\n          type=\"monotone\"\n          dataKey=\"Risks\"\n          stroke=\"hsl(var(--chart-4))\"\n          fillOpacity={1}\n          fill=\"url(#riskGradient)\"\n          strokeWidth={2}\n        />"
 }
 ```
 
 **Output:**
+
 ```
 Edit applied successfully.
 ```
@@ -4149,18 +4338,20 @@ Now let me fix the weekly-volume-chart.tsx and risk-breakdown-chart.tsx.
 **Tool: read**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/six/code/mehta/src/components/dashboard/charts/weekly-volume-chart.tsx"
+  "filePath": "./src/components/dashboard/charts/weekly-volume-chart.tsx"
 }
 ```
 
 **Output:**
+
 ```
-<path>/Users/six/code/mehta/src/components/dashboard/charts/weekly-volume-chart.tsx</path>
+<path>./src/components/dashboard/charts/weekly-volume-chart.tsx</path>
 <type>file</type>
 <content>1: 'use client';
-2: 
+2:
 3: import {
 4:   BarChart,
 5:   Bar,
@@ -4170,17 +4361,17 @@ Now let me fix the weekly-volume-chart.tsx and risk-breakdown-chart.tsx.
 9:   Tooltip,
 10:   ResponsiveContainer
 11: } from 'recharts';
-12: 
+12:
 13: interface WeeklyVolumeData {
 14:   week: string;
 15:   sessions: number;
 16:   analyzed: number;
 17: }
-18: 
+18:
 19: interface WeeklyVolumeChartProps {
 20:   data: WeeklyVolumeData[];
 21: }
-22: 
+22:
 23: export function WeeklyVolumeChart({ data }: WeeklyVolumeChartProps) {
 24:   if (!data || data.length === 0) {
 25:     return (
@@ -4189,7 +4380,7 @@ Now let me fix the weekly-volume-chart.tsx and risk-breakdown-chart.tsx.
 28:       </div>
 29:     );
 30:   }
-31: 
+31:
 32:   return (
 33:     <ResponsiveContainer width="100%" height={250}>
 34:       <BarChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
@@ -4228,7 +4419,7 @@ Now let me fix the weekly-volume-chart.tsx and risk-breakdown-chart.tsx.
 67:     </ResponsiveContainer>
 68:   );
 69: }
-70: 
+70:
 
 (End of file - total 70 lines)
 </content>
@@ -4245,15 +4436,17 @@ Let me fix the colors in weekly-volume-chart.tsx.
 **Tool: edit**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/six/code/mehta/src/components/dashboard/charts/weekly-volume-chart.tsx",
+  "filePath": "./src/components/dashboard/charts/weekly-volume-chart.tsx",
   "newString": "        <Bar\n          dataKey=\"sessions\"\n          fill=\"#3b82f6\"\n          radius={[4, 4, 0, 0]}\n          name=\"Total Sessions\"\n        />\n        <Bar\n          dataKey=\"analyzed\"\n          fill=\"#22c55e\"\n          radius={[4, 4, 0, 0]}\n          name=\"Analyzed\"\n        />",
   "oldString": "        <Bar\n          dataKey=\"sessions\"\n          fill=\"hsl(var(--chart-5))\"\n          radius={[4, 4, 0, 0]}\n          name=\"Total Sessions\"\n        />\n        <Bar\n          dataKey=\"analyzed\"\n          fill=\"hsl(var(--chart-1))\"\n          radius={[4, 4, 0, 0]}\n          name=\"Analyzed\"\n        />"
 }
 ```
 
 **Output:**
+
 ```
 Edit applied successfully.
 ```
@@ -4269,18 +4462,20 @@ Now fix the risk-breakdown-chart.tsx.
 **Tool: read**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/six/code/mehta/src/components/dashboard/charts/risk-breakdown-chart.tsx"
+  "filePath": "./src/components/dashboard/charts/risk-breakdown-chart.tsx"
 }
 ```
 
 **Output:**
+
 ```
-<path>/Users/six/code/mehta/src/components/dashboard/charts/risk-breakdown-chart.tsx</path>
+<path>./src/components/dashboard/charts/risk-breakdown-chart.tsx</path>
 <type>file</type>
 <content>1: 'use client';
-2: 
+2:
 3: import {
 4:   BarChart,
 5:   Bar,
@@ -4291,16 +4486,16 @@ Now fix the risk-breakdown-chart.tsx.
 10:   ResponsiveContainer,
 11:   Cell
 12: } from 'recharts';
-13: 
+13:
 14: interface RiskCategory {
 15:   category: string;
 16:   count: number;
 17: }
-18: 
+18:
 19: interface RiskBreakdownChartProps {
 20:   data: RiskCategory[];
 21: }
-22: 
+22:
 23: const RISK_COLORS = [
 24:   'hsl(var(--chart-4))',
 25:   'hsl(var(--chart-3))',
@@ -4308,7 +4503,7 @@ Now fix the risk-breakdown-chart.tsx.
 27:   'hsl(var(--chart-1))',
 28:   'hsl(var(--chart-5))'
 29: ];
-30: 
+30:
 31: export function RiskBreakdownChart({ data }: RiskBreakdownChartProps) {
 32:   if (!data || data.length === 0) {
 33:     return (
@@ -4317,13 +4512,13 @@ Now fix the risk-breakdown-chart.tsx.
 36:       </div>
 37:     );
 38:   }
-39: 
+39:
 40:   const chartData = data.map(d => ({
 41:     name: d.category.length > 20 ? d.category.slice(0, 20) + '...' : d.category,
 42:     fullName: d.category,
 43:     count: d.count
 44:   }));
-45: 
+45:
 46:   return (
 47:     <ResponsiveContainer width="100%" height={250}>
 48:       <BarChart
@@ -4365,7 +4560,7 @@ Now fix the risk-breakdown-chart.tsx.
 84:     </ResponsiveContainer>
 85:   );
 86: }
-87: 
+87:
 
 (End of file - total 87 lines)
 </content>
@@ -4382,15 +4577,17 @@ Let me fix the risk breakdown chart colors.
 **Tool: edit**
 
 **Input:**
+
 ```json
 {
-  "filePath": "/Users/six/code/mehta/src/components/dashboard/charts/risk-breakdown-chart.tsx",
+  "filePath": "./src/components/dashboard/charts/risk-breakdown-chart.tsx",
   "newString": "const RISK_COLORS = [\n  '#ef4444',  // red\n  '#f97316',  // orange\n  '#eab308',  // yellow\n  '#22c55e',  // green\n  '#3b82f6'   // blue\n];",
   "oldString": "const RISK_COLORS = [\n  'hsl(var(--chart-4))',\n  'hsl(var(--chart-3))',\n  'hsl(var(--chart-2))',\n  'hsl(var(--chart-1))',\n  'hsl(var(--chart-5))'\n];"
 }
 ```
 
 **Output:**
+
 ```
 Edit applied successfully.
 ```
@@ -4406,6 +4603,7 @@ Now I've fixed all the colors. Let me also add tooltips to the remaining charts.
 **Tool: todowrite**
 
 **Input:**
+
 ```json
 {
   "todos": [
@@ -4450,6 +4648,7 @@ Now I've fixed all the colors. Let me also add tooltips to the remaining charts.
 ```
 
 **Output:**
+
 ```
 [
   {
@@ -4502,26 +4701,28 @@ Now I need to create the score distribution chart.
 **Tool: write**
 
 **Input:**
+
 ```json
 {
   "content": "'use client';\n\nimport {\n  BarChart,\n  Bar,\n  XAxis,\n  YAxis,\n  CartesianGrid,\n  Tooltip,\n  Legend,\n  ResponsiveContainer\n} from 'recharts';\n\ninterface ScoreDistribution {\n  contentCoverage: { low: number; medium: number; high: number };\n  facilitationQuality: { low: number; medium: number; high: number };\n  protocolSafety: { low: number; medium: number; high: number };\n}\n\ninterface ScoreDistributionChartProps {\n  data: ScoreDistribution | null;\n}\n\nconst COLORS = {\n  low: '#ef4444',     // red\n  medium: '#f59e0b', // amber\n  high: '#22c55e'    // green\n};\n\nexport function ScoreDistributionChart({ data }: ScoreDistributionChartProps) {\n  if (!data) {\n    return (\n      <div className=\"flex items-center justify-center h-64 text-muted-foreground\">\n        No score distribution data available\n      </div>\n    );\n  }\n\n  const chartData = [\n    {\n      name: 'Content Coverage',\n      Low: data.contentCoverage.low,\n      Medium: data.contentCoverage.medium,\n      High: data.contentCoverage.high\n    },\n    {\n      name: 'Facilitation Quality',\n      Low: data.facilitationQuality.low,\n      Medium: data.facilitationQuality.medium,\n      High: data.facilitationQuality.high\n    },\n    {\n      name: 'Protocol Safety',\n      Low: data.protocolSafety.low,\n      Medium: data.protocolSafety.medium,\n      High: data.protocolSafety.high\n    }\n  ];\n\n  return (\n    <ResponsiveContainer width=\"100%\" height={300}>\n      <BarChart\n        data={chartData}\n        margin={{ top: 20, right: 30, left: 20, bottom: 5 }}\n      >\n        <CartesianGrid strokeDasharray=\"3 3\" className=\"stroke-muted\" />\n        <XAxis\n          dataKey=\"name\"\n          tick={{ fontSize: 11 }}\n          className=\"fill-muted-foreground\"\n          angle={-15}\n          textAnchor=\"end\"\n          height={60}\n        />\n        <YAxis\n          tick={{ fontSize: 11 }}\n          className=\"fill-muted-foreground\"\n          allowDecimals={false}\n        />\n        <Tooltip\n          contentStyle={{\n            backgroundColor: 'hsl(var(--card))',\n            border: '1px solid hsl(var(--border))',\n            borderRadius: '8px'\n          }}\n          labelStyle={{ color: 'hsl(var(--foreground))' }}\n        />\n        <Legend />\n        <Bar dataKey=\"Low\" stackId=\"a\" fill={COLORS.low} name=\"Low (0-1)\" radius={[0, 0, 0, 0]} />\n        <Bar dataKey=\"Medium\" stackId=\"a\" fill={COLORS.medium} name=\"Medium (1-2)\" radius={[0, 0, 0, 0]} />\n        <Bar dataKey=\"High\" stackId=\"a\" fill={COLORS.high} name=\"High (2-3)\" radius={[4, 4, 0, 0]} />\n      </BarChart>\n    </ResponsiveContainer>\n  );\n}\n",
-  "filePath": "/Users/six/code/mehta/src/components/dashboard/charts/score-distribution-chart.tsx"
+  "filePath": "./src/components/dashboard/charts/score-distribution-chart.tsx"
 }
 ```
 
 **Output:**
+
 ```
 Wrote file successfully.
 
 LSP errors detected in other files:
-<diagnostics file="/Users/six/code/mehta/src/lib/auth.ts">
-ERROR [9:3] Type 'import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").Adapter' is not assignable to type 'import("/Users/six/code/mehta/node_modules/next-auth/adapters").Adapter'.
+<diagnostics file="./src/lib/auth.ts">
+ERROR [9:3] Type 'import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").Adapter' is not assignable to type 'import("./node_modules/next-auth/adapters").Adapter'.
   Types of property 'getUser' are incompatible.
-    Type '((id: string) => import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>) | undefined' is not assignable to type '((id: string) => import("/Users/six/code/mehta/node_modules/next-auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/next-auth/adapters").AdapterUser | null>) | undefined'.
-      Type '(id: string) => import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>' is not assignable to type '(id: string) => import("/Users/six/code/mehta/node_modules/next-auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/next-auth/adapters").AdapterUser | null>'.
-        Type 'import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>' is not assignable to type 'import("/Users/six/code/mehta/node_modules/next-auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/next-auth/adapters").AdapterUser | null>'.
+    Type '((id: string) => import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>) | undefined' is not assignable to type '((id: string) => import("./node_modules/next-auth/core/types").Awaitable<import("./node_modules/next-auth/adapters").AdapterUser | null>) | undefined'.
+      Type '(id: string) => import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>' is not assignable to type '(id: string) => import("./node_modules/next-auth/core/types").Awaitable<import("./node_modules/next-auth/adapters").AdapterUser | null>'.
+        Type 'import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>' is not assignable to type 'import("./node_modules/next-auth/core/types").Awaitable<import("./node_modules/next-auth/adapters").AdapterUser | null>'.
           Type 'AdapterUser' is not assignable to type 'Awaitable<AdapterUser | null>'.
-            Property 'role' is missing in type 'import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser' but required in type 'import("/Users/six/code/mehta/node_modules/next-auth/adapters").AdapterUser'.
+            Property 'role' is missing in type 'import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser' but required in type 'import("./node_modules/next-auth/adapters").AdapterUser'.
 ERROR [9:26] Argument of type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>' is not assignable to parameter of type 'PrismaClient<PrismaClientOptions, never, DefaultArgs> | DynamicClientExtensionThis<TypeMap<InternalArgs & InternalArgs<{ [x: string]: { [x: string]: unknown; }; }, { ...; }, { ...; }, { ...; }>, {}>, TypeMapCb<...>, InternalArgs<...>>'.
   Type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>' is not assignable to type 'DynamicClientExtensionThis<TypeMap<InternalArgs & InternalArgs<{ [x: string]: { [x: string]: unknown; }; }, { [x: string]: { [x: string]: unknown; }; }, { [x: string]: { [x: string]: unknown; }; }, { [x: string]: unknown; }>, {}>, TypeMapCb<...>, InternalArgs<...>>'.
     Type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>' is not assignable to type '{ [x: string]: unknown; }'.
@@ -4540,26 +4741,28 @@ Now I need to create the fellow radar chart for the session page.
 **Tool: write**
 
 **Input:**
+
 ```json
 {
   "content": "'use client';\n\nimport {\n  RadarChart,\n  PolarGrid,\n  PolarAngleAxis,\n  PolarRadiusAxis,\n  Radar,\n  ResponsiveContainer,\n  Legend\n} from 'recharts';\n\ninterface FellowMetrics {\n  fellowName: string;\n  contentCoverage: number;\n  facilitationQuality: number;\n  protocolSafety: number;\n  sessionCount: number;\n  riskRate: number; // percentage\n  validationRate: number; // percentage\n}\n\ninterface FellowRadarChartProps {\n  data: FellowMetrics;\n  teamAverages?: FellowMetrics;\n}\n\nconst COLORS = {\n  fellow: '#3b82f6',    // blue\n  average: '#6b7280'     // gray\n};\n\nexport function FellowRadarChart({ data, teamAverages }: FellowRadarChartProps) {\n  const chartData = [\n    {\n      metric: 'Content Coverage',\n      Fellow: data.contentCoverage,\n      Average: teamAverages?.contentCoverage || 0\n    },\n    {\n      metric: 'Facilitation',\n      Fellow: data.facilitationQuality,\n      Average: teamAverages?.facilitationQuality || 0\n    },\n    {\n      metric: 'Protocol Safety',\n      Fellow: data.protocolSafety,\n      Average: teamAverages?.protocolSafety || 0\n    },\n    {\n      metric: 'Sessions',\n      Fellow: Math.min(data.sessionCount / 10, 3), // normalize to 0-3 scale\n      Average: teamAverages ? Math.min(teamAverages.sessionCount / 10, 3) : 0\n    },\n    {\n      metric: 'Risk Rate',\n      Fellow: 3 - (data.riskRate / 100 * 3), // invert: lower is better\n      Average: teamAverages ? 3 - (teamAverages.riskRate / 100 * 3) : 0\n    },\n    {\n      metric: 'Validation',\n      Fellow: data.validationRate / 100 * 3,\n      Average: teamAverages ? (teamAverages.validationRate / 100 * 3) : 0\n    }\n  ];\n\n  return (\n    <ResponsiveContainer width=\"100%\" height={350}>\n      <RadarChart cx=\"50%\" cy=\"50%\" outerRadius=\"70%\" data={chartData}>\n        <PolarGrid stroke=\"#e5e7eb\" />\n        <PolarAngleAxis\n          dataKey=\"metric\"\n          tick={{ fontSize: 11 }}\n          className=\"fill-muted-foreground\"\n        />\n        <PolarRadiusAxis\n          angle={30}\n          domain={[0, 3]}\n          tick={{ fontSize: 10 }}\n          axisLine={false}\n        />\n        <Radar\n          name={data.fellowName}\n          dataKey=\"Fellow\"\n          stroke={COLORS.fellow}\n          fill={COLORS.fellow}\n          fillOpacity={0.3}\n          strokeWidth={2}\n        />\n        {teamAverages && (\n          <Radar\n            name=\"Team Average\"\n            dataKey=\"Average\"\n            stroke={COLORS.average}\n            fill={COLORS.average}\n            fillOpacity={0.1}\n            strokeWidth={2}\n            strokeDasharray=\"5 5\"\n          />\n        )}\n        <Legend />\n      </RadarChart>\n    </ResponsiveContainer>\n  );\n}\n",
-  "filePath": "/Users/six/code/mehta/src/components/dashboard/charts/fellow-radar-chart.tsx"
+  "filePath": "./src/components/dashboard/charts/fellow-radar-chart.tsx"
 }
 ```
 
 **Output:**
+
 ```
 Wrote file successfully.
 
 LSP errors detected in other files:
-<diagnostics file="/Users/six/code/mehta/src/lib/auth.ts">
-ERROR [9:3] Type 'import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").Adapter' is not assignable to type 'import("/Users/six/code/mehta/node_modules/next-auth/adapters").Adapter'.
+<diagnostics file="./src/lib/auth.ts">
+ERROR [9:3] Type 'import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").Adapter' is not assignable to type 'import("./node_modules/next-auth/adapters").Adapter'.
   Types of property 'getUser' are incompatible.
-    Type '((id: string) => import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>) | undefined' is not assignable to type '((id: string) => import("/Users/six/code/mehta/node_modules/next-auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/next-auth/adapters").AdapterUser | null>) | undefined'.
-      Type '(id: string) => import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>' is not assignable to type '(id: string) => import("/Users/six/code/mehta/node_modules/next-auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/next-auth/adapters").AdapterUser | null>'.
-        Type 'import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>' is not assignable to type 'import("/Users/six/code/mehta/node_modules/next-auth/core/types").Awaitable<import("/Users/six/code/mehta/node_modules/next-auth/adapters").AdapterUser | null>'.
+    Type '((id: string) => import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>) | undefined' is not assignable to type '((id: string) => import("./node_modules/next-auth/core/types").Awaitable<import("./node_modules/next-auth/adapters").AdapterUser | null>) | undefined'.
+      Type '(id: string) => import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>' is not assignable to type '(id: string) => import("./node_modules/next-auth/core/types").Awaitable<import("./node_modules/next-auth/adapters").AdapterUser | null>'.
+        Type 'import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/types").Awaitable<import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser | null>' is not assignable to type 'import("./node_modules/next-auth/core/types").Awaitable<import("./node_modules/next-auth/adapters").AdapterUser | null>'.
           Type 'AdapterUser' is not assignable to type 'Awaitable<AdapterUser | null>'.
-            Property 'role' is missing in type 'import("/Users/six/code/mehta/node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser' but required in type 'import("/Users/six/code/mehta/node_modules/next-auth/adapters").AdapterUser'.
+            Property 'role' is missing in type 'import("./node_modules/@auth/prisma-adapter/node_modules/@auth/core/adapters").AdapterUser' but required in type 'import("./node_modules/next-auth/adapters").AdapterUser'.
 ERROR [9:26] Argument of type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>' is not assignable to parameter of type 'PrismaClient<PrismaClientOptions, never, DefaultArgs> | DynamicClientExtensionThis<TypeMap<InternalArgs & InternalArgs<{ [x: string]: { [x: string]: unknown; }; }, { ...; }, { ...; }, { ...; }>, {}>, TypeMapCb<...>, InternalArgs<...>>'.
   Type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>' is not assignable to type 'DynamicClientExtensionThis<TypeMap<InternalArgs & InternalArgs<{ [x: string]: { [x: string]: unknown; }; }, { [x: string]: { [x: string]: unknown; }; }, { [x: string]: { [x: string]: unknown; }; }, { [x: string]: unknown; }>, {}>, TypeMapCb<...>, InternalArgs<...>>'.
     Type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>' is not assignable to type '{ [x: string]: unknown; }'.
@@ -4582,4 +4785,3 @@ continue
 ## Assistant (Build · big-pickle · 1.9s)
 
 ---
-

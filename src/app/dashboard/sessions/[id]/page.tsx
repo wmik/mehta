@@ -42,12 +42,14 @@ import {
   AlertTriangle,
   Loader,
   CheckCircle,
-  XCircle
+  XCircle,
+  Mic
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/dashboard/theme-toggle';
 import { Notifications } from '@/components/dashboard/notifications';
 import { UserMenu } from '@/components/dashboard/user-menu';
 import { useSession } from 'next-auth/react';
+import { useSpeechRecognition } from '@/hooks/use-speech-recognition';
 
 interface Session {
   id: string;
@@ -93,6 +95,17 @@ export default function SessionDetailPage() {
   const [analyzing, setAnalyzing] = useState(false);
   const [notes, setNotes] = useState('');
   const [analysisStatus, setAnalysisStatus] = useState('');
+
+  // Speech recognition
+  const {
+    interimTranscript,
+    liveTranscript,
+    isListening,
+    isSupported: speechSupported,
+    startListening,
+    stopListening,
+    resetTranscript
+  } = useSpeechRecognition();
 
   // Confirmation dialog state
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -707,18 +720,73 @@ export default function SessionDetailPage() {
               </CardHeader>
               <CardContent>
                 <div className="mb-4">
-                  <label className="text-sm font-medium text-gray-700 mb-2 block">
-                    Supervisor Notes (optional)
-                  </label>
-                  <textarea
-                    placeholder="Add notes about this analysis or session?..."
-                    value={notes}
-                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                      setNotes(e.target.value)
-                    }
-                    className="flex min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    rows={3}
-                  />
+                  <div className="flex items-center mb-2">
+                    <label className="text-sm font-medium text-gray-700 mr-auto">
+                      Supervisor Notes (optional)
+                    </label>
+                    {speechSupported && (
+                      <>
+                        <Button
+                          type="button"
+                          variant={isListening ? 'destructive' : 'outline'}
+                          size="sm"
+                          onClick={isListening ? stopListening : startListening}
+                          className={isListening ? 'animate-pulse' : ''}
+                        >
+                          <Mic
+                            className={`w-4 h-4 mr-1 ${isListening ? 'animate-pulse' : ''}`}
+                          />
+                          {isListening ? 'Recording...' : 'Voice'}
+                        </Button>
+                        {!isListening &&
+                          liveTranscript &&
+                          latestAnalysis?.supervisorStatus !== 'VALIDATED' &&
+                          latestAnalysis?.supervisorStatus !== 'REJECTED' && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setNotes(
+                                  notes + (notes ? ' ' : '') + liveTranscript
+                                );
+                                resetTranscript();
+                              }}
+                              className="ml-2"
+                            >
+                              <Check className="w-4 h-4 mr-1" />
+                              Add to Notes
+                            </Button>
+                          )}
+                      </>
+                    )}
+                  </div>
+                  <div className="relative">
+                    <textarea
+                      placeholder="Add notes about this analysis or session?..."
+                      value={
+                        notes +
+                        (liveTranscript ? ' ' + liveTranscript : '') +
+                        (interimTranscript ? ' ' + interimTranscript : '')
+                      }
+                      onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                        setNotes(e.target.value)
+                      }
+                      className="flex min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      rows={3}
+                    />
+                    {isListening && (
+                      <div className="absolute bottom-3 right-3 flex items-center gap-1">
+                        <span className="flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                        </span>
+                        <span className="text-xs text-red-500 font-medium">
+                          Listening...
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Button

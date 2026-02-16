@@ -10,14 +10,16 @@ export function ProgressProvider() {
 
   useEffect(() => {
     // Reset and start progress on route change
-    setProgress(0);
+    // setProgress(0);
 
+    const timeout0 = setTimeout(() => setProgress(0), 0);
     const timeout1 = setTimeout(() => setProgress(20), 50);
     const timeout2 = setTimeout(() => setProgress(50), 200);
     const timeout3 = setTimeout(() => setProgress(80), 400);
     const timeout4 = setTimeout(() => setProgress(100), 700);
 
     return () => {
+      clearTimeout(timeout0);
       clearTimeout(timeout1);
       clearTimeout(timeout2);
       clearTimeout(timeout3);
