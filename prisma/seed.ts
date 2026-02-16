@@ -13,7 +13,8 @@ async function main() {
     create: {
       email: 'supervisor@shamiri.org',
       name: 'Dr. Sarah Johnson',
-      password: hashedPassword
+      password: hashedPassword,
+      role: 'admin'
     }
   });
 

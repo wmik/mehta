@@ -42,7 +42,7 @@ export const authOptions: AuthOptions = {
           id: supervisor.id,
           email: supervisor.email,
           name: supervisor.name,
-          role: 'supervisor'
+          role: supervisor.role || 'supervisor'
         };
       }
     })
@@ -72,3 +72,7 @@ export const authOptions: AuthOptions = {
 
 const handler = NextAuth(authOptions);
 export { handler as GET, handler as POST };
+
+export function isAdmin(user: { role?: string } | null | undefined): boolean {
+  return user?.role === 'admin';
+}

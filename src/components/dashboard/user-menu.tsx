@@ -24,7 +24,8 @@ import {
   HelpCircle,
   LogOut,
   Loader2,
-  Check
+  Check,
+  Shield
 } from 'lucide-react';
 
 interface UserMenuProps {
@@ -32,6 +33,7 @@ interface UserMenuProps {
     name?: string | null;
     email?: string | null;
     image?: string | null;
+    role?: string;
   };
 }
 
@@ -98,6 +100,13 @@ export function UserMenu({ user }: UserMenuProps) {
           Settings
           <DropdownMenuShortcut>⌘,</DropdownMenuShortcut>
         </DropdownMenuItem>
+
+        {user.role === 'admin' && (
+          <DropdownMenuItem onClick={() => router.push('/admin')}>
+            <Shield className="mr-2 h-4 w-4" />
+            Admin
+          </DropdownMenuItem>
+        )}
 
         <DropdownMenuSeparator />
 
