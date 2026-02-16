@@ -23,7 +23,8 @@ import {
   Monitor,
   HelpCircle,
   LogOut,
-  Loader2
+  Loader2,
+  Check
 } from 'lucide-react';
 
 interface UserMenuProps {
@@ -105,19 +106,19 @@ export function UserMenu({ user }: UserMenuProps) {
         <DropdownMenuItem onClick={() => setTheme('light')}>
           <Sun className="mr-2 h-4 w-4" />
           Light Mode
-          {theme === 'light' && <span className="ml-auto">✓</span>}
+          {theme === 'light' && <Check className="ml-auto h-4 w-4" />}
         </DropdownMenuItem>
 
         <DropdownMenuItem onClick={() => setTheme('dark')}>
           <Moon className="mr-2 h-4 w-4" />
           Dark Mode
-          {theme === 'dark' && <span className="ml-auto">✓</span>}
+          {theme === 'dark' && <Check className="ml-auto h-4 w-4" />}
         </DropdownMenuItem>
 
         <DropdownMenuItem onClick={() => setTheme('system')}>
           <Monitor className="mr-2 h-4 w-4" />
           System
-          {theme === 'system' && <span className="ml-auto">✓</span>}
+          {theme === 'system' && <Check className="ml-auto h-4 w-4" />}
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />

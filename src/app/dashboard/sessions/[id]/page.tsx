@@ -2,7 +2,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, ReactNode } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -29,7 +29,21 @@ import { ProgressProvider } from '@/components/ui/progress-bar';
 import { FellowRadarChart } from '@/components/dashboard/charts';
 import useSWR from 'swr';
 import { Toggle } from '@/components/ui/toggle';
-import { Users, BarChart3 } from 'lucide-react';
+import {
+  Users,
+  BarChart3,
+  BookOpen,
+  Target,
+  Shield,
+  ArrowLeft,
+  Check,
+  X,
+  Download,
+  AlertTriangle,
+  Loader,
+  CheckCircle,
+  XCircle
+} from 'lucide-react';
 import { ThemeToggle } from '@/components/dashboard/theme-toggle';
 import { Notifications } from '@/components/dashboard/notifications';
 import { UserMenu } from '@/components/dashboard/user-menu';
@@ -60,7 +74,7 @@ interface Session {
 
 interface AnalysisCard {
   title: string;
-  icon: string;
+  icon: ReactNode;
   value: {
     score: number;
     rating: string;
@@ -299,7 +313,7 @@ export default function SessionDetailPage() {
   const analysisCards: AnalysisCard[] = [
     {
       title: 'Content Coverage',
-      icon: '📚',
+      icon: <BookOpen className="w-5 h-5" />,
       value: {
         score: (latestAnalysis?.contentCoverage as any)?.score || 0,
         rating: (latestAnalysis?.contentCoverage as any)?.rating || 'Not Rated',
@@ -314,7 +328,7 @@ export default function SessionDetailPage() {
     },
     {
       title: 'Facilitation Quality',
-      icon: '🎯',
+      icon: <Target className="w-5 h-5" />,
       value: {
         score: (latestAnalysis?.facilitationQuality as any)?.score || 0,
         rating:
@@ -330,7 +344,7 @@ export default function SessionDetailPage() {
     },
     {
       title: 'Protocol Safety',
-      icon: '🛡️',
+      icon: <Shield className="w-5 h-5" />,
       value: {
         score: (latestAnalysis?.protocolSafety as any)?.score || 0,
         rating: (latestAnalysis?.protocolSafety as any)?.rating || 'Not Rated',
@@ -373,7 +387,8 @@ export default function SessionDetailPage() {
                 onClick={() => router.push('/dashboard')}
                 className="rounded-none"
               >
-                ← Back to Dashboard
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Dashboard
               </Button>
               <div className="text-sm">
                 <span className="font-medium">{session?.fellow.name}</span>
@@ -406,11 +421,19 @@ export default function SessionDetailPage() {
                     }
                     className={latestAnalysis.supervisorStatus ? '' : 'hidden'}
                   >
-                    {latestAnalysis.supervisorStatus === 'VALIDATED'
-                      ? '✓ Validated'
-                      : latestAnalysis.supervisorStatus === 'REJECTED'
-                        ? '✗ Rejected'
-                        : 'Pending Review'}
+                    {latestAnalysis.supervisorStatus === 'VALIDATED' ? (
+                      <>
+                        <Check className="w-3 h-3 mr-1" />
+                        Validated
+                      </>
+                    ) : latestAnalysis.supervisorStatus === 'REJECTED' ? (
+                      <>
+                        <X className="w-3 h-3 mr-1" />
+                        Rejected
+                      </>
+                    ) : (
+                      'Pending Review'
+                    )}
                   </Badge>
                 )}
                 <Button
@@ -420,7 +443,8 @@ export default function SessionDetailPage() {
                   }
                   className="rounded-none"
                 >
-                  📥 Export CSV
+                  <Download className="w-4 h-4 mr-2" />
+                  Export CSV
                 </Button>
               </div>
 
@@ -456,8 +480,9 @@ export default function SessionDetailPage() {
 
           {riskStatus === 'RISK' && latestAnalysis?.riskDetection?.quote ? (
             <Alert className="border-red-200 bg-red-50">
+              <AlertTriangle className="w-5 h-5 mr-2" />
               <AlertDescription className="text-red-800">
-                <strong>⚠️ RISK DETECTED</strong>
+                <strong>RISK DETECTED</strong>
                 <p className="mt-2">
                   <strong>Concerning Quote:</strong> &quot;
                   {latestAnalysis.riskDetection as any}&quot;quote&quot;
@@ -486,7 +511,7 @@ export default function SessionDetailPage() {
                 >
                   {analyzing ? (
                     <span className="flex items-center gap-2">
-                      <span className="animate-spin">⏳</span>
+                      <Loader className="w-4 h-4 animate-spin" />
                       Analyzing...
                     </span>
                   ) : latestAnalysis ? (
@@ -701,7 +726,8 @@ export default function SessionDetailPage() {
                     className="flex-1 bg-green-600 hover:bg-green-700"
                     size="lg"
                   >
-                    ✅ Validate Analysis
+                    <CheckCircle className="w-5 h-5 mr-2" />
+                    Validate Analysis
                   </Button>
                   <Button
                     onClick={() => handleValidateClick('reject')}
@@ -709,7 +735,8 @@ export default function SessionDetailPage() {
                     className="flex-1 border-red-300 text-red-600 hover:bg-red-50"
                     size="lg"
                   >
-                    ✗ Reject Analysis
+                    <XCircle className="w-5 h-5 mr-2" />
+                    Reject Analysis
                   </Button>
                   {riskStatus === 'RISK' && (
                     <Button
@@ -718,7 +745,8 @@ export default function SessionDetailPage() {
                       className="flex-1 border-amber-300 text-amber-700 hover:bg-amber-50"
                       size="lg"
                     >
-                      ⚠️ Mark as Safe (Override)
+                      <AlertTriangle className="w-5 h-5 mr-2" />
+                      Mark as Safe (Override)
                     </Button>
                   )}
                 </div>
@@ -780,8 +808,13 @@ function AnalysisCard({ card }: { card: AnalysisCard }) {
     <Card className={`${card.isRisk ? 'border-red-200' : 'border-gray-200'}`}>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">{card.title}</CardTitle>
-          <div className={`text-2xl ${card.icon}`}>{card.value.score}</div>
+          <CardTitle className="text-lg flex items-center gap-2">
+            {card.icon}
+            {card.title}
+          </CardTitle>
+          <div className={`text-2xl font-bold ${card.value.color}`}>
+            {card.value.score}
+          </div>
         </div>
         <Badge
           variant={card.isRisk ? 'destructive' : 'outline'}

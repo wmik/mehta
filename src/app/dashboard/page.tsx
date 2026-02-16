@@ -20,7 +20,6 @@ import {
   TableRow
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
 import type { Fellow, Meeting, MeetingAnalysis } from '@/generated/prisma';
 import type { JsonObject } from '@/generated/prisma/runtime/client';
 import { Toaster } from '@/components/ui/sonner';
@@ -715,40 +714,6 @@ export default function DashboardPage() {
             )}
           </CardContent>
         </Card>
-      </main>
-    </div>
-  );
-}
-
-function DashboardLoader() {
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <Toaster />
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Skeleton className="h-6 w-64" />
-            <Skeleton className="h-10 w-20" />
-          </div>
-        </div>
-      </header>
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="space-y-6">
-          <Skeleton className="h-8 w-96" />
-          <Skeleton className="h-4 w-80" />
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-6 w-32" />
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {[...Array(5)].map((_, i) => (
-                  <Skeleton key={i} className="h-12 w-full" />
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
       </main>
     </div>
   );
