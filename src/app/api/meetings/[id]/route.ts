@@ -104,7 +104,7 @@ export async function POST(
       data: { status: 'PROCESSING' }
     });
 
-    const metadata = await tasks.trigger<typeof analyzeSessionJob>(
+    const handle = await tasks.trigger<typeof analyzeSessionJob>(
       'analyze-session',
       {
         meetingId: meeting.id
@@ -112,7 +112,9 @@ export async function POST(
     );
 
     return NextResponse.json({
-      metadata
+      runId: handle.id,
+      publicAccessToken: handle.publicAccessToken,
+      status: 'queued'
     });
   } catch (error) {
     console.error('Failed to start analysis:', error);

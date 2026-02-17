@@ -5,6 +5,7 @@
 import { useState, useEffect, useCallback, ReactNode } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useRealtimeRun } from '@trigger.dev/react-hooks';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -15,14 +16,12 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import {
   SessionInfoSkeleton,
   AnalysisCardSkeleton,
-  TranscriptSkeleton,
   AIAnalysisLoader
 } from '@/components/ui/loaders';
 import { ProgressProvider } from '@/components/ui/progress-bar';
@@ -106,6 +105,8 @@ export default function SessionDetailPage() {
   const [jobStatus, setJobStatus] = useState<
     'idle' | 'queued' | 'processing' | 'completed' | 'failed'
   >('idle');
+  const [runId, setRunId] = useState<string | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [notes, setNotes] = useState('');
 
   // Speech recognition
@@ -138,6 +139,36 @@ export default function SessionDetailPage() {
   const { data: statsData } = useSWR('/api/statistics', fetcher, {
     revalidateOnFocus: false
   });
+
+  // Subscribe to run status updates
+  const { run, error: runError } = useRealtimeRun(runId || undefined, {
+    accessToken: accessToken || undefined,
+    onComplete: async completedRun => {
+      if (completedRun.status === 'COMPLETED') {
+        // Refresh session to get the analysis
+        await fetchSession();
+        setJobStatus('completed');
+        setAnalysisStatus('');
+        toast.success('Analysis completed!');
+      } else if (completedRun.status === 'FAILED') {
+        setJobStatus('failed');
+        setAnalysisStatus('');
+        toast.error('Analysis failed. Please try again.');
+      }
+      setRunId(null);
+    }
+  });
+
+  // Update progress from run metadata
+  useEffect(() => {
+    if (run && run.status === 'EXECUTING') {
+      const progressMessage = (run.metadata as Record<string, string>)
+        ?.progressMessage;
+      if (progressMessage) {
+        setAnalysisStatus(progressMessage);
+      }
+    }
+  }, [run]);
 
   // Get fellow's other sessions
   const [fellowSessions, setFellowSessions] = useState<Session[]>([]);
@@ -185,26 +216,10 @@ export default function SessionDetailPage() {
     }
   }, [params.id, fetchSession]);
 
-  const ANALYSIS_PROGRESS_MESSAGES = [
-    'Evaluating content coverage...',
-    'Assessing facilitation quality...',
-    'Checking protocol safety...',
-    'Detecting risk indicators...',
-    'Finalizing analysis...'
-  ];
-
   const runAnalysis = async () => {
     setAnalyzing(true);
     setJobStatus('queued');
     setAnalysisStatus('Analysis queued...');
-
-    let progressIndex = 0;
-    const progressInterval = setInterval(() => {
-      progressIndex++;
-      if (progressIndex < ANALYSIS_PROGRESS_MESSAGES.length) {
-        setAnalysisStatus(ANALYSIS_PROGRESS_MESSAGES[progressIndex]);
-      }
-    }, 2000);
 
     try {
       const response = await fetch(`/api/meetings/${params.id}`, {
@@ -212,11 +227,13 @@ export default function SessionDetailPage() {
       });
       const data = await response.json();
 
-      if (data.status === 'queued') {
+      if (data.runId) {
         setJobStatus('processing');
-
-        // Poll for job completion
-        await pollForAnalysis();
+        // Subscribe to run updates via realtime
+        setRunId(data.runId);
+        setAccessToken(data.publicAccessToken);
+      } else {
+        throw new Error('Failed to get run ID');
       }
     } catch (error) {
       console.error('Analysis failed:', error);
@@ -226,60 +243,7 @@ export default function SessionDetailPage() {
         'Analysis failed. Please check your AI provider configuration.'
       );
     } finally {
-      clearInterval(progressInterval);
       setAnalyzing(false);
-    }
-  };
-
-  const pollForAnalysis = async () => {
-    const maxAttempts = 60; // Poll for up to 60 seconds
-    let attempts = 0;
-
-    const poll = async () => {
-      attempts++;
-
-      try {
-        const response = await fetch(`/api/meetings/${params.id}`);
-        const data = await response.json();
-
-        if (data.session) {
-          const hasNewAnalysis =
-            session && data.session.analyses.length > session.analyses.length;
-
-          if (hasNewAnalysis || data.session.status === 'PROCESSED') {
-            // New analysis completed
-            setSession(data.session);
-            setJobStatus('completed');
-            setAnalysisStatus('');
-            toast.success('Analysis completed!');
-            return true;
-          }
-
-          // Check if meeting status indicates processing
-          if (data.session.status === 'PROCESSING') {
-            setJobStatus('processing');
-          }
-        }
-      } catch (error) {
-        console.error('Polling error:', error);
-      }
-
-      return false;
-    };
-
-    // Initial wait before polling
-    await new Promise(resolve => setTimeout(resolve, 3000));
-
-    while (attempts < maxAttempts) {
-      const completed = await poll();
-      if (completed) break;
-      await new Promise(resolve => setTimeout(resolve, 2000));
-    }
-
-    if (attempts >= maxAttempts) {
-      setJobStatus('failed');
-      setAnalysisStatus('');
-      toast.error('Analysis timed out. Please try again.');
     }
   };
 

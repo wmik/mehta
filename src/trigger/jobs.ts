@@ -25,6 +25,7 @@ export const analyzeSessionJob = task({
     });
 
     metadata.set('status', 'starting');
+    metadata.set('progressMessage', 'Loading session transcript...');
     metadata.set('meetingId', payload.meetingId);
 
     try {
@@ -41,8 +42,14 @@ export const analyzeSessionJob = task({
       }
 
       metadata.set('status', 'analyzing');
+      metadata.set('progressMessage', 'Evaluating content coverage...');
 
       const analysis = await analyzeSession(meeting.transcript);
+
+      metadata.set('progressMessage', 'Assessing facilitation quality...');
+      metadata.set('progressMessage', 'Checking protocol safety...');
+      metadata.set('progressMessage', 'Detecting risk indicators...');
+      metadata.set('progressMessage', 'Finalizing analysis...');
 
       metadata.set('status', 'saving');
 
