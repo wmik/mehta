@@ -1,6 +1,7 @@
 'use client';
 
 import { cn } from '@/lib/utils';
+import { useEffect, useState } from 'react';
 
 interface ShimmerSkeletonProps {
   className?: string;
@@ -26,7 +27,7 @@ export function ShimmerSkeleton({
 
 export function StatsCardSkeleton({ delay = 0 }: { delay?: number }) {
   return (
-    <div className="border rounded-lg p-6">
+    <div className="border rounded-none p-6">
       <ShimmerSkeleton className="h-5 w-32 mb-2" delay={delay} />
       <ShimmerSkeleton className="h-4 w-24 mb-4" delay={delay + 100} />
       <ShimmerSkeleton className="h-10 w-20" delay={delay + 200} />
@@ -75,7 +76,7 @@ export function FilterBarSkeleton() {
 export function AnalyticsSkeleton() {
   return (
     <div className="grid gap-6 md:grid-cols-2">
-      <div className="border rounded-lg p-6">
+      <div className="border rounded-none p-6">
         <ShimmerSkeleton className="h-5 w-40 mb-2" />
         <ShimmerSkeleton className="h-4 w-56 mb-4" />
         <div className="space-y-3">
@@ -103,7 +104,7 @@ export function AnalyticsSkeleton() {
           ))}
         </div>
       </div>
-      <div className="border rounded-lg p-6">
+      <div className="border rounded-none p-6">
         <ShimmerSkeleton className="h-5 w-44 mb-2" />
         <ShimmerSkeleton className="h-4 w-52 mb-4" />
         <div className="space-y-2">
@@ -124,7 +125,7 @@ export function AnalyticsSkeleton() {
 
 export function AnalysisCardSkeleton({ delay = 0 }: { delay?: number }) {
   return (
-    <div className="border rounded-lg p-6">
+    <div className="border rounded-none p-6">
       <div className="flex justify-between items-start mb-4">
         <ShimmerSkeleton className="h-6 w-40" delay={delay} />
         <ShimmerSkeleton className="h-8 w-8 rounded-full" delay={delay + 100} />
@@ -138,7 +139,7 @@ export function AnalysisCardSkeleton({ delay = 0 }: { delay?: number }) {
 
 export function SessionInfoSkeleton() {
   return (
-    <div className="border rounded-lg p-6">
+    <div className="border rounded-none p-6">
       <ShimmerSkeleton className="h-6 w-40 mb-4" />
       <div className="grid grid-cols-3 gap-4">
         <div>
@@ -159,8 +160,14 @@ export function SessionInfoSkeleton() {
 }
 
 export function TranscriptSkeleton() {
+  const [randomNumber, setRandomNumber] = useState(0);
+
+  useEffect(() => {
+    setTimeout(() => setRandomNumber(Math.random()), 0);
+  }, []);
+
   return (
-    <div className="border rounded-lg p-6">
+    <div className="border rounded-none p-6">
       <ShimmerSkeleton className="h-6 w-44 mb-2" />
       <ShimmerSkeleton className="h-4 w-64 mb-6" />
       <div className="space-y-3">
@@ -168,8 +175,7 @@ export function TranscriptSkeleton() {
           <ShimmerSkeleton
             key={i}
             className="h-4"
-            // eslint-disable-next-line react-hooks/purity
-            style={{ width: `${Math.random() * 40 + 60}%` }}
+            style={{ width: `${randomNumber * 40 + 60}%` }}
             delay={i * 80}
           />
         ))}

@@ -10,6 +10,7 @@ interface UseSpeechRecognitionReturn {
   transcript: string;
   interimTranscript: string;
   liveTranscript: string;
+  currentSegment: string;
   isListening: boolean;
   isSupported: boolean;
   startListening: () => void;
@@ -48,9 +49,9 @@ export function useSpeechRecognition(
 ): UseSpeechRecognitionReturn {
   const maxDuration = options?.maxDuration || 5 * 60 * 1000; // default 5 minutes
 
-  const [transcript, setTranscript] = useState('');
   const [interimTranscript, setInterimTranscript] = useState('');
   const [liveTranscript, setLiveTranscript] = useState('');
+  const [currentSegment, setCurrentSegment] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -59,20 +60,16 @@ export function useSpeechRecognition(
   const maxDurationRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const interimRef = useRef('');
   const isRestartingRef = useRef(false);
-  const lastFinalRef = useRef('');
+  const finalTranscriptsRef = useRef<Set<string>>(new Set());
 
   const isSupported =
     typeof window !== 'undefined' &&
     ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
 
-  useEffect(() => {
-    if (!isSupported) return;
-
+  const createRecognitionInstance = useCallback(() => {
     const SpeechRecognitionAPI =
       window.SpeechRecognition || window.webkitSpeechRecognition;
-    recognitionRef.current = new SpeechRecognitionAPI();
-
-    const recognition = recognitionRef.current;
+    const recognition = new SpeechRecognitionAPI();
 
     recognition.continuous = true;
     recognition.interimResults = true;
@@ -106,11 +103,16 @@ export function useSpeechRecognition(
         setInterimTranscript(interim);
       }
 
-      // Only add FINAL results to liveTranscript if different from last final
-      // This prevents duplicates
-      if (final && final !== lastFinalRef.current) {
-        lastFinalRef.current = final;
-        setLiveTranscript(prev => (prev ? prev + ' ' + final : final).trim());
+      // Only add FINAL results to liveTranscript if not already processed
+      // Normalize text for comparison (trim, lowercase) to catch duplicates
+      if (final) {
+        const normalizedFinal = final.toLowerCase().trim();
+        if (!finalTranscriptsRef.current.has(normalizedFinal)) {
+          finalTranscriptsRef.current.add(normalizedFinal);
+          setLiveTranscript(prev => (prev ? prev + ' ' + final : final).trim());
+        }
+        // Keep only the latest segment for display
+        setCurrentSegment(final.trim());
       }
     };
 
@@ -126,15 +128,28 @@ export function useSpeechRecognition(
         maxDurationRef.current = null;
       }
 
-      // Auto-restart if not intentionally stopped
+      // Auto-restart if not intentionally stopped - create FRESH instance
       if (!intentionallyStopped.current) {
         isRestartingRef.current = true;
         setTimeout(() => {
           try {
-            if (recognitionRef.current && !intentionallyStopped.current) {
-              // Restore interim from ref before restarting
-              setInterimTranscript(interimRef.current);
+            // Abort old instance to ensure clean state
+            if (recognitionRef.current) {
+              recognitionRef.current.abort();
+            }
+
+            if (!intentionallyStopped.current) {
+              // Create a fresh recognition instance
+              recognitionRef.current = createRecognitionInstance();
               recognitionRef.current.start();
+
+              // Set max duration timer for new instance
+              maxDurationRef.current = setTimeout(() => {
+                intentionallyStopped.current = true;
+                if (recognitionRef.current) {
+                  recognitionRef.current.stop();
+                }
+              }, maxDuration);
             }
           } catch (e: unknown) {
             console.log(e);
@@ -155,6 +170,14 @@ export function useSpeechRecognition(
       }
     };
 
+    return recognition;
+  }, [maxDuration]);
+
+  useEffect(() => {
+    if (!isSupported) return;
+
+    recognitionRef.current = createRecognitionInstance();
+
     return () => {
       if (maxDurationRef.current) {
         clearTimeout(maxDurationRef.current);
@@ -163,12 +186,12 @@ export function useSpeechRecognition(
         recognitionRef.current.abort();
       }
     };
-  }, [isSupported]);
+  }, [isSupported, createRecognitionInstance]);
 
   const startListening = useCallback(() => {
     setError(null);
     intentionallyStopped.current = false;
-    lastFinalRef.current = ''; // Reset for new recording session
+    finalTranscriptsRef.current = new Set(); // Reset for new recording session
 
     if (recognitionRef.current) {
       try {
@@ -203,15 +226,17 @@ export function useSpeechRecognition(
   }, []);
 
   const resetTranscript = useCallback(() => {
-    setTranscript('');
     setInterimTranscript('');
     setLiveTranscript('');
+    setCurrentSegment('');
+    finalTranscriptsRef.current = new Set();
   }, []);
 
   return {
-    transcript,
+    transcript: liveTranscript,
     interimTranscript,
     liveTranscript,
+    currentSegment,
     isListening,
     isSupported,
     startListening,

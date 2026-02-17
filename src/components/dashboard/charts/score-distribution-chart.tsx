@@ -62,8 +62,8 @@ export function ScoreDistributionChart({ data }: ScoreDistributionChartProps) {
   ];
 
   return (
-    <ChartContainer config={{}} style={{ width: '100%', height: 300 }}>
-      <ResponsiveContainer width="100%" height={300}>
+    <ChartContainer config={{}} style={{ width: '100%', height: 500 }}>
+      <ResponsiveContainer width="100%" height={500}>
         <BarChart
           data={chartData}
           margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
@@ -73,8 +73,7 @@ export function ScoreDistributionChart({ data }: ScoreDistributionChartProps) {
             dataKey="name"
             tick={{ fontSize: 11 }}
             className="fill-muted-foreground"
-            angle={-15}
-            textAnchor="end"
+            textAnchor="middle"
             height={60}
           />
           <YAxis
@@ -103,7 +102,7 @@ export function ScoreDistributionChart({ data }: ScoreDistributionChartProps) {
             stackId="a"
             fill={COLORS.high}
             name="High"
-            radius={[4, 4, 0, 0]}
+            radius={[24, 24, 0, 0]}
           />
         </BarChart>
       </ResponsiveContainer>

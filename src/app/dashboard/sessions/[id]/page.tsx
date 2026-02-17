@@ -99,7 +99,7 @@ export default function SessionDetailPage() {
   // Speech recognition
   const {
     interimTranscript,
-    liveTranscript,
+    currentSegment,
     isListening,
     isSupported: speechSupported,
     startListening,
@@ -673,7 +673,7 @@ export default function SessionDetailPage() {
                           href={`/dashboard/sessions/${s.id}`}
                           className="block"
                         >
-                          <div className="flex items-center justify-between p-2 rounded hover:bg-gray-50 border transition-colors">
+                          <div className="flex items-center justify-between p-2 rounded-none hover:bg-gray-50 border transition-colors">
                             <div className="text-sm">
                               <p className="font-medium">
                                 {new Date(s.date).toLocaleDateString()}
@@ -731,28 +731,62 @@ export default function SessionDetailPage() {
                           variant={isListening ? 'destructive' : 'outline'}
                           size="sm"
                           onClick={isListening ? stopListening : startListening}
-                          className={isListening ? 'animate-pulse' : ''}
+                          className={
+                            isListening
+                              ? 'animate-pulse rounded-none'
+                              : 'rounded-none'
+                          }
                         >
                           <Mic
                             className={`w-4 h-4 mr-1 ${isListening ? 'animate-pulse' : ''}`}
                           />
                           {isListening ? 'Recording...' : 'Voice'}
                         </Button>
-                        {!isListening &&
-                          liveTranscript &&
+                        {currentSegment &&
                           latestAnalysis?.supervisorStatus !== 'VALIDATED' &&
                           latestAnalysis?.supervisorStatus !== 'REJECTED' && (
                             <Button
                               type="button"
                               variant="outline"
                               size="sm"
-                              onClick={() => {
-                                setNotes(
-                                  notes + (notes ? ' ' : '') + liveTranscript
+                              onClick={async () => {
+                                const loadingToast = toast.loading(
+                                  'Saving notes...',
+                                  { duration: Infinity }
                                 );
-                                resetTranscript();
+                                const transcriptToAdd = currentSegment;
+                                const updatedNotes =
+                                  notes + (notes ? ' ' : '') + transcriptToAdd;
+
+                                try {
+                                  const response = await fetch(
+                                    `/api/meetings/${params.id}/notes`,
+                                    {
+                                      method: 'POST',
+                                      headers: {
+                                        'Content-Type': 'application/json'
+                                      },
+                                      body: JSON.stringify({
+                                        notes: updatedNotes
+                                      })
+                                    }
+                                  );
+
+                                  toast.dismiss(loadingToast);
+
+                                  if (response.ok) {
+                                    setNotes(updatedNotes);
+                                    resetTranscript();
+                                    toast.success('Notes saved');
+                                  } else {
+                                    toast.error('Failed to save notes');
+                                  }
+                                } catch (error) {
+                                  console.error('Failed to save notes:', error);
+                                  toast.error('Failed to save notes');
+                                }
                               }}
-                              className="ml-2"
+                              className="ml-2 rounded-none"
                             >
                               <Check className="w-4 h-4 mr-1" />
                               Add to Notes
@@ -765,14 +799,14 @@ export default function SessionDetailPage() {
                     <textarea
                       placeholder="Add notes about this analysis or session?..."
                       value={
-                        notes +
-                        (liveTranscript ? ' ' + liveTranscript : '') +
-                        (interimTranscript ? ' ' + interimTranscript : '')
+                        isListening
+                          ? interimTranscript || currentSegment || ''
+                          : currentSegment || notes
                       }
                       onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                         setNotes(e.target.value)
                       }
-                      className="flex min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="flex min-h-20 w-full rounded-none border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       rows={3}
                     />
                     {isListening && (
@@ -791,7 +825,7 @@ export default function SessionDetailPage() {
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Button
                     onClick={() => handleValidateClick('validate')}
-                    className="flex-1 bg-green-600 hover:bg-green-700"
+                    className="rounded-none flex-1 bg-green-600 hover:bg-green-700"
                     size="lg"
                   >
                     <CheckCircle className="w-5 h-5 mr-2" />
@@ -800,7 +834,7 @@ export default function SessionDetailPage() {
                   <Button
                     onClick={() => handleValidateClick('reject')}
                     variant="outline"
-                    className="flex-1 border-red-300 text-red-600 hover:bg-red-50"
+                    className="rounded-none flex-1 border-red-300 text-red-600 hover:bg-red-50"
                     size="lg"
                   >
                     <XCircle className="w-5 h-5 mr-2" />
@@ -810,7 +844,7 @@ export default function SessionDetailPage() {
                     <Button
                       onClick={() => handleValidateClick('override')}
                       variant="outline"
-                      className="flex-1 border-amber-300 text-amber-700 hover:bg-amber-50"
+                      className="rounded-none flex-1 border-amber-300 text-amber-700 hover:bg-amber-50"
                       size="lg"
                     >
                       <AlertTriangle className="w-5 h-5 mr-2" />

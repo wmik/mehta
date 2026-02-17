@@ -32,7 +32,8 @@ export async function GET(
         name: true,
         role: true,
         createdAt: true,
-        updatedAt: true
+        updatedAt: true,
+        deletedAt: true
       }
     });
 
