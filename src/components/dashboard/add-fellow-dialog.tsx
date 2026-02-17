@@ -79,7 +79,7 @@ export function AddFellowDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] rounded-none">
         <DialogHeader>
           <DialogTitle>Add Fellow</DialogTitle>
           <DialogDescription>

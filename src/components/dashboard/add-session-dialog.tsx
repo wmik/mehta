@@ -221,7 +221,7 @@ export function AddSessionDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto rounded-none">
         <DialogHeader>
           <DialogTitle>Add Session</DialogTitle>
           <DialogDescription>
