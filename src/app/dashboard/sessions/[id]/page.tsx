@@ -43,11 +43,13 @@ import {
   Loader,
   CheckCircle,
   XCircle,
-  Mic
+  Mic,
+  Upload
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/dashboard/theme-toggle';
 import { Notifications } from '@/components/dashboard/notifications';
 import { UserMenu } from '@/components/dashboard/user-menu';
+import { TranscriptUploadDialog } from '@/components/dashboard/transcript-upload-dialog';
 import { useSession } from 'next-auth/react';
 import { useSpeechRecognition } from '@/hooks/use-speech-recognition';
 
@@ -114,6 +116,9 @@ export default function SessionDetailPage() {
   >(null);
   const [confirmTitle, setConfirmTitle] = useState('');
   const [confirmDescription, setConfirmDescription] = useState('');
+
+  // Transcript upload dialog state
+  const [transcriptDialogOpen, setTranscriptDialogOpen] = useState(false);
 
   // Radar chart state
   const [showComparison, setShowComparison] = useState(true);
@@ -391,6 +396,24 @@ export default function SessionDetailPage() {
         variant={confirmAction === 'reject' ? 'destructive' : 'default'}
         onConfirm={handleConfirmAction}
       />
+      <TranscriptUploadDialog
+        open={transcriptDialogOpen}
+        onOpenChange={setTranscriptDialogOpen}
+        sessionId={params.id as string}
+        existingTranscript={session?.transcript}
+        onSuccess={newTranscript => {
+          setSession(prev =>
+            prev
+              ? {
+                  ...prev,
+                  transcript: newTranscript,
+                  analyses: []
+                }
+              : null
+          );
+          toast.info('Transcript updated. Please re-analyze the session.');
+        }}
+      />
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -449,6 +472,14 @@ export default function SessionDetailPage() {
                     )}
                   </Badge>
                 )}
+                <Button
+                  variant="outline"
+                  onClick={() => setTranscriptDialogOpen(true)}
+                  className="rounded-none"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  {session?.transcript ? 'Update Transcript' : 'Add Transcript'}
+                </Button>
                 <Button
                   variant="outline"
                   onClick={() =>
@@ -519,7 +550,7 @@ export default function SessionDetailPage() {
                 )}
                 <Button
                   onClick={runAnalysis}
-                  disabled={analyzing}
+                  disabled={analyzing || loading || !session?.transcript}
                   className="min-w-32 rounded-none"
                 >
                   {analyzing ? (

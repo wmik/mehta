@@ -118,3 +118,49 @@ export async function POST(
     );
   }
 }
+
+export async function PATCH(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    const meetingId = (await context.params).id;
+    const { transcript } = await request.json();
+
+    if (!transcript || typeof transcript !== 'string') {
+      return NextResponse.json(
+        { error: 'Transcript is required' },
+        { status: 400 }
+      );
+    }
+
+    const meeting = await prisma.meeting.findUnique({
+      where: { id: meetingId }
+    });
+
+    if (!meeting) {
+      return NextResponse.json({ error: 'Meeting not found' }, { status: 404 });
+    }
+
+    const updatedMeeting = await prisma.meeting.update({
+      where: { id: meetingId },
+      data: { transcript, status: 'PENDING' }
+    });
+
+    return NextResponse.json({
+      session: {
+        id: updatedMeeting.id,
+        groupId: updatedMeeting.groupId,
+        date: updatedMeeting.date.toISOString(),
+        status: updatedMeeting.status,
+        transcript: updatedMeeting.transcript
+      }
+    });
+  } catch (error) {
+    console.error('Failed to update transcript:', error);
+    return NextResponse.json(
+      { error: 'Failed to update transcript' },
+      { status: 500 }
+    );
+  }
+}
