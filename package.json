@@ -4,15 +4,9 @@
   "private": true,
   "license": "UNLICENSED",
   "description": "Mental Health Transcript Analysis",
-  "trigger": {
-    "projects": [
-      {
-        "name": "mehta"
-      }
-    ]
-  },
   "scripts": {
-    "dev": "next dev",
+    "trigger:dev": "npx trigger.dev@latest dev",
+    "dev": "npx concurrently --kill-others --names \"next,trigger\" --prefix-colors \"yellow,blue\" \"next dev\" \"npm run trigger:dev\"",
     "build": "next build",
     "start": "next start",
     "lint": "eslint . --ext js,jsx,ts,tsx",
@@ -66,6 +60,7 @@
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
+    "@trigger.dev/build": "^4.3.3",
     "@types/node": "^20.19.33",
     "@types/pg": "^8.16.0",
     "@types/react": "^19",

@@ -1,59 +1,108 @@
-import { triggerClient } from '@/lib/trigger';
+import { logger, task, queue, metadata } from '@trigger.dev/sdk';
 import { analyzeSession } from '@/lib/ai-service';
 import { prisma } from '@/lib/prisma';
 
-export const analyzeSessionJob = triggerClient.defineJob({
+const analysisQueue = queue({
+  name: 'session-analysis',
+  concurrencyLimit: 2
+});
+
+export const analyzeSessionJob = task({
   id: 'analyze-session',
-  name: 'Analyze Session',
-  version: '1.0.0',
-  run: async (payload: { meetingId: string }, ctx) => {
-    ctx.logger.info('Starting session analysis', {
-      meetingId: payload.meetingId
-    });
-
-    const meeting = await prisma.meeting.findUnique({
-      where: { id: payload.meetingId }
-    });
-
-    if (!meeting) {
-      throw new Error(`Meeting not found: ${payload.meetingId}`);
-    }
-
-    // Update status to processing
-    await prisma.meeting.update({
-      where: { id: payload.meetingId },
-      data: { status: 'PROCESSING' }
-    });
-
-    // Run AI analysis
-    if (!meeting.transcript) {
-      throw new Error(`Meeting has no transcript: ${payload.meetingId}`);
-    }
-    const analysis = await analyzeSession(meeting.transcript);
-
-    // Save analysis to database
-    const savedAnalysis = await prisma.meetingAnalysis.create({
-      data: {
-        meetingId: meeting.id,
-        summary: analysis.summary,
-        contentCoverage: analysis.contentCoverage,
-        facilitationQuality: analysis.facilitationQuality,
-        protocolSafety: analysis.protocolSafety,
-        riskDetection: analysis.riskDetection
-      }
-    });
-
-    // Update meeting status to processed
-    await prisma.meeting.update({
-      where: { id: meeting.id },
-      data: { status: 'PROCESSED' }
-    });
-
-    ctx.logger.info('Session analysis completed', {
+  maxDuration: 600,
+  retry: {
+    maxAttempts: 3,
+    factor: 2,
+    minTimeoutInMs: 1000,
+    maxTimeoutInMs: 30000,
+    randomize: true
+  },
+  queue: analysisQueue,
+  run: async (payload: { meetingId: string }, { ctx }) => {
+    logger.info('Starting session analysis', {
       meetingId: payload.meetingId,
-      analysisId: savedAnalysis.id
+      attempt: ctx.attempt
     });
 
-    return { analysisId: savedAnalysis.id };
+    metadata.set('status', 'starting');
+    metadata.set('meetingId', payload.meetingId);
+
+    try {
+      const meeting = await prisma.meeting.findUnique({
+        where: { id: payload.meetingId }
+      });
+
+      if (!meeting) {
+        throw new Error(`Meeting not found: ${payload.meetingId}`);
+      }
+
+      if (!meeting.transcript) {
+        throw new Error(`Meeting has no transcript: ${payload.meetingId}`);
+      }
+
+      metadata.set('status', 'analyzing');
+
+      const analysis = await analyzeSession(meeting.transcript);
+
+      metadata.set('status', 'saving');
+
+      const savedAnalysis = await prisma.meetingAnalysis.create({
+        data: {
+          meetingId: meeting.id,
+          summary: analysis.summary,
+          contentCoverage: analysis.contentCoverage,
+          facilitationQuality: analysis.facilitationQuality,
+          protocolSafety: analysis.protocolSafety,
+          riskDetection: analysis.riskDetection
+        }
+      });
+
+      const riskStatus = (analysis.riskDetection as { status?: string })
+        ?.status;
+      const finalStatus =
+        riskStatus === 'RISK' ? 'FLAGGED_FOR_REVIEW' : 'PROCESSED';
+
+      await prisma.meeting.update({
+        where: { id: meeting.id },
+        data: { status: finalStatus }
+      });
+
+      logger.info('Session analysis completed', {
+        meetingId: payload.meetingId,
+        analysisId: savedAnalysis.id,
+        riskStatus
+      });
+
+      metadata.set('status', 'completed');
+
+      await prisma.notification.create({
+        data: {
+          userId: meeting.supervisorId,
+          title: 'Session Analyzed',
+          description: `${meeting.groupId} analysis ready for review`
+        }
+      });
+
+      return {
+        analysisId: savedAnalysis.id,
+        riskStatus,
+        meetingId: meeting.id
+      };
+    } catch (error) {
+      logger.error('Session analysis failed', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        meetingId: payload.meetingId,
+        attempt: ctx.attempt
+      });
+
+      await prisma.meeting
+        .update({
+          where: { id: payload.meetingId },
+          data: { status: 'PENDING' }
+        })
+        .catch(() => {});
+
+      throw error;
+    }
   }
 });

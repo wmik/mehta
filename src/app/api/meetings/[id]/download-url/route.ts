@@ -33,7 +33,12 @@ export async function GET(
       const key = extractKeyFromUrl(meeting.transcript);
 
       if (key) {
-        const exists = await objectExists(key);
+        let exists = false;
+        try {
+          exists = await objectExists(key);
+        } catch (err: unknown) {
+          console.error(err);
+        }
 
         if (!exists) {
           // Clear invalid URL from database

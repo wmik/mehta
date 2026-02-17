@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
-import { analyzeSession } from '@/lib/ai-service';
+import { tasks } from '@trigger.dev/sdk';
+import { analyzeSessionJob } from '@/trigger/jobs';
 import { uploadToS3, isS3Url, extractKeyFromUrl, deleteFromS3 } from '@/lib/s3';
 
 // Sample therapy session transcripts (simplified to avoid syntax issues)
@@ -338,36 +339,23 @@ export async function POST(request: Request) {
       }
     }
 
-    // If transcript provided, trigger AI analysis
+    // If transcript provided, trigger AI analysis (async via Trigger.dev)
     if (transcript) {
       try {
-        const analysis = await analyzeSession(transcript);
-
-        await prisma.meetingAnalysis.create({
-          data: {
-            meetingId: newSession.id,
-            summary: analysis.summary,
-            contentCoverage: analysis.contentCoverage,
-            facilitationQuality: analysis.facilitationQuality,
-            protocolSafety: analysis.protocolSafety,
-            riskDetection: analysis.riskDetection
-          }
-        });
-
-        // Update status based on risk detection
-        const riskStatus = (analysis.riskDetection as { status?: string })
-          ?.status;
-        const finalStatus =
-          riskStatus === 'RISK' ? 'FLAGGED_FOR_REVIEW' : 'PROCESSED';
-
+        // Update status to processing
         await prisma.meeting.update({
           where: { id: newSession.id },
-          data: { status: finalStatus }
+          data: { status: 'PROCESSING' }
         });
 
-        newSession.status = finalStatus;
+        // Trigger async analysis job
+        await tasks.trigger<typeof analyzeSessionJob>('analyze-session', {
+          meetingId: newSession.id
+        });
+
+        newSession.status = 'PROCESSING';
       } catch (analysisError) {
-        console.error('AI Analysis failed:', analysisError);
+        console.error('Failed to start analysis:', analysisError);
         await prisma.meeting.update({
           where: { id: newSession.id },
           data: { status: 'PENDING' }

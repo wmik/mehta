@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { triggerClient } from '@/lib/trigger';
 import {
   uploadToS3,
   getObjectContent,
@@ -8,6 +7,8 @@ import {
   deleteFromS3,
   extractKeyFromUrl
 } from '@/lib/s3';
+import { tasks } from '@trigger.dev/sdk';
+import { analyzeSessionJob } from '@/trigger/jobs';
 
 export async function GET(
   request: NextRequest,
@@ -97,21 +98,21 @@ export async function POST(
       return NextResponse.json({ error: 'Meeting not found' }, { status: 404 });
     }
 
-    // Update meeting status to indicate analysis is queued
+    // Update meeting status to indicate analysis is processing
     await prisma.meeting.update({
       where: { id: meeting.id },
       data: { status: 'PROCESSING' }
     });
 
-    // Trigger background job
-    await triggerClient.sendEvent({
-      name: 'analyze.session',
-      payload: { meetingId: meeting.id }
-    });
+    const metadata = await tasks.trigger<typeof analyzeSessionJob>(
+      'analyze-session',
+      {
+        meetingId: meeting.id
+      }
+    );
 
     return NextResponse.json({
-      status: 'queued',
-      message: 'Analysis job started'
+      metadata
     });
   } catch (error) {
     console.error('Failed to start analysis:', error);

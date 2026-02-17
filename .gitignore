@@ -35,3 +35,5 @@ pnpm-debug.log*
 .env
 
 /src/generated/prisma
+
+.trigger
