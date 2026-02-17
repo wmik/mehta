@@ -95,8 +95,11 @@ export default function SessionDetailPage() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
-  const [notes, setNotes] = useState('');
   const [analysisStatus, setAnalysisStatus] = useState('');
+  const [jobStatus, setJobStatus] = useState<
+    'idle' | 'queued' | 'processing' | 'completed' | 'failed'
+  >('idle');
+  const [notes, setNotes] = useState('');
 
   // Speech recognition
   const {
@@ -176,7 +179,6 @@ export default function SessionDetailPage() {
   }, [params.id, fetchSession]);
 
   const ANALYSIS_PROGRESS_MESSAGES = [
-    'Analyzing transcript...',
     'Evaluating content coverage...',
     'Assessing facilitation quality...',
     'Checking protocol safety...',
@@ -186,7 +188,8 @@ export default function SessionDetailPage() {
 
   const runAnalysis = async () => {
     setAnalyzing(true);
-    setAnalysisStatus(ANALYSIS_PROGRESS_MESSAGES[0]);
+    setJobStatus('queued');
+    setAnalysisStatus('Analysis queued...');
 
     let progressIndex = 0;
     const progressInterval = setInterval(() => {
@@ -202,23 +205,74 @@ export default function SessionDetailPage() {
       });
       const data = await response.json();
 
-      if (data.analysis) {
-        setSession(prev =>
-          prev
-            ? {
-                ...prev,
-                analyses: [data.analysis, ...prev.analyses]
-              }
-            : null
-        );
+      if (data.status === 'queued') {
+        setJobStatus('processing');
+
+        // Poll for job completion
+        await pollForAnalysis();
       }
     } catch (error) {
       console.error('Analysis failed:', error);
-      alert('Analysis failed. Please check your AI provider configuration.');
+      setJobStatus('failed');
+      setAnalysisStatus('');
+      toast.error(
+        'Analysis failed. Please check your AI provider configuration.'
+      );
     } finally {
       clearInterval(progressInterval);
       setAnalyzing(false);
+    }
+  };
+
+  const pollForAnalysis = async () => {
+    const maxAttempts = 60; // Poll for up to 60 seconds
+    let attempts = 0;
+
+    const poll = async () => {
+      attempts++;
+
+      try {
+        const response = await fetch(`/api/meetings/${params.id}`);
+        const data = await response.json();
+
+        if (data.session) {
+          const hasNewAnalysis =
+            session && data.session.analyses.length > session.analyses.length;
+
+          if (hasNewAnalysis || data.session.status === 'PROCESSED') {
+            // New analysis completed
+            setSession(data.session);
+            setJobStatus('completed');
+            setAnalysisStatus('');
+            toast.success('Analysis completed!');
+            return true;
+          }
+
+          // Check if meeting status indicates processing
+          if (data.session.status === 'PROCESSING') {
+            setJobStatus('processing');
+          }
+        }
+      } catch (error) {
+        console.error('Polling error:', error);
+      }
+
+      return false;
+    };
+
+    // Initial wait before polling
+    await new Promise(resolve => setTimeout(resolve, 3000));
+
+    while (attempts < maxAttempts) {
+      const completed = await poll();
+      if (completed) break;
+      await new Promise(resolve => setTimeout(resolve, 2000));
+    }
+
+    if (attempts >= maxAttempts) {
+      setJobStatus('failed');
       setAnalysisStatus('');
+      toast.error('Analysis timed out. Please try again.');
     }
   };
 
@@ -556,7 +610,11 @@ export default function SessionDetailPage() {
                   {analyzing ? (
                     <span className="flex items-center gap-2">
                       <Loader className="w-4 h-4 animate-spin" />
-                      Analyzing...
+                      {jobStatus === 'queued'
+                        ? 'Queued...'
+                        : jobStatus === 'processing'
+                          ? 'Analyzing...'
+                          : 'Processing...'}
                     </span>
                   ) : latestAnalysis ? (
                     'Re-analyze'
@@ -566,6 +624,14 @@ export default function SessionDetailPage() {
                 </Button>
               </div>
             </div>
+
+            {analysisStatus && analyzing && (
+              <div className="mb-4">
+                <p className="text-sm text-amber-600 animate-pulse">
+                  {analysisStatus}
+                </p>
+              </div>
+            )}
 
             {analyzing ? (
               <AIAnalysisLoader />

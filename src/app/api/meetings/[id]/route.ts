@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { analyzeSession } from '@/lib/ai-service';
+import { triggerClient } from '@/lib/trigger';
+import {
+  uploadToS3,
+  getObjectContent,
+  isS3Url,
+  deleteFromS3,
+  extractKeyFromUrl
+} from '@/lib/s3';
 
 export async function GET(
   request: NextRequest,
@@ -33,13 +40,25 @@ export async function GET(
       return NextResponse.json({ error: 'Meeting not found' }, { status: 404 });
     }
 
+    let transcriptContent = meeting.transcript || '';
+
+    if (meeting.transcript && isS3Url(meeting.transcript)) {
+      try {
+        transcriptContent = await getObjectContent(
+          extractKeyFromUrl(meeting.transcript) || ''
+        );
+      } catch (error) {
+        console.error('Failed to fetch transcript from S3:', error);
+      }
+    }
+
     return NextResponse.json({
       session: {
         id: meeting.id,
         groupId: meeting.groupId,
         date: meeting.date.toISOString(),
         status: meeting.status,
-        transcript: meeting.transcript,
+        transcript: transcriptContent,
         fellow: meeting.fellow,
         analyses: meeting.analyses.map(analysis => ({
           id: analysis.id,
@@ -78,42 +97,26 @@ export async function POST(
       return NextResponse.json({ error: 'Meeting not found' }, { status: 404 });
     }
 
-    const analysis = await analyzeSession(meeting.transcript);
-
-    const savedAnalysis = await prisma.meetingAnalysis.create({
-      data: {
-        meetingId: meeting.id,
-        summary: analysis.summary,
-        contentCoverage: analysis.contentCoverage,
-        facilitationQuality: analysis.facilitationQuality,
-        protocolSafety: analysis.protocolSafety,
-        riskDetection: analysis.riskDetection
-      }
-    });
-
-    // Update meeting status
+    // Update meeting status to indicate analysis is queued
     await prisma.meeting.update({
       where: { id: meeting.id },
-      data: { status: 'PROCESSED' }
+      data: { status: 'PROCESSING' }
+    });
+
+    // Trigger background job
+    await triggerClient.sendEvent({
+      name: 'analyze.session',
+      payload: { meetingId: meeting.id }
     });
 
     return NextResponse.json({
-      analysis: {
-        id: savedAnalysis.id,
-        summary: savedAnalysis.summary,
-        contentCoverage: savedAnalysis.contentCoverage,
-        facilitationQuality: savedAnalysis.facilitationQuality,
-        protocolSafety: savedAnalysis.protocolSafety,
-        riskDetection: savedAnalysis.riskDetection,
-        supervisorStatus: savedAnalysis.supervisorStatus,
-        supervisorNotes: savedAnalysis.supervisorNotes,
-        createdAt: savedAnalysis.createdAt.toISOString()
-      }
+      status: 'queued',
+      message: 'Analysis job started'
     });
   } catch (error) {
-    console.error('Failed to analyze meeting:', error);
+    console.error('Failed to start analysis:', error);
     return NextResponse.json(
-      { error: 'Failed to analyze meeting' },
+      { error: 'Failed to start analysis' },
       { status: 500 }
     );
   }
@@ -125,9 +128,45 @@ export async function PATCH(
 ) {
   try {
     const meetingId = (await context.params).id;
-    const { transcript } = await request.json();
+    const contentType = request.headers.get('content-type') || '';
 
-    if (!transcript || typeof transcript !== 'string') {
+    let transcriptUrl: string | undefined;
+
+    if (contentType.includes('multipart/form-data')) {
+      const formData = await request.formData();
+      const file = formData.get('file') as File | null;
+      const transcriptText = formData.get('transcript') as string | null;
+
+      if (file) {
+        const arrayBuffer = await file.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        const key = `transcripts/${meetingId}/${file.name}`;
+
+        const result = await uploadToS3(buffer, key, file.type);
+        transcriptUrl = result.url;
+      } else if (transcriptText) {
+        const key = `transcripts/${meetingId}/transcript.txt`;
+        const buffer = Buffer.from(transcriptText, 'utf-8');
+        const result = await uploadToS3(buffer, key, 'text/plain');
+        transcriptUrl = result.url;
+      }
+    } else {
+      const { transcript } = await request.json();
+      if (
+        transcript &&
+        typeof transcript === 'string' &&
+        !isS3Url(transcript)
+      ) {
+        const key = `transcripts/${meetingId}/transcript.txt`;
+        const buffer = Buffer.from(transcript, 'utf-8');
+        const result = await uploadToS3(buffer, key, 'text/plain');
+        transcriptUrl = result.url;
+      } else if (transcript) {
+        transcriptUrl = transcript;
+      }
+    }
+
+    if (!transcriptUrl) {
       return NextResponse.json(
         { error: 'Transcript is required' },
         { status: 400 }
@@ -142,9 +181,20 @@ export async function PATCH(
       return NextResponse.json({ error: 'Meeting not found' }, { status: 404 });
     }
 
+    if (meeting.transcript && isS3Url(meeting.transcript)) {
+      const oldKey = extractKeyFromUrl(meeting.transcript);
+      if (oldKey) {
+        try {
+          await deleteFromS3(oldKey);
+        } catch (error) {
+          console.error('Failed to delete old transcript from S3:', error);
+        }
+      }
+    }
+
     const updatedMeeting = await prisma.meeting.update({
       where: { id: meetingId },
-      data: { transcript, status: 'PENDING' }
+      data: { transcript: transcriptUrl, status: 'PENDING' }
     });
 
     return NextResponse.json({

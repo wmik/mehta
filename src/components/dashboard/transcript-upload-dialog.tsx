@@ -126,17 +126,24 @@ export function TranscriptUploadDialog({
   };
 
   const onSubmit = async () => {
-    if (!transcript.trim()) {
+    if (!file && !transcript.trim()) {
       toast.error('Please provide a transcript');
       return;
     }
 
     setLoading(true);
     try {
+      const formData = new FormData();
+
+      if (file) {
+        formData.append('file', file);
+      } else if (transcript.trim()) {
+        formData.append('transcript', transcript);
+      }
+
       const response = await fetch(`/api/meetings/${sessionId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ transcript })
+        body: formData
       });
 
       if (!response.ok) {
@@ -144,8 +151,9 @@ export function TranscriptUploadDialog({
         throw new Error(error.error || 'Failed to update transcript');
       }
 
+      const data = await response.json();
       toast.success('Transcript updated successfully');
-      onSuccess(transcript);
+      onSuccess(data.session.transcript);
       handleOpenChange(false);
     } catch (error) {
       toast.error((error as Error).message);

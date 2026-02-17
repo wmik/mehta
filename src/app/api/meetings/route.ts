@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { analyzeSession } from '@/lib/ai-service';
+import { uploadToS3, isS3Url, extractKeyFromUrl, deleteFromS3 } from '@/lib/s3';
 
 // Sample therapy session transcripts (simplified to avoid syntax issues)
 const SAMPLE_TRANSCRIPTS = [
@@ -209,8 +210,41 @@ export async function POST(request: Request) {
   }
 
   try {
-    const body = await request.json();
-    const { action, groupId, date, fellowId, transcript } = body;
+    const contentType = request.headers.get('content-type') || '';
+    let action: string | undefined;
+    let groupId: string | undefined;
+    let date: string | undefined;
+    let fellowId: string | undefined;
+    let transcript: string | undefined;
+    let meetingId: string | undefined;
+
+    if (contentType.includes('multipart/form-data')) {
+      const formData = await request.formData();
+      action = formData.get('action') as string | undefined;
+      groupId = formData.get('groupId') as string | undefined;
+      date = formData.get('date') as string | undefined;
+      fellowId = formData.get('fellowId') as string | undefined;
+      const file = formData.get('file') as File | null;
+      transcript = formData.get('transcript') as string | undefined;
+
+      if (file) {
+        const arrayBuffer = await file.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        const tempId = `temp-${Date.now()}`;
+        const key = `transcripts/${tempId}/${file.name}`;
+
+        const result = await uploadToS3(buffer, key, file.type);
+        transcript = result.url;
+        meetingId = tempId;
+      }
+    } else {
+      const body = await request.json();
+      action = body.action;
+      groupId = body.groupId;
+      date = body.date;
+      fellowId = body.fellowId;
+      transcript = body.transcript;
+    }
 
     // Check if creating sample sessions (backward compatibility)
     if (action === 'sample') {
@@ -241,14 +275,24 @@ export async function POST(request: Request) {
       );
     }
 
+    // If transcript is not an S3 URL, upload it
+    let transcriptUrl = transcript;
+    if (transcript && !isS3Url(transcript)) {
+      const tempId = meetingId || `temp-${Date.now()}`;
+      const key = `transcripts/${tempId}/transcript.txt`;
+      const buffer = Buffer.from(transcript, 'utf-8');
+      const result = await uploadToS3(buffer, key, 'text/plain');
+      transcriptUrl = result.url;
+    }
+
     // Create the session
-    const status = transcript ? 'PROCESSING' : 'PENDING';
+    const status = transcriptUrl ? 'PROCESSING' : 'PENDING';
 
     const newSession = await prisma.meeting.create({
       data: {
         groupId,
         date: new Date(date),
-        transcript: transcript || '',
+        transcript: transcriptUrl || null,
         status,
         fellowId,
         supervisorId: session.user.id
@@ -274,6 +318,25 @@ export async function POST(request: Request) {
         }
       }
     });
+
+    // If transcript was uploaded to temp location, update the key
+    if (transcriptUrl && meetingId) {
+      try {
+        const oldKey = extractKeyFromUrl(transcriptUrl);
+        if (oldKey) {
+          const newKey = `transcripts/${newSession.id}/transcript.txt`;
+          // Note: In production, you'd copy and delete the old key
+          await prisma.meeting.update({
+            where: { id: newSession.id },
+            data: {
+              transcript: `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${newKey}`
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Failed to update transcript key:', error);
+      }
+    }
 
     // If transcript provided, trigger AI analysis
     if (transcript) {

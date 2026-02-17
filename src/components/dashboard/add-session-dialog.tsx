@@ -179,11 +179,26 @@ export function AddSessionDialog({
 
     setLoading(true);
     try {
-      const response = await fetch('/api/meetings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
+      let response;
+
+      if (file) {
+        const formData = new FormData();
+        formData.append('groupId', data.groupId);
+        formData.append('date', data.date);
+        formData.append('fellowId', data.fellowId);
+        formData.append('file', file);
+
+        response = await fetch('/api/meetings', {
+          method: 'POST',
+          body: formData
+        });
+      } else {
+        response = await fetch('/api/meetings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+      }
 
       if (!response.ok) {
         const error = await response.json();

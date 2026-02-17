@@ -102,7 +102,7 @@ model Meeting {
   id           String            @id @default(cuid())
   groupId      String
   date         DateTime
-  transcript   String
+  transcript   String?           // S3 URL or plain text transcript
   status       String            @default("PENDING")
   createdAt    DateTime          @default(now())
   updatedAt    DateTime          @updatedAt

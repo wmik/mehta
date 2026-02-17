@@ -3,6 +3,7 @@ import { createOpenAI } from '@ai-sdk/openai';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createOllama } from 'ollama-ai-provider-v2';
 import { sessionAnalysisSchema, SESSION_ANALYSIS_PROMPT } from './schemas';
+import { getObjectContent, isS3Url, extractKeyFromUrl } from './s3';
 
 // Configure AI providers
 const openai = createOpenAI({
@@ -41,6 +42,20 @@ export async function analyzeSession(
     throw new Error(`AI provider ${provider} not available`);
   }
 
+  let transcriptContent = transcript;
+
+  if (isS3Url(transcript)) {
+    try {
+      const key = extractKeyFromUrl(transcript);
+      if (key) {
+        transcriptContent = await getObjectContent(key);
+      }
+    } catch (error) {
+      console.error('Failed to fetch transcript from S3:', error);
+      throw new Error('Failed to fetch transcript from storage');
+    }
+  }
+
   console.log(`Running analysis with ${provider}`);
 
   try {
@@ -49,7 +64,7 @@ export async function analyzeSession(
       prompt: `${SESSION_ANALYSIS_PROMPT}
 
 SESSION TRANSCRIPT:
-${transcript}`,
+${transcriptContent}`,
       output: Output.object({ schema: sessionAnalysisSchema }),
       temperature: 0.1, // Low temperature for consistent analysis
       maxRetries: 2

@@ -4,6 +4,13 @@
   "private": true,
   "license": "UNLICENSED",
   "description": "Mental Health Transcript Analysis",
+  "trigger": {
+    "projects": [
+      {
+        "name": "mehta"
+      }
+    ]
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -23,10 +30,13 @@
     "@ai-sdk/anthropic": "^3.0.41",
     "@ai-sdk/openai": "^3.0.26",
     "@auth/prisma-adapter": "^2.11.1",
+    "@aws-sdk/client-s3": "^3.991.0",
+    "@aws-sdk/s3-request-presigner": "^3.991.0",
     "@badrap/bar-of-progress": "^0.3.0",
     "@hookform/resolvers": "^5.2.2",
     "@prisma/adapter-pg": "^7.4.0",
     "@prisma/client": "^7.4.0",
+    "@trigger.dev/sdk": "^4.3.3",
     "@types/bcryptjs": "^2.4.6",
     "ai": "^6.0.83",
     "bcryptjs": "^3.0.3",
