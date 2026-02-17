@@ -48,6 +48,7 @@ import { useLocalStorage } from '@/hooks/use-local-storage';
 import { AddFellowDialog } from '@/components/dashboard/add-fellow-dialog';
 import { AddSessionDialog } from '@/components/dashboard/add-session-dialog';
 import { FellowViewDialog } from '@/components/dashboard/fellow-view-dialog';
+import { TourProvider } from '@/components/dashboard/tour-provider';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -393,391 +394,438 @@ export default function DashboardPage() {
 
   const fellowOptions = fellows.map(f => ({ value: f.id, label: f.name }));
 
+  const dashboardTourSteps = [
+    {
+      target: '[data-tour="dashboard-header"]',
+      title: 'Welcome to Your Dashboard',
+      content:
+        'This is your supervisor dashboard where you can manage fellows and review therapy sessions. Start by adding your first fellow.',
+      placement: 'bottom' as const
+    },
+    {
+      target: '[data-tour="add-fellow"]',
+      title: 'Add Fellows',
+      content:
+        'Add new fellows to your supervision. Each fellow will conduct therapy sessions that you can review and analyze.',
+      placement: 'bottom' as const
+    },
+    {
+      target: '[data-tour="sessions-table"]',
+      title: 'Session Reviews',
+      content:
+        'View all therapy sessions conducted by your fellows. Click on any session to view detailed AI analysis and validation tools.',
+      placement: 'top' as const
+    },
+    {
+      target: '[data-tour="add-session"]',
+      title: 'Create Sessions',
+      content:
+        'Create new therapy sessions by uploading transcripts or entering them manually. The AI will analyze each session automatically.',
+      placement: 'left' as const
+    },
+    {
+      target: '[data-tour="filters"]',
+      title: 'Filter & Search',
+      content:
+        'Filter sessions by fellow, status, or date range to find specific sessions quickly. Use the search to find sessions by group ID.',
+      placement: 'bottom' as const
+    }
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <ProgressProvider />
-      <Toaster />
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <h1 className="text-lg font-bold tracking-tighter uppercase font-mono">
-              SHAMIRI /// COPILOT
-            </h1>
-            <div className="flex items-center gap-2">
-              <ThemeToggle />
-              <Notifications />
-              {session?.user && <UserMenu user={session.user} />}
+    <TourProvider
+      steps={dashboardTourSteps}
+      tourKey="dashboard_onboarding_tour_completed"
+    >
+      <div className="min-h-screen bg-gray-50">
+        <ProgressProvider />
+        <Toaster />
+        <header className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <h1 className="text-lg font-bold tracking-tighter uppercase font-mono">
+                SHAMIRI /// COPILOT
+              </h1>
+              <div className="flex items-center gap-2">
+                <ThemeToggle />
+                <Notifications />
+                {session?.user && <UserMenu user={session.user} />}
+              </div>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Shamiri Supervisor Dashboard
-          </h2>
-          <p className="text-gray-600">
-            Review and analyze therapy sessions conducted by your Fellows.
-          </p>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
-          {loading ? (
-            <>
-              <StatsCardSkeleton delay={0} />
-              <StatsCardSkeleton delay={100} />
-              <StatsCardSkeleton delay={200} />
-            </>
-          ) : (
-            <>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Session Management</CardTitle>
-                  <CardDescription>
-                    View and analyze therapy sessions
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-3xl font-bold text-blue-600">
-                    {stats.total}
-                  </p>
-                  <p className="text-sm text-gray-600">Total Sessions</p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>AI Analysis</CardTitle>
-                  <CardDescription>AI-powered session insights</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-3xl font-bold text-green-600">
-                    {stats.processed}
-                  </p>
-                  <p className="text-sm text-gray-600">Completed Analyses</p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Risk Alerts</CardTitle>
-                  <CardDescription>
-                    Sessions requiring attention
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-3xl font-bold text-red-600">
-                    {stats.risks}
-                  </p>
-                  <p className="text-sm text-gray-600">Flagged Sessions</p>
-                </CardContent>
-              </Card>
-            </>
-          )}
-        </div>
-
-        {/* Analytics Section */}
-        {loading ? (
-          <div className="mb-8">
-            <AnalyticsSkeleton />
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="mb-8" data-tour="dashboard-header">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              Shamiri Supervisor Dashboard
+            </h2>
+            <p className="text-gray-600">
+              Review and analyze therapy sessions conducted by your Fellows.
+            </p>
           </div>
-        ) : (
-          <div className="space-y-8">
-            {/* Charts Row */}
-            {(fellowStats.length > 0 || riskTrend.length > 0) && (
-              <div className="grid gap-6 grid-cols-1 mb-8">
-                <div className="grid gap-6 grid-cols-2">
-                  <Card>
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <CardTitle>Session Status</CardTitle>
-                          <CardDescription>
-                            Distribution of session statuses
-                          </CardDescription>
-                        </div>
-                        <Toggle
-                          pressed={showStatusChart}
-                          onPressedChange={setShowStatusChart}
-                          aria-label="Toggle chart view"
-                          className="rounded-none"
-                        >
-                          {showStatusChart ? (
-                            <PieChart className="h-4 w-4" />
-                          ) : (
-                            <List className="h-4 w-4" />
-                          )}
-                        </Toggle>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      {showStatusChart ? (
-                        <SessionStatusPie data={statusDistribution} />
-                      ) : (
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm">Pending</span>
-                            <Badge variant="secondary">
-                              {statusDistribution.PENDING}
-                            </Badge>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm">Processed</span>
-                            <Badge variant="outline">
-                              {statusDistribution.PROCESSED}
-                            </Badge>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm">Safe</span>
-                            <Badge className="bg-green-500">
-                              {statusDistribution.SAFE}
-                            </Badge>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm">Flagged</span>
-                            <Badge variant="destructive">
-                              {statusDistribution.FLAGGED_FOR_REVIEW}
-                            </Badge>
-                          </div>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
 
-                  <Card>
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <CardTitle>Risk Trend</CardTitle>
-                          <CardDescription>
-                            Risks detected over time
-                          </CardDescription>
-                        </div>
-                        <Toggle
-                          pressed={showRiskChart}
-                          onPressedChange={setShowRiskChart}
-                          aria-label="Toggle chart view"
-                          className="rounded-none"
-                        >
-                          {showRiskChart ? (
-                            <TrendingUp className="h-4 w-4" />
-                          ) : (
-                            <List className="h-4 w-4" />
-                          )}
-                        </Toggle>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      {showRiskChart ? (
-                        <RiskTrendChart data={riskTrend} />
-                      ) : (
-                        <div className="space-y-2">
-                          {riskTrend.slice(-7).map(t => (
-                            <div
-                              key={t.date}
-                              className="flex items-center justify-between"
-                            >
-                              <span className="text-sm text-gray-600">
-                                {new Date(t.date).toLocaleDateString()}
-                              </span>
-                              <Badge variant="destructive">
-                                {t.count} risk(s)
-                              </Badge>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {statsData?.scoreDistribution && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Score Distribution</CardTitle>
-                      <CardDescription>
-                        Distribution of scores across all analyzed sessions
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <ScoreDistributionChart
-                        data={statsData.scoreDistribution}
-                      />
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Sessions Table */}
-        <Card>
-          <CardHeader>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <CardTitle>Recent Sessions</CardTitle>
-                <CardDescription>
-                  Therapy sessions conducted by your assigned Fellows
-                </CardDescription>
-              </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button className="rounded-none">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem
-                    onClick={() => setShowAddFellowDialog(true)}
-                  >
-                    <User className="h-4 w-4 mr-2" />
-                    Add Fellow
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => setShowAddSessionDialog(true)}
-                  >
-                    <Calendar className="h-4 w-4 mr-2" />
-                    Add Session
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-            <div className="mt-4">
-              {loading ? (
-                <FilterBarSkeleton />
-              ) : (
-                <FilterDropdown
-                  statusOptions={statusOptions}
-                  fellowOptions={fellowOptions}
-                  onStatusChange={setSelectedStatuses}
-                  onFellowChange={setSelectedFellows}
-                  onDateRangeChange={(start, end) =>
-                    setDateRange({ start, end })
-                  }
-                  onSortChange={(sort, order) => {
-                    setSortBy(sort);
-                    setSortOrder(order);
-                  }}
-                  onSearchChange={setSearchQuery}
-                  initialSearch={searchQuery}
-                />
-              )}
-            </div>
-          </CardHeader>
-          <CardContent>
-            {filteredSessions.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-gray-500 mb-4">No sessions found.</p>
-                <Button
-                  onClick={() =>
-                    fetchSessions().then(s => setAllSessions(s || []))
-                  }
-                >
-                  Refresh
-                </Button>
-              </div>
+          {/* Stats Cards */}
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
+            {loading ? (
+              <>
+                <StatsCardSkeleton delay={0} />
+                <StatsCardSkeleton delay={100} />
+                <StatsCardSkeleton delay={200} />
+              </>
             ) : (
               <>
-                {loading ? (
-                  <TableSkeleton />
-                ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Fellow Name</TableHead>
-                        <TableHead>Group ID</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {paginatedSessions.map(sessionData => (
-                        <TableRow key={sessionData.id}>
-                          <TableCell className="font-medium">
-                            <button
-                              onClick={() =>
-                                setViewFellowId(sessionData.fellow.id)
-                              }
-                              className="hover:underline text-left"
-                            >
-                              {sessionData.fellow.name}
-                            </button>
-                          </TableCell>
-                          <TableCell>{sessionData.groupId}</TableCell>
-                          <TableCell>
-                            {new Date(sessionData.date).toLocaleDateString()}
-                          </TableCell>
-                          <TableCell>
-                            <StatusBadge
-                              status={sessionData.status}
-                              analysis={sessionData.analyses[0]}
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Link
-                              href={`/dashboard/sessions/${sessionData.id}`}
-                            >
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="rounded-none"
-                              >
-                                View Details
-                              </Button>
-                            </Link>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                )}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Session Management</CardTitle>
+                    <CardDescription>
+                      View and analyze therapy sessions
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-3xl font-bold text-blue-600">
+                      {stats.total}
+                    </p>
+                    <p className="text-sm text-gray-600">Total Sessions</p>
+                  </CardContent>
+                </Card>
 
-                <div className="mt-4 flex items-center justify-between">
-                  <p className="text-sm text-gray-600">
-                    Showing {(currentPage - 1) * itemsPerPage + 1} to{' '}
-                    {Math.min(
-                      currentPage * itemsPerPage,
-                      filteredSessions.length
-                    )}{' '}
-                    of {filteredSessions.length} sessions
-                  </p>
-                  <Pagination
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={setCurrentPage}
-                  />
-                </div>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>AI Analysis</CardTitle>
+                    <CardDescription>
+                      AI-powered session insights
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-3xl font-bold text-green-600">
+                      {stats.processed}
+                    </p>
+                    <p className="text-sm text-gray-600">Completed Analyses</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Risk Alerts</CardTitle>
+                    <CardDescription>
+                      Sessions requiring attention
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-3xl font-bold text-red-600">
+                      {stats.risks}
+                    </p>
+                    <p className="text-sm text-gray-600">Flagged Sessions</p>
+                  </CardContent>
+                </Card>
               </>
             )}
-          </CardContent>
-        </Card>
+          </div>
 
-        <AddFellowDialog
-          open={showAddFellowDialog}
-          onOpenChange={setShowAddFellowDialog}
-          onSuccess={() => mutate('/api/fellows')}
-        />
-        <AddSessionDialog
-          open={showAddSessionDialog}
-          onOpenChange={setShowAddSessionDialog}
-          onSuccess={() => mutate('/api/meetings')}
-        />
-        <FellowViewDialog
-          open={!!viewFellowId}
-          onOpenChange={open => !open && setViewFellowId(null)}
-          fellowId={viewFellowId || ''}
-          onSuccess={() => {
-            mutate('/api/fellows');
-            mutate('/api/meetings');
-          }}
-        />
-      </main>
-    </div>
+          {/* Analytics Section */}
+          {loading ? (
+            <div className="mb-8">
+              <AnalyticsSkeleton />
+            </div>
+          ) : (
+            <div className="space-y-8">
+              {/* Charts Row */}
+              {(fellowStats.length > 0 || riskTrend.length > 0) && (
+                <div className="grid gap-6 grid-cols-1 mb-8">
+                  <div className="grid gap-6 grid-cols-2">
+                    <Card>
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <CardTitle>Session Status</CardTitle>
+                            <CardDescription>
+                              Distribution of session statuses
+                            </CardDescription>
+                          </div>
+                          <Toggle
+                            pressed={showStatusChart}
+                            onPressedChange={setShowStatusChart}
+                            aria-label="Toggle chart view"
+                            className="rounded-none"
+                          >
+                            {showStatusChart ? (
+                              <PieChart className="h-4 w-4" />
+                            ) : (
+                              <List className="h-4 w-4" />
+                            )}
+                          </Toggle>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        {showStatusChart ? (
+                          <SessionStatusPie data={statusDistribution} />
+                        ) : (
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm">Pending</span>
+                              <Badge variant="secondary">
+                                {statusDistribution.PENDING}
+                              </Badge>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm">Processed</span>
+                              <Badge variant="outline">
+                                {statusDistribution.PROCESSED}
+                              </Badge>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm">Safe</span>
+                              <Badge className="bg-green-500">
+                                {statusDistribution.SAFE}
+                              </Badge>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm">Flagged</span>
+                              <Badge variant="destructive">
+                                {statusDistribution.FLAGGED_FOR_REVIEW}
+                              </Badge>
+                            </div>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <CardTitle>Risk Trend</CardTitle>
+                            <CardDescription>
+                              Risks detected over time
+                            </CardDescription>
+                          </div>
+                          <Toggle
+                            pressed={showRiskChart}
+                            onPressedChange={setShowRiskChart}
+                            aria-label="Toggle chart view"
+                            className="rounded-none"
+                          >
+                            {showRiskChart ? (
+                              <TrendingUp className="h-4 w-4" />
+                            ) : (
+                              <List className="h-4 w-4" />
+                            )}
+                          </Toggle>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        {showRiskChart ? (
+                          <RiskTrendChart data={riskTrend} />
+                        ) : (
+                          <div className="space-y-2">
+                            {riskTrend.slice(-7).map(t => (
+                              <div
+                                key={t.date}
+                                className="flex items-center justify-between"
+                              >
+                                <span className="text-sm text-gray-600">
+                                  {new Date(t.date).toLocaleDateString()}
+                                </span>
+                                <Badge variant="destructive">
+                                  {t.count} risk(s)
+                                </Badge>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {statsData?.scoreDistribution && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Score Distribution</CardTitle>
+                        <CardDescription>
+                          Distribution of scores across all analyzed sessions
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <ScoreDistributionChart
+                          data={statsData.scoreDistribution}
+                        />
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Sessions Table */}
+          <Card>
+            <CardHeader>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <CardTitle>Recent Sessions</CardTitle>
+                  <CardDescription>
+                    Therapy sessions conducted by your assigned Fellows
+                  </CardDescription>
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button className="rounded-none">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem
+                      onClick={() => setShowAddFellowDialog(true)}
+                      data-tour="add-fellow"
+                    >
+                      <User className="h-4 w-4 mr-2" />
+                      Add Fellow
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => setShowAddSessionDialog(true)}
+                      data-tour="add-session"
+                    >
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Add Session
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+              <div className="mt-4" data-tour="filters">
+                {loading ? (
+                  <FilterBarSkeleton />
+                ) : (
+                  <FilterDropdown
+                    statusOptions={statusOptions}
+                    fellowOptions={fellowOptions}
+                    onStatusChange={setSelectedStatuses}
+                    onFellowChange={setSelectedFellows}
+                    onDateRangeChange={(start, end) =>
+                      setDateRange({ start, end })
+                    }
+                    onSortChange={(sort, order) => {
+                      setSortBy(sort);
+                      setSortOrder(order);
+                    }}
+                    onSearchChange={setSearchQuery}
+                    initialSearch={searchQuery}
+                  />
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              {filteredSessions.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500 mb-4">No sessions found.</p>
+                  <Button
+                    onClick={() =>
+                      fetchSessions().then(s => setAllSessions(s || []))
+                    }
+                  >
+                    Refresh
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  {loading ? (
+                    <TableSkeleton />
+                  ) : (
+                    <Table data-tour="sessions-table">
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Fellow Name</TableHead>
+                          <TableHead>Group ID</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {paginatedSessions.map(sessionData => (
+                          <TableRow key={sessionData.id}>
+                            <TableCell className="font-medium">
+                              <button
+                                onClick={() =>
+                                  setViewFellowId(sessionData.fellow.id)
+                                }
+                                className="hover:underline text-left"
+                              >
+                                {sessionData.fellow.name}
+                              </button>
+                            </TableCell>
+                            <TableCell>{sessionData.groupId}</TableCell>
+                            <TableCell>
+                              {new Date(sessionData.date).toLocaleDateString()}
+                            </TableCell>
+                            <TableCell>
+                              <StatusBadge
+                                status={sessionData.status}
+                                analysis={sessionData.analyses[0]}
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Link
+                                href={`/dashboard/sessions/${sessionData.id}`}
+                              >
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="rounded-none"
+                                >
+                                  View Details
+                                </Button>
+                              </Link>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+
+                  <div className="mt-4 flex items-center justify-between">
+                    <p className="text-sm text-gray-600">
+                      Showing {(currentPage - 1) * itemsPerPage + 1} to{' '}
+                      {Math.min(
+                        currentPage * itemsPerPage,
+                        filteredSessions.length
+                      )}{' '}
+                      of {filteredSessions.length} sessions
+                    </p>
+                    <Pagination
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      onPageChange={setCurrentPage}
+                    />
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          <AddFellowDialog
+            open={showAddFellowDialog}
+            onOpenChange={setShowAddFellowDialog}
+            onSuccess={() => mutate('/api/fellows')}
+          />
+          <AddSessionDialog
+            open={showAddSessionDialog}
+            onOpenChange={setShowAddSessionDialog}
+            onSuccess={() => mutate('/api/meetings')}
+          />
+          <FellowViewDialog
+            open={!!viewFellowId}
+            onOpenChange={open => !open && setViewFellowId(null)}
+            fellowId={viewFellowId || ''}
+            onSuccess={() => {
+              mutate('/api/fellows');
+              mutate('/api/meetings');
+            }}
+          />
+        </main>
+      </div>
+    </TourProvider>
   );
 }
 

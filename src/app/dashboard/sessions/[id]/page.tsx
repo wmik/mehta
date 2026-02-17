@@ -558,7 +558,7 @@ export default function SessionDetailPage() {
                   </Button>
                 </div>
 
-                <Card>
+                <Card data-tour="session-info">
                   <CardHeader>
                     <CardTitle>Session Information</CardTitle>
                     <CardDescription>
@@ -701,7 +701,7 @@ export default function SessionDetailPage() {
 
             {/* Session Summary */}
             {latestAnalysis && (
-              <Card>
+              <Card data-tour="ai-analysis">
                 <CardHeader>
                   <CardTitle>Session Summary</CardTitle>
                 </CardHeader>
@@ -717,7 +717,7 @@ export default function SessionDetailPage() {
             {session && latestAnalysis && (
               <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
                 {/* Radar Chart */}
-                <Card className="lg:col-span-3">
+                <Card className="lg:col-span-3" data-tour="fellow-metrics">
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <div>
@@ -969,7 +969,10 @@ export default function SessionDetailPage() {
                       )}
                     </div>
                   </div>
-                  <div className="flex flex-col sm:flex-row gap-4">
+                  <div
+                    className="flex flex-col sm:flex-row gap-4"
+                    data-tour="validation"
+                  >
                     <Button
                       onClick={() => handleValidateClick('validate')}
                       className="rounded-none flex-1 bg-green-600 hover:bg-green-700"

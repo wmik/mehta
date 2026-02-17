@@ -15,6 +15,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useTheme } from 'next-themes';
+import { useTour } from './tour-provider';
 import {
   User,
   Settings,
@@ -25,7 +26,8 @@ import {
   LogOut,
   Loader2,
   Check,
-  Shield
+  Shield,
+  Compass
 } from 'lucide-react';
 
 interface UserMenuProps {
@@ -40,6 +42,7 @@ interface UserMenuProps {
 export function UserMenu({ user }: UserMenuProps) {
   const router = useRouter();
   const { theme, setTheme } = useTheme();
+  const { startDashboardTour } = useTour();
   const [loggingOut, setLoggingOut] = useState(false);
 
   const handleLogout = async () => {
@@ -128,6 +131,11 @@ export function UserMenu({ user }: UserMenuProps) {
           <Monitor className="mr-2 h-4 w-4" />
           System
           {theme === 'system' && <Check className="ml-auto h-4 w-4" />}
+        </DropdownMenuItem>
+
+        <DropdownMenuItem onClick={startDashboardTour}>
+          <Compass className="mr-2 h-4 w-4" />
+          Restart Tour
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />

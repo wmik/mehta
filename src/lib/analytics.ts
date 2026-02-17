@@ -39,7 +39,11 @@ export const ANALYTICS_EVENTS = {
   FELLOW_VIEWED: 'Fellow Viewed',
   FELLOW_UPDATED: 'Fellow Updated',
   FELLOW_DELETED: 'Fellow Deleted',
-  PAGE_VIEWED: 'Page Viewed'
+  PAGE_VIEWED: 'Page Viewed',
+  ONBOARDING_STARTED: 'Onboarding Started',
+  ONBOARDING_COMPLETED: 'Onboarding Completed',
+  ONBOARDING_SKIPPED: 'Onboarding Skipped',
+  ONBOARDING_STEP_VIEWED: 'Onboarding Step Viewed'
 } as const;
 
 export type AnalyticsEvent =
