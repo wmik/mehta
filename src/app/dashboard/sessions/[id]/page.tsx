@@ -364,6 +364,25 @@ export default function SessionDetailPage() {
     setConfirmAction(null);
   };
 
+  const handleTranscriptDownload = async () => {
+    if (!session?.transcript) return;
+
+    try {
+      const response = await fetch(`/api/meetings/${session.id}/download-url`);
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to generate download URL');
+      }
+
+      const { url } = await response.json();
+      window.open(url, '_blank');
+    } catch (error) {
+      console.error('Failed to download transcript:', error);
+      toast.error('Failed to download transcript. Please try again.');
+    }
+  };
+
   if (!session && !loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -567,7 +586,7 @@ export default function SessionDetailPage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                       <div>
                         <p className="text-sm text-gray-600">Fellow</p>
                         <p className="font-medium">{session?.fellow.name}</p>
@@ -576,44 +595,40 @@ export default function SessionDetailPage() {
                         <p className="text-sm text-gray-600">Group ID</p>
                         <p className="font-medium">{session?.groupId}</p>
                       </div>
-                      <div className="flex items-start gap-4">
-                        <div>
-                          <p className="text-sm text-gray-600">Status</p>
-                          <StatusBadge status={session?.status} />
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-600">Transcript</p>
-                          {session?.transcript ? (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <a
-                                  href={session.transcript}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="flex items-center gap-1 text-blue-600 hover:underline font-medium cursor-pointer"
-                                >
-                                  <FileText className="w-4 h-4" />
-                                  Transcript
-                                </a>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>Click to download transcript</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          ) : (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span className="flex items-center gap-1 text-amber-600 font-medium cursor-help">
-                                  <AlertTriangle className="w-4 h-4" />
-                                  Missing
-                                </span>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>No transcript uploaded for this session</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          )}
-                        </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Status</p>
+                        <StatusBadge status={session?.status} />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Transcript</p>
+                        {session?.transcript ? (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                onClick={handleTranscriptDownload}
+                                className="flex items-center gap-1 text-blue-600 hover:underline font-medium cursor-pointer"
+                              >
+                                <FileText className="w-4 h-4" />
+                                Transcript
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Click to download transcript</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        ) : (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="flex items-center gap-1 text-amber-600 font-medium cursor-help">
+                                <AlertTriangle className="w-4 h-4" />
+                                Missing
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>No transcript uploaded for this session</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
                       </div>
                     </div>
                   </CardContent>
