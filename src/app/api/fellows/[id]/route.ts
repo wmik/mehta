@@ -27,6 +27,28 @@ export async function GET(
           select: {
             meetings: true
           }
+        },
+        meetings: {
+          take: 10,
+          orderBy: {
+            date: 'desc'
+          },
+          select: {
+            id: true,
+            groupId: true,
+            date: true,
+            status: true,
+            analyses: {
+              take: 1,
+              orderBy: {
+                createdAt: 'desc' as const
+              },
+              select: {
+                riskDetection: true,
+                supervisorStatus: true
+              }
+            }
+          }
         }
       }
     });
@@ -42,7 +64,15 @@ export async function GET(
         email: fellow.email,
         status: fellow.status,
         createdAt: fellow.createdAt,
-        sessionCount: fellow._count.meetings
+        sessionCount: fellow._count.meetings,
+        sessions: fellow.meetings.map(m => ({
+          id: m.id,
+          groupId: m.groupId,
+          date: m.date.toISOString(),
+          status: m.status,
+          hasRisk: m.analyses[0]?.riskDetection?.status === 'RISK',
+          supervisorStatus: m.analyses[0]?.supervisorStatus || null
+        }))
       }
     });
   } catch (error) {

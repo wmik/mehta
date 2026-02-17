@@ -47,6 +47,7 @@ import { List, TrendingUp, PieChart, Plus, User, Calendar } from 'lucide-react';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { AddFellowDialog } from '@/components/dashboard/add-fellow-dialog';
 import { AddSessionDialog } from '@/components/dashboard/add-session-dialog';
+import { FellowViewDialog } from '@/components/dashboard/fellow-view-dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -101,6 +102,7 @@ export default function DashboardPage() {
   // Dialog state
   const [showAddFellowDialog, setShowAddFellowDialog] = useState(false);
   const [showAddSessionDialog, setShowAddSessionDialog] = useState(false);
+  const [viewFellowId, setViewFellowId] = useState<string | null>(null);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -197,7 +199,7 @@ export default function DashboardPage() {
       const query = searchQuery.toLowerCase();
       result = result.filter(
         s =>
-          s.transcript.toLowerCase().includes(query) ||
+          s.transcript?.toLowerCase().includes(query) ||
           s.groupId.toLowerCase().includes(query) ||
           s.fellow.name.toLowerCase().includes(query)
       );
@@ -487,54 +489,6 @@ export default function DashboardPage() {
             {(fellowStats.length > 0 || riskTrend.length > 0) && (
               <div className="grid gap-6 grid-cols-1 mb-8">
                 <div className="grid gap-6 grid-cols-2">
-                  {riskTrend.length > 0 && (
-                    <Card>
-                      <CardHeader>
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <CardTitle>Risk Trend</CardTitle>
-                            <CardDescription>
-                              Risks detected over time
-                            </CardDescription>
-                          </div>
-                          <Toggle
-                            pressed={showRiskChart}
-                            onPressedChange={setShowRiskChart}
-                            aria-label="Toggle chart view"
-                            className="rounded-none"
-                          >
-                            {showRiskChart ? (
-                              <TrendingUp className="h-4 w-4" />
-                            ) : (
-                              <List className="h-4 w-4" />
-                            )}
-                          </Toggle>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        {showRiskChart ? (
-                          <RiskTrendChart data={riskTrend} />
-                        ) : (
-                          <div className="space-y-2">
-                            {riskTrend.slice(-7).map(t => (
-                              <div
-                                key={t.date}
-                                className="flex items-center justify-between"
-                              >
-                                <span className="text-sm text-gray-600">
-                                  {new Date(t.date).toLocaleDateString()}
-                                </span>
-                                <Badge variant="destructive">
-                                  {t.count} risk(s)
-                                </Badge>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  )}
-
                   <Card>
                     <CardHeader>
                       <div className="flex items-center justify-between">
@@ -587,6 +541,52 @@ export default function DashboardPage() {
                               {statusDistribution.FLAGGED_FOR_REVIEW}
                             </Badge>
                           </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle>Risk Trend</CardTitle>
+                          <CardDescription>
+                            Risks detected over time
+                          </CardDescription>
+                        </div>
+                        <Toggle
+                          pressed={showRiskChart}
+                          onPressedChange={setShowRiskChart}
+                          aria-label="Toggle chart view"
+                          className="rounded-none"
+                        >
+                          {showRiskChart ? (
+                            <TrendingUp className="h-4 w-4" />
+                          ) : (
+                            <List className="h-4 w-4" />
+                          )}
+                        </Toggle>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      {showRiskChart ? (
+                        <RiskTrendChart data={riskTrend} />
+                      ) : (
+                        <div className="space-y-2">
+                          {riskTrend.slice(-7).map(t => (
+                            <div
+                              key={t.date}
+                              className="flex items-center justify-between"
+                            >
+                              <span className="text-sm text-gray-600">
+                                {new Date(t.date).toLocaleDateString()}
+                              </span>
+                              <Badge variant="destructive">
+                                {t.count} risk(s)
+                              </Badge>
+                            </div>
+                          ))}
                         </div>
                       )}
                     </CardContent>
@@ -699,7 +699,14 @@ export default function DashboardPage() {
                       {paginatedSessions.map(sessionData => (
                         <TableRow key={sessionData.id}>
                           <TableCell className="font-medium">
-                            {sessionData.fellow.name}
+                            <button
+                              onClick={() =>
+                                setViewFellowId(sessionData.fellow.id)
+                              }
+                              className="hover:underline text-left"
+                            >
+                              {sessionData.fellow.name}
+                            </button>
                           </TableCell>
                           <TableCell>{sessionData.groupId}</TableCell>
                           <TableCell>
@@ -759,6 +766,15 @@ export default function DashboardPage() {
           open={showAddSessionDialog}
           onOpenChange={setShowAddSessionDialog}
           onSuccess={() => mutate('/api/meetings')}
+        />
+        <FellowViewDialog
+          open={!!viewFellowId}
+          onOpenChange={open => !open && setViewFellowId(null)}
+          fellowId={viewFellowId || ''}
+          onSuccess={() => {
+            mutate('/api/fellows');
+            mutate('/api/meetings');
+          }}
         />
       </main>
     </div>
