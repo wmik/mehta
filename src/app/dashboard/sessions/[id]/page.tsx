@@ -44,12 +44,19 @@ import {
   CheckCircle,
   XCircle,
   Mic,
-  Upload
+  Upload,
+  FileText
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/dashboard/theme-toggle';
 import { Notifications } from '@/components/dashboard/notifications';
 import { UserMenu } from '@/components/dashboard/user-menu';
 import { TranscriptUploadDialog } from '@/components/dashboard/transcript-upload-dialog';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from '@/components/ui/tooltip';
 import { useSession } from 'next-auth/react';
 import { useSpeechRecognition } from '@/hooks/use-speech-recognition';
 
@@ -432,558 +439,585 @@ export default function SessionDetailPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <ProgressProvider />
-      <Toaster />
-      <ConfirmationDialog
-        open={confirmOpen}
-        onOpenChange={setConfirmOpen}
-        title={confirmTitle}
-        description={confirmDescription}
-        confirmLabel={
-          confirmAction === 'reject'
-            ? 'Reject'
-            : confirmAction === 'override'
-              ? 'Override'
-              : 'Validate'
-        }
-        variant={confirmAction === 'reject' ? 'destructive' : 'default'}
-        onConfirm={handleConfirmAction}
-      />
-      <TranscriptUploadDialog
-        open={transcriptDialogOpen}
-        onOpenChange={setTranscriptDialogOpen}
-        sessionId={params.id as string}
-        existingTranscript={session?.transcript}
-        onSuccess={newTranscript => {
-          setSession(prev =>
-            prev
-              ? {
-                  ...prev,
-                  transcript: newTranscript,
-                  analyses: []
-                }
-              : null
-          );
-          toast.info('Transcript updated. Please re-analyze the session.');
-        }}
-      />
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="outline"
-                onClick={() => router.push('/dashboard')}
-                className="rounded-none"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Dashboard
-              </Button>
-              <div className="text-sm">
-                <span className="font-medium">{session?.fellow.name}</span>
-                <span className="text-gray-500"> • {session?.groupId}</span>
+    <TooltipProvider>
+      <div className="min-h-screen bg-gray-50">
+        <ProgressProvider />
+        <Toaster />
+        <ConfirmationDialog
+          open={confirmOpen}
+          onOpenChange={setConfirmOpen}
+          title={confirmTitle}
+          description={confirmDescription}
+          confirmLabel={
+            confirmAction === 'reject'
+              ? 'Reject'
+              : confirmAction === 'override'
+                ? 'Override'
+                : 'Validate'
+          }
+          variant={confirmAction === 'reject' ? 'destructive' : 'default'}
+          onConfirm={handleConfirmAction}
+        />
+        <TranscriptUploadDialog
+          open={transcriptDialogOpen}
+          onOpenChange={setTranscriptDialogOpen}
+          sessionId={params.id as string}
+          existingTranscript={session?.transcript}
+          onSuccess={newTranscript => {
+            setSession(prev =>
+              prev
+                ? {
+                    ...prev,
+                    transcript: newTranscript,
+                    analyses: []
+                  }
+                : null
+            );
+            toast.info('Transcript updated. Please re-analyze the session.');
+          }}
+        />
+        <header className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <div className="flex items-center space-x-4">
+                <Button
+                  variant="outline"
+                  onClick={() => router.push('/dashboard')}
+                  className="rounded-none"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to Dashboard
+                </Button>
+                <div className="text-sm">
+                  <span className="font-medium">{session?.fellow.name}</span>
+                  <span className="text-gray-500"> • {session?.groupId}</span>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <ThemeToggle />
-              <Notifications />
-              {auth?.user && <UserMenu user={auth.user} />}
+              <div className="flex items-center gap-2">
+                <ThemeToggle />
+                <Notifications />
+                {auth?.user && <UserMenu user={auth.user} />}
+              </div>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="space-y-8">
-          {loading ? (
-            <SessionInfoSkeleton />
-          ) : session ? (
-            <>
-              <div className="flex items-center space-x-2 ml-auto w-fit">
-                {/* <StatusBadge status={session?.status ?? 'Risk'} /> */}
-                {latestAnalysis && (
-                  <Badge
-                    variant={
-                      latestAnalysis.supervisorStatus === 'VALIDATED'
-                        ? 'default'
-                        : 'outline'
-                    }
-                    className={latestAnalysis.supervisorStatus ? '' : 'hidden'}
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="space-y-8">
+            {loading ? (
+              <SessionInfoSkeleton />
+            ) : session ? (
+              <>
+                <div className="flex items-center space-x-2 ml-auto w-fit">
+                  {/* <StatusBadge status={session?.status ?? 'Risk'} /> */}
+                  {latestAnalysis && (
+                    <Badge
+                      variant={
+                        latestAnalysis.supervisorStatus === 'VALIDATED'
+                          ? 'default'
+                          : 'outline'
+                      }
+                      className={
+                        latestAnalysis.supervisorStatus ? '' : 'hidden'
+                      }
+                    >
+                      {latestAnalysis.supervisorStatus === 'VALIDATED' ? (
+                        <>
+                          <Check className="w-3 h-3 mr-1" />
+                          Validated
+                        </>
+                      ) : latestAnalysis.supervisorStatus === 'REJECTED' ? (
+                        <>
+                          <X className="w-3 h-3 mr-1" />
+                          Rejected
+                        </>
+                      ) : (
+                        'Pending Review'
+                      )}
+                    </Badge>
+                  )}
+                  <Button
+                    variant="outline"
+                    onClick={() => setTranscriptDialogOpen(true)}
+                    className="rounded-none"
                   >
-                    {latestAnalysis.supervisorStatus === 'VALIDATED' ? (
-                      <>
-                        <Check className="w-3 h-3 mr-1" />
-                        Validated
-                      </>
-                    ) : latestAnalysis.supervisorStatus === 'REJECTED' ? (
-                      <>
-                        <X className="w-3 h-3 mr-1" />
-                        Rejected
-                      </>
-                    ) : (
-                      'Pending Review'
-                    )}
-                  </Badge>
-                )}
-                <Button
-                  variant="outline"
-                  onClick={() => setTranscriptDialogOpen(true)}
-                  className="rounded-none"
-                >
-                  <Upload className="w-4 h-4 mr-2" />
-                  {session?.transcript ? 'Update Transcript' : 'Add Transcript'}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() =>
-                    window.open(`/api/export/${session?.id}`, '_blank')
-                  }
-                  className="rounded-none"
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  Export CSV
-                </Button>
-              </div>
+                    <Upload className="w-4 h-4 mr-2" />
+                    {session?.transcript
+                      ? 'Update Transcript'
+                      : 'Add Transcript'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() =>
+                      window.open(`/api/export/${session?.id}`, '_blank')
+                    }
+                    className="rounded-none"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Export CSV
+                  </Button>
+                </div>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Session Information</CardTitle>
-                  <CardDescription>
-                    Therapy session conducted on{' '}
-                    {new Date(session?.date).toLocaleDateString()}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-600">Fellow</p>
-                      <p className="font-medium">{session?.fellow.name}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Group ID</p>
-                      <p className="font-medium">{session?.groupId}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Status</p>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Session Information</CardTitle>
+                    <CardDescription>
+                      Therapy session conducted on{' '}
+                      {new Date(session?.date).toLocaleDateString()}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
-                        <StatusBadge status={session?.status} />
+                        <p className="text-sm text-gray-600">Fellow</p>
+                        <p className="font-medium">{session?.fellow.name}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Group ID</p>
+                        <p className="font-medium">{session?.groupId}</p>
+                      </div>
+                      <div className="flex items-start gap-4">
+                        <div>
+                          <p className="text-sm text-gray-600">Status</p>
+                          <StatusBadge status={session?.status} />
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">Transcript</p>
+                          {session?.transcript ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <a
+                                  href={session.transcript}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-1 text-blue-600 hover:underline font-medium cursor-pointer"
+                                >
+                                  <FileText className="w-4 h-4" />
+                                  Transcript
+                                </a>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Click to download transcript</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="flex items-center gap-1 text-amber-600 font-medium cursor-help">
+                                  <AlertTriangle className="w-4 h-4" />
+                                  Missing
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>No transcript uploaded for this session</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </>
-          ) : null}
+                  </CardContent>
+                </Card>
+              </>
+            ) : null}
 
-          {riskStatus === 'RISK' && latestAnalysis?.riskDetection?.quote ? (
-            <Alert className="border-red-200 bg-red-50">
-              <AlertTriangle className="w-5 h-5 mr-2" />
-              <AlertDescription className="text-red-800">
-                <strong>RISK DETECTED</strong>
-                <p className="mt-2">
-                  <strong>Concerning Quote:</strong> &quot;
-                  {latestAnalysis.riskDetection as any}&quot;quote&quot;
-                </p>
-                <p className="mt-2">
-                  <strong>Explanation:</strong>{' '}
-                  {(latestAnalysis.riskDetection as any).explanation}
-                </p>
-              </AlertDescription>
-            </Alert>
-          ) : null}
+            {riskStatus === 'RISK' && latestAnalysis?.riskDetection?.quote ? (
+              <Alert className="border-red-200 bg-red-50">
+                <AlertTriangle className="w-5 h-5 mr-2" />
+                <AlertDescription className="text-red-800">
+                  <strong>RISK DETECTED</strong>
+                  <p className="mt-2">
+                    <strong>Concerning Quote:</strong> &quot;
+                    {latestAnalysis.riskDetection as any}&quot;quote&quot;
+                  </p>
+                  <p className="mt-2">
+                    <strong>Explanation:</strong>{' '}
+                    {(latestAnalysis.riskDetection as any).explanation}
+                  </p>
+                </AlertDescription>
+              </Alert>
+            ) : null}
 
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold">AI Analysis Results</h2>
-              <div className="flex flex-col items-end gap-1">
-                {analyzing && analysisStatus && (
-                  <span className="text-xs text-amber-600 animate-pulse">
-                    {analysisStatus}
-                  </span>
-                )}
-                <Button
-                  onClick={runAnalysis}
-                  disabled={analyzing || loading || !session?.transcript}
-                  className="min-w-32 rounded-none"
-                >
-                  {analyzing ? (
-                    <span className="flex items-center gap-2">
-                      <Loader className="w-4 h-4 animate-spin" />
-                      {jobStatus === 'queued'
-                        ? 'Queued...'
-                        : jobStatus === 'processing'
-                          ? 'Analyzing...'
-                          : 'Processing...'}
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold">AI Analysis Results</h2>
+                <div className="flex flex-col items-end gap-1">
+                  {analyzing && analysisStatus && (
+                    <span className="text-xs text-amber-600 animate-pulse">
+                      {analysisStatus}
                     </span>
-                  ) : latestAnalysis ? (
-                    'Re-analyze'
-                  ) : (
-                    'Analyze Session'
                   )}
-                </Button>
+                  <Button
+                    onClick={runAnalysis}
+                    disabled={analyzing || loading || !session?.transcript}
+                    className="min-w-32 rounded-none"
+                  >
+                    {analyzing ? (
+                      <span className="flex items-center gap-2">
+                        <Loader className="w-4 h-4 animate-spin" />
+                        {jobStatus === 'queued'
+                          ? 'Queued...'
+                          : jobStatus === 'processing'
+                            ? 'Analyzing...'
+                            : 'Processing...'}
+                      </span>
+                    ) : latestAnalysis ? (
+                      'Re-analyze'
+                    ) : (
+                      'Analyze Session'
+                    )}
+                  </Button>
+                </div>
               </div>
+
+              {analysisStatus && analyzing && (
+                <div className="mb-4">
+                  <p className="text-sm text-amber-600 animate-pulse">
+                    {analysisStatus}
+                  </p>
+                </div>
+              )}
+
+              {analyzing ? (
+                <AIAnalysisLoader />
+              ) : latestAnalysis ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {analysisCards.map(card => (
+                    <AnalysisCard card={card} key={card.title} />
+                  ))}
+                </div>
+              ) : loading ? (
+                <AnalysisCardSkeleton />
+              ) : (
+                <Card>
+                  <CardContent className="text-center py-12">
+                    <p className="text-gray-600 mb-4">
+                      No AI analysis available for this session yet.
+                    </p>
+                    <p className="text-sm text-gray-500 mb-6">
+                      Click &quot;Analyze Session&quot; to generate AI-powered
+                      insights from the transcript.
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
             </div>
 
-            {analysisStatus && analyzing && (
-              <div className="mb-4">
-                <p className="text-sm text-amber-600 animate-pulse">
-                  {analysisStatus}
-                </p>
-              </div>
-            )}
-
-            {analyzing ? (
-              <AIAnalysisLoader />
-            ) : latestAnalysis ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {analysisCards.map(card => (
-                  <AnalysisCard card={card} key={card.title} />
-                ))}
-              </div>
-            ) : loading ? (
-              <AnalysisCardSkeleton />
-            ) : (
+            {/* Session Summary */}
+            {latestAnalysis && (
               <Card>
-                <CardContent className="text-center py-12">
-                  <p className="text-gray-600 mb-4">
-                    No AI analysis available for this session yet.
-                  </p>
-                  <p className="text-sm text-gray-500 mb-6">
-                    Click &quot;Analyze Session&quot; to generate AI-powered
-                    insights from the transcript.
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-
-          {/* Session Summary */}
-          {latestAnalysis && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Session Summary</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-700 leading-relaxed">
-                  {latestAnalysis.summary}
-                </p>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Radar Chart and Fellow Sessions - 2 Column Layout */}
-          {session && latestAnalysis && (
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-              {/* Radar Chart */}
-              <Card className="lg:col-span-3">
                 <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle>Fellow Performance</CardTitle>
-                      <CardDescription>
-                        {session.fellow.name}&apos;s metrics overview
-                      </CardDescription>
-                    </div>
-                    <Toggle
-                      pressed={showComparison}
-                      onPressedChange={setShowComparison}
-                      aria-label="Toggle comparison view"
-                      className="rounded-none"
-                    >
-                      {showComparison ? (
-                        <BarChart3 className="h-4 w-4" />
-                      ) : (
-                        <Users className="h-4 w-4" />
-                      )}
-                    </Toggle>
-                  </div>
+                  <CardTitle>Session Summary</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <FellowRadarChart
-                    data={{
-                      fellowName: session.fellow.name,
-                      contentCoverage:
-                        (latestAnalysis.contentCoverage as any)?.score || 0,
-                      facilitationQuality:
-                        (latestAnalysis.facilitationQuality as any)?.score || 0,
-                      protocolSafety:
-                        (latestAnalysis.protocolSafety as any)?.score || 0,
-                      sessionCount: fellowSessions.length + 1,
-                      riskRate:
-                        (fellowSessions.filter(s => {
-                          const analysis = s.analyses[0];
-                          return (
-                            analysis?.riskDetection &&
-                            (analysis.riskDetection as any).status === 'RISK'
-                          );
-                        }).length /
-                          (fellowSessions.length + 1)) *
-                        100,
-                      validationRate:
-                        (fellowSessions.filter(s => {
-                          const analysis = s.analyses[0];
-                          return analysis?.supervisorStatus === 'VALIDATED';
-                        }).length /
-                          (fellowSessions.length + 1)) *
-                        100
-                    }}
-                    teamAverages={
-                      showComparison
-                        ? {
-                            fellowName: 'Team Average',
-                            contentCoverage:
-                              statsData?.teamAverages?.contentCoverage || 0,
-                            facilitationQuality:
-                              statsData?.teamAverages?.facilitationQuality || 0,
-                            protocolSafety:
-                              statsData?.teamAverages?.protocolSafety || 0,
-                            sessionCount:
-                              statsData?.summary?.totalSessions || 0,
-                            riskRate: statsData?.summary?.riskCount
-                              ? (statsData.summary.riskCount /
-                                  statsData.summary.totalSessions) *
-                                100
-                              : 0,
-                            validationRate: 0
-                          }
-                        : undefined
-                    }
-                  />
+                  <p className="text-gray-700 leading-relaxed">
+                    {latestAnalysis.summary}
+                  </p>
                 </CardContent>
               </Card>
+            )}
 
-              {/* Fellow's Other Sessions */}
-              <Card className="lg:col-span-2">
+            {/* Radar Chart and Fellow Sessions - 2 Column Layout */}
+            {session && latestAnalysis && (
+              <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                {/* Radar Chart */}
+                <Card className="lg:col-span-3">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle>Fellow Performance</CardTitle>
+                        <CardDescription>
+                          {session.fellow.name}&apos;s metrics overview
+                        </CardDescription>
+                      </div>
+                      <Toggle
+                        pressed={showComparison}
+                        onPressedChange={setShowComparison}
+                        aria-label="Toggle comparison view"
+                        className="rounded-none"
+                      >
+                        {showComparison ? (
+                          <BarChart3 className="h-4 w-4" />
+                        ) : (
+                          <Users className="h-4 w-4" />
+                        )}
+                      </Toggle>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <FellowRadarChart
+                      data={{
+                        fellowName: session.fellow.name,
+                        contentCoverage:
+                          (latestAnalysis.contentCoverage as any)?.score || 0,
+                        facilitationQuality:
+                          (latestAnalysis.facilitationQuality as any)?.score ||
+                          0,
+                        protocolSafety:
+                          (latestAnalysis.protocolSafety as any)?.score || 0,
+                        sessionCount: fellowSessions.length + 1,
+                        riskRate:
+                          (fellowSessions.filter(s => {
+                            const analysis = s.analyses[0];
+                            return (
+                              analysis?.riskDetection &&
+                              (analysis.riskDetection as any).status === 'RISK'
+                            );
+                          }).length /
+                            (fellowSessions.length + 1)) *
+                          100,
+                        validationRate:
+                          (fellowSessions.filter(s => {
+                            const analysis = s.analyses[0];
+                            return analysis?.supervisorStatus === 'VALIDATED';
+                          }).length /
+                            (fellowSessions.length + 1)) *
+                          100
+                      }}
+                      teamAverages={
+                        showComparison
+                          ? {
+                              fellowName: 'Team Average',
+                              contentCoverage:
+                                statsData?.teamAverages?.contentCoverage || 0,
+                              facilitationQuality:
+                                statsData?.teamAverages?.facilitationQuality ||
+                                0,
+                              protocolSafety:
+                                statsData?.teamAverages?.protocolSafety || 0,
+                              sessionCount:
+                                statsData?.summary?.totalSessions || 0,
+                              riskRate: statsData?.summary?.riskCount
+                                ? (statsData.summary.riskCount /
+                                    statsData.summary.totalSessions) *
+                                  100
+                                : 0,
+                              validationRate: 0
+                            }
+                          : undefined
+                      }
+                    />
+                  </CardContent>
+                </Card>
+
+                {/* Fellow's Other Sessions */}
+                <Card className="lg:col-span-2">
+                  <CardHeader>
+                    <CardTitle>Other Sessions</CardTitle>
+                    <CardDescription>
+                      Recent sessions by {session.fellow.name}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {fellowSessions.length > 0 ? (
+                      <div className="space-y-2">
+                        {fellowSessions.map(s => (
+                          <Link
+                            key={s.id}
+                            href={`/dashboard/sessions/${s.id}`}
+                            className="block"
+                          >
+                            <div className="flex items-center justify-between p-2 rounded-none hover:bg-gray-50 border transition-colors">
+                              <div className="text-sm">
+                                <p className="font-medium">
+                                  {new Date(s.date).toLocaleDateString()}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  {s.groupId}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <StatusBadge status={s.status} />
+                                {s.analyses[0]?.riskDetection &&
+                                  (s.analyses[0].riskDetection as any)
+                                    .status === 'RISK' && (
+                                    <Badge
+                                      variant="destructive"
+                                      className="text-xs"
+                                    >
+                                      Risk
+                                    </Badge>
+                                  )}
+                              </div>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-500 text-center py-4">
+                        No other sessions found
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Human Review Actions */}
+            {latestAnalysis && !latestAnalysis.supervisorStatus && (
+              <Card>
                 <CardHeader>
-                  <CardTitle>Other Sessions</CardTitle>
+                  <CardTitle>Supervisor Review</CardTitle>
                   <CardDescription>
-                    Recent sessions by {session.fellow.name}
+                    Validate or reject the AI analysis findings
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {fellowSessions.length > 0 ? (
-                    <div className="space-y-2">
-                      {fellowSessions.map(s => (
-                        <Link
-                          key={s.id}
-                          href={`/dashboard/sessions/${s.id}`}
-                          className="block"
-                        >
-                          <div className="flex items-center justify-between p-2 rounded-none hover:bg-gray-50 border transition-colors">
-                            <div className="text-sm">
-                              <p className="font-medium">
-                                {new Date(s.date).toLocaleDateString()}
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                {s.groupId}
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <StatusBadge status={s.status} />
-                              {s.analyses[0]?.riskDetection &&
-                                (s.analyses[0].riskDetection as any).status ===
-                                  'RISK' && (
-                                  <Badge
-                                    variant="destructive"
-                                    className="text-xs"
-                                  >
-                                    Risk
-                                  </Badge>
-                                )}
-                            </div>
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-gray-500 text-center py-4">
-                      No other sessions found
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {/* Human Review Actions */}
-          {latestAnalysis && !latestAnalysis.supervisorStatus && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Supervisor Review</CardTitle>
-                <CardDescription>
-                  Validate or reject the AI analysis findings
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="mb-4">
-                  <div className="flex items-center mb-2">
-                    <label className="text-sm font-medium text-gray-700 mr-auto">
-                      Supervisor Notes (optional)
-                    </label>
-                    {speechSupported && (
-                      <>
-                        <Button
-                          type="button"
-                          variant={isListening ? 'destructive' : 'outline'}
-                          size="sm"
-                          onClick={isListening ? stopListening : startListening}
-                          className={
-                            isListening
-                              ? 'animate-pulse rounded-none'
-                              : 'rounded-none'
-                          }
-                        >
-                          <Mic
-                            className={`w-4 h-4 mr-1 ${isListening ? 'animate-pulse' : ''}`}
-                          />
-                          {isListening ? 'Recording...' : 'Voice'}
-                        </Button>
-                        {currentSegment &&
-                          latestAnalysis?.supervisorStatus !== 'VALIDATED' &&
-                          latestAnalysis?.supervisorStatus !== 'REJECTED' && (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={async () => {
-                                const loadingToast = toast.loading(
-                                  'Saving notes...',
-                                  { duration: Infinity }
-                                );
-                                const transcriptToAdd = currentSegment;
-                                const updatedNotes =
-                                  notes + (notes ? ' ' : '') + transcriptToAdd;
-
-                                try {
-                                  const response = await fetch(
-                                    `/api/meetings/${params.id}/notes`,
-                                    {
-                                      method: 'POST',
-                                      headers: {
-                                        'Content-Type': 'application/json'
-                                      },
-                                      body: JSON.stringify({
-                                        notes: updatedNotes
-                                      })
-                                    }
+                  <div className="mb-4">
+                    <div className="flex items-center mb-2">
+                      <label className="text-sm font-medium text-gray-700 mr-auto">
+                        Supervisor Notes (optional)
+                      </label>
+                      {speechSupported && (
+                        <>
+                          <Button
+                            type="button"
+                            variant={isListening ? 'destructive' : 'outline'}
+                            size="sm"
+                            onClick={
+                              isListening ? stopListening : startListening
+                            }
+                            className={
+                              isListening
+                                ? 'animate-pulse rounded-none'
+                                : 'rounded-none'
+                            }
+                          >
+                            <Mic
+                              className={`w-4 h-4 mr-1 ${isListening ? 'animate-pulse' : ''}`}
+                            />
+                            {isListening ? 'Recording...' : 'Voice'}
+                          </Button>
+                          {currentSegment &&
+                            latestAnalysis?.supervisorStatus !== 'VALIDATED' &&
+                            latestAnalysis?.supervisorStatus !== 'REJECTED' && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={async () => {
+                                  const loadingToast = toast.loading(
+                                    'Saving notes...',
+                                    { duration: Infinity }
                                   );
+                                  const transcriptToAdd = currentSegment;
+                                  const updatedNotes =
+                                    notes +
+                                    (notes ? ' ' : '') +
+                                    transcriptToAdd;
 
-                                  toast.dismiss(loadingToast);
+                                  try {
+                                    const response = await fetch(
+                                      `/api/meetings/${params.id}/notes`,
+                                      {
+                                        method: 'POST',
+                                        headers: {
+                                          'Content-Type': 'application/json'
+                                        },
+                                        body: JSON.stringify({
+                                          notes: updatedNotes
+                                        })
+                                      }
+                                    );
 
-                                  if (response.ok) {
-                                    setNotes(updatedNotes);
-                                    resetTranscript();
-                                    toast.success('Notes saved');
-                                  } else {
+                                    toast.dismiss(loadingToast);
+
+                                    if (response.ok) {
+                                      setNotes(updatedNotes);
+                                      resetTranscript();
+                                      toast.success('Notes saved');
+                                    } else {
+                                      toast.error('Failed to save notes');
+                                    }
+                                  } catch (error) {
+                                    console.error(
+                                      'Failed to save notes:',
+                                      error
+                                    );
                                     toast.error('Failed to save notes');
                                   }
-                                } catch (error) {
-                                  console.error('Failed to save notes:', error);
-                                  toast.error('Failed to save notes');
-                                }
-                              }}
-                              className="ml-2 rounded-none"
-                            >
-                              <Check className="w-4 h-4 mr-1" />
-                              Add to Notes
-                            </Button>
-                          )}
-                      </>
-                    )}
+                                }}
+                                className="ml-2 rounded-none"
+                              >
+                                <Check className="w-4 h-4 mr-1" />
+                                Add to Notes
+                              </Button>
+                            )}
+                        </>
+                      )}
+                    </div>
+                    <div className="relative">
+                      <textarea
+                        placeholder="Add notes about this analysis or session?..."
+                        value={
+                          isListening
+                            ? interimTranscript || currentSegment || ''
+                            : currentSegment || notes
+                        }
+                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                          setNotes(e.target.value)
+                        }
+                        className="flex min-h-20 w-full rounded-none border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        rows={3}
+                      />
+                      {isListening && (
+                        <div className="absolute bottom-3 right-3 flex items-center gap-1">
+                          <span className="flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                          </span>
+                          <span className="text-xs text-red-500 font-medium">
+                            Listening...
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="relative">
-                    <textarea
-                      placeholder="Add notes about this analysis or session?..."
-                      value={
-                        isListening
-                          ? interimTranscript || currentSegment || ''
-                          : currentSegment || notes
-                      }
-                      onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                        setNotes(e.target.value)
-                      }
-                      className="flex min-h-20 w-full rounded-none border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      rows={3}
-                    />
-                    {isListening && (
-                      <div className="absolute bottom-3 right-3 flex items-center gap-1">
-                        <span className="flex h-2 w-2">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                        </span>
-                        <span className="text-xs text-red-500 font-medium">
-                          Listening...
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <Button
-                    onClick={() => handleValidateClick('validate')}
-                    className="rounded-none flex-1 bg-green-600 hover:bg-green-700"
-                    size="lg"
-                  >
-                    <CheckCircle className="w-5 h-5 mr-2" />
-                    Validate Analysis
-                  </Button>
-                  <Button
-                    onClick={() => handleValidateClick('reject')}
-                    variant="outline"
-                    className="rounded-none flex-1 border-red-300 text-red-600 hover:bg-red-50"
-                    size="lg"
-                  >
-                    <XCircle className="w-5 h-5 mr-2" />
-                    Reject Analysis
-                  </Button>
-                  {riskStatus === 'RISK' && (
+                  <div className="flex flex-col sm:flex-row gap-4">
                     <Button
-                      onClick={() => handleValidateClick('override')}
-                      variant="outline"
-                      className="rounded-none flex-1 border-amber-300 text-amber-700 hover:bg-amber-50"
+                      onClick={() => handleValidateClick('validate')}
+                      className="rounded-none flex-1 bg-green-600 hover:bg-green-700"
                       size="lg"
                     >
-                      <AlertTriangle className="w-5 h-5 mr-2" />
-                      Mark as Safe (Override)
+                      <CheckCircle className="w-5 h-5 mr-2" />
+                      Validate Analysis
                     </Button>
+                    <Button
+                      onClick={() => handleValidateClick('reject')}
+                      variant="outline"
+                      className="rounded-none flex-1 border-red-300 text-red-600 hover:bg-red-50"
+                      size="lg"
+                    >
+                      <XCircle className="w-5 h-5 mr-2" />
+                      Reject Analysis
+                    </Button>
+                    {riskStatus === 'RISK' && (
+                      <Button
+                        onClick={() => handleValidateClick('override')}
+                        variant="outline"
+                        className="rounded-none flex-1 border-amber-300 text-amber-700 hover:bg-amber-50"
+                        size="lg"
+                      >
+                        <AlertTriangle className="w-5 h-5 mr-2" />
+                        Mark as Safe (Override)
+                      </Button>
+                    )}
+                  </div>
+                  {latestAnalysis.supervisorNotes && (
+                    <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                      <p className="text-sm text-gray-600">
+                        <strong>Supervisor Notes:</strong>{' '}
+                        {latestAnalysis.supervisorNotes}
+                      </p>
+                    </div>
                   )}
-                </div>
-                {latestAnalysis.supervisorNotes && (
-                  <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                    <p className="text-sm text-gray-600">
-                      <strong>Supervisor Notes:</strong>{' '}
-                      {latestAnalysis.supervisorNotes}
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Full Transcript */}
-          {loading ? (
-            <TranscriptSkeleton />
-          ) : session ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>Session Transcript</CardTitle>
-                <CardDescription>
-                  Full conversation from the therapy session
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ScrollArea className="h-96 w-full border p-4">
-                  <div className="text-sm font-mono whitespace-pre-wrap">
-                    {session?.transcript}
-                  </div>
-                </ScrollArea>
-              </CardContent>
-            </Card>
-          ) : null}
-        </div>
-      </main>
-    </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </main>
+      </div>
+    </TooltipProvider>
   );
 }
 
