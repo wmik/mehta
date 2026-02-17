@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth';
 import { tasks } from '@trigger.dev/sdk';
 import { analyzeSessionJob } from '@/trigger/jobs';
 import { uploadToS3, isS3Url, extractKeyFromUrl, deleteFromS3 } from '@/lib/s3';
+import { trackServer, ANALYTICS_EVENTS } from '@/lib/analytics-server';
 
 // Sample therapy session transcripts (simplified to avoid syntax issues)
 const SAMPLE_TRANSCRIPTS = [
@@ -363,6 +364,13 @@ export async function POST(request: Request) {
         newSession.status = 'PENDING';
       }
     }
+
+    trackServer(ANALYTICS_EVENTS.SESSION_CREATED, {
+      sessionId: newSession.id,
+      groupId: newSession.groupId,
+      fellowId: newSession.fellowId,
+      hasTranscript: !!transcript
+    });
 
     return NextResponse.json({
       message: 'Session created successfully',

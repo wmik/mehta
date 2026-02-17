@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
+import { trackServer, ANALYTICS_EVENTS } from '@/lib/analytics-server';
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -81,6 +82,12 @@ export async function POST(request: Request) {
         email,
         supervisorId: session.user.id
       }
+    });
+
+    trackServer(ANALYTICS_EVENTS.FELLOW_CREATED, {
+      fellowId: fellow.id,
+      name: fellow.name,
+      email: fellow.email
     });
 
     return NextResponse.json({
