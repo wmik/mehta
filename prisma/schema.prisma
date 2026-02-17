@@ -18,6 +18,7 @@ model User {
   role          String          @default("supervisor")
   image         String?
   deletedAt     DateTime?
+  settings      Json?           // {"aiProvider": "...", "llmKey": "...", "theme": "...", "notifications": {...}}
   Authenticator Authenticator[]
   accounts      Account[]
   fellows       Fellow[]
