@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getObjectUrl, isS3Url, extractKeyFromUrl } from '@/lib/s3';
+import {
+  getObjectUrl,
+  isS3Url,
+  extractKeyFromUrl,
+  objectExists
+} from '@/lib/s3';
 
 export async function GET(
   request: NextRequest,
@@ -23,30 +28,52 @@ export async function GET(
       );
     }
 
-    if (!isS3Url(meeting.transcript)) {
-      return NextResponse.json(
-        { error: 'Transcript is not stored in S3' },
-        { status: 400 }
-      );
+    // If transcript is an S3 URL, verify the object exists
+    if (isS3Url(meeting.transcript)) {
+      const key = extractKeyFromUrl(meeting.transcript);
+
+      if (key) {
+        const exists = await objectExists(key);
+
+        if (!exists) {
+          // Clear invalid URL from database
+          await prisma.meeting.update({
+            where: { id: meetingId },
+            data: { transcript: null }
+          });
+
+          return NextResponse.json(
+            {
+              error: 'Transcript file not found in storage. Please re-upload.'
+            },
+            { status: 410 }
+          );
+        }
+
+        const maxExpiresIn = 3600;
+        const actualExpiresIn = Math.min(expiresIn, maxExpiresIn);
+        const presignedUrl = await getObjectUrl(key, actualExpiresIn);
+
+        return NextResponse.json({ url: presignedUrl });
+      }
     }
 
-    const key = extractKeyFromUrl(meeting.transcript);
-    if (!key) {
-      return NextResponse.json(
-        { error: 'Invalid transcript URL' },
-        { status: 400 }
-      );
+    // If not S3 URL, return plain text transcript
+    if (meeting.transcript) {
+      return new NextResponse(meeting.transcript, {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/plain; charset=utf-8',
+          'Content-Disposition': `attachment; filename="transcript-${meetingId}.txt"`
+        }
+      });
     }
 
-    const maxExpiresIn = 3600;
-    const actualExpiresIn = Math.min(expiresIn, maxExpiresIn);
-    const presignedUrl = await getObjectUrl(key, actualExpiresIn);
-
-    return NextResponse.json({ url: presignedUrl });
+    return NextResponse.json({ error: 'No transcript found' }, { status: 404 });
   } catch (error) {
     console.error('Failed to generate download URL:', error);
     return NextResponse.json(
-      { error: 'Failed to generate download URL' },
+      { error: 'Failed to download transcript. Please try again.' },
       { status: 500 }
     );
   }

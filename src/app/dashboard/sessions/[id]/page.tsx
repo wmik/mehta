@@ -370,13 +370,30 @@ export default function SessionDetailPage() {
     try {
       const response = await fetch(`/api/meetings/${session.id}/download-url`);
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to generate download URL');
-      }
+      if (response.ok) {
+        const contentType = response.headers.get('content-type');
 
-      const { url } = await response.json();
-      window.open(url, '_blank');
+        if (contentType?.includes('text/plain')) {
+          const text = await response.text();
+          const blob = new Blob([text], { type: 'text/plain' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `transcript-${session.id}.txt`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        } else {
+          const { url } = await response.json();
+          window.open(url, '_blank');
+        }
+      } else if (response.status === 410) {
+        toast.error('Transcript file not found. Please re-upload.');
+      } else {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to download transcript');
+      }
     } catch (error) {
       console.error('Failed to download transcript:', error);
       toast.error('Failed to download transcript. Please try again.');
