@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTheme } from 'next-themes';
 import {
   Card,
   CardContent,
@@ -29,6 +30,7 @@ interface UserSettings {
 }
 
 export default function SettingsPage() {
+  const { setTheme } = useTheme();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -48,25 +50,30 @@ export default function SettingsPage() {
 
   const [newLlmKey, setNewLlmKey] = useState('');
 
-  const fetchSettings = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch('/api/users/settings');
-      const data = await response.json();
-      if (response.ok && data.settings) {
-        setSettings(data.settings);
-        setNewLlmKey(data.settings.llmKey || '');
-      }
-    } catch (error) {
-      console.error('Failed to fetch settings:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    const fetchSettings = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch('/api/users/settings');
+        const data = await response.json();
+        if (response.ok && data.settings) {
+          setSettings(data.settings);
+          setNewLlmKey(data.settings.llmKey || '');
+
+          // Apply theme from database
+          if (data.settings.theme) {
+            setTheme(data.settings.theme);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch settings:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchSettings();
-  }, []);
+  }, [setTheme]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -93,6 +100,12 @@ export default function SettingsPage() {
         const data = await response.json();
         setSettings(data.settings);
         setNewLlmKey(data.settings.llmKey || '');
+
+        // Apply theme to localStorage
+        if (settings.theme) {
+          setTheme(settings.theme);
+        }
+
         toast.success('Settings saved successfully');
       } else {
         const data = await response.json();
