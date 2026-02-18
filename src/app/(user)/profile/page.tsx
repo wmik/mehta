@@ -153,7 +153,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -178,13 +178,15 @@ export default function ProfilePage() {
                 <p className="font-medium text-lg">
                   {profile?.name || 'No name set'}
                 </p>
-                <p className="text-sm text-gray-500">{profile?.email}</p>
-                <p className="text-xs text-gray-400 capitalize">
+                <p className="text-sm text-muted-foreground">
+                  {profile?.email}
+                </p>
+                <p className="text-xs text-muted-foreground capitalize">
                   {profile?.role}
                 </p>
               </div>
             </div>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-muted-foreground">
               Joined:{' '}
               {profile?.createdAt ? formatDate(profile.createdAt) : 'N/A'}
             </p>

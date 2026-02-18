@@ -3,6 +3,7 @@
 import { SessionProvider } from 'next-auth/react';
 import { ThemeProvider as NextThemesProvider } from 'next-themes';
 import { AnalyticsProvider } from '@/components/providers/analytics-provider';
+import { TourProvider } from './tour';
 
 interface ProvidersProps {
   children: React.ReactNode;
@@ -17,8 +18,10 @@ export function Providers({ children }: ProvidersProps) {
         enableSystem
         disableTransitionOnChange
       >
-        <AnalyticsProvider />
-        {children}
+        <TourProvider>
+          <AnalyticsProvider />
+          {children}
+        </TourProvider>
       </NextThemesProvider>
     </SessionProvider>
   );

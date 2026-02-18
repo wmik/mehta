@@ -413,7 +413,7 @@ export default function SessionDetailPage() {
         <Card className="w-full max-w-md">
           <CardContent className="text-center py-8">
             <h2 className="text-2xl font-bold mb-4">Session Not Found</h2>
-            <p className="text-gray-600 mb-4">
+            <p className="text-muted-foreground mb-4">
               The session you&apos;re looking for doesn&apos;t exist or has been
               removed.
             </p>
@@ -483,7 +483,7 @@ export default function SessionDetailPage() {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-background">
         <ProgressProvider />
         <Toaster />
         <ConfirmationDialog
@@ -519,7 +519,7 @@ export default function SessionDetailPage() {
             toast.info('Transcript updated. Please re-analyze the session.');
           }}
         />
-        <header className="bg-white shadow-sm border-b">
+        <header className="bg-background shadow-sm border-b">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
               <div className="flex items-center space-x-4">
@@ -533,7 +533,10 @@ export default function SessionDetailPage() {
                 </Button>
                 <div className="text-sm">
                   <span className="font-medium">{session?.fellow.name}</span>
-                  <span className="text-gray-500"> • {session?.groupId}</span>
+                  <span className="text-muted-foreground">
+                    {' '}
+                    • {session?.groupId}
+                  </span>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -612,19 +615,23 @@ export default function SessionDetailPage() {
                   <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                       <div>
-                        <p className="text-sm text-gray-600">Fellow</p>
+                        <p className="text-sm text-muted-foreground">Fellow</p>
                         <p className="font-medium">{session?.fellow.name}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-600">Group ID</p>
+                        <p className="text-sm text-muted-foreground">
+                          Group ID
+                        </p>
                         <p className="font-medium">{session?.groupId}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-600">Status</p>
+                        <p className="text-sm text-muted-foreground">Status</p>
                         <StatusBadge status={session?.status} />
                       </div>
                       <div>
-                        <p className="text-sm text-gray-600">Transcript</p>
+                        <p className="text-sm text-muted-foreground">
+                          Transcript
+                        </p>
                         {session?.transcript ? (
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -752,10 +759,10 @@ export default function SessionDetailPage() {
               ) : (
                 <Card>
                   <CardContent className="text-center py-12">
-                    <p className="text-gray-600 mb-4">
+                    <p className="text-muted-foreground mb-4">
                       No AI analysis available for this session yet.
                     </p>
-                    <p className="text-sm text-gray-500 mb-6">
+                    <p className="text-sm text-muted-foreground mb-6">
                       Click &quot;Analyze Session&quot; to generate AI-powered
                       insights from the transcript.
                     </p>
@@ -771,7 +778,7 @@ export default function SessionDetailPage() {
                   <CardTitle>Session Summary</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-gray-700 leading-relaxed">
+                  <p className="text-foreground leading-relaxed">
                     {latestAnalysis.summary}
                   </p>
                 </CardContent>
@@ -878,12 +885,12 @@ export default function SessionDetailPage() {
                             href={`/dashboard/sessions/${s.id}`}
                             className="block"
                           >
-                            <div className="flex items-center justify-between p-2 rounded-none hover:bg-gray-50 border transition-colors">
+                            <div className="flex items-center justify-between p-2 rounded-none hover:bg-background border transition-colors">
                               <div className="text-sm">
                                 <p className="font-medium">
                                   {new Date(s.date).toLocaleDateString()}
                                 </p>
-                                <p className="text-xs text-gray-500">
+                                <p className="text-xs text-muted-foreground">
                                   {s.groupId}
                                 </p>
                               </div>
@@ -905,7 +912,7 @@ export default function SessionDetailPage() {
                         ))}
                       </div>
                     ) : (
-                      <p className="text-sm text-gray-500 text-center py-4">
+                      <p className="text-sm text-muted-foreground text-center py-4">
                         No other sessions found
                       </p>
                     )}
@@ -926,7 +933,7 @@ export default function SessionDetailPage() {
                 <CardContent>
                   <div className="mb-4">
                     <div className="flex items-center mb-2">
-                      <label className="text-sm font-medium text-gray-700 mr-auto">
+                      <label className="text-sm font-medium text-foreground mr-auto">
                         Supervisor Notes (optional)
                       </label>
                       {speechSupported && (
@@ -1068,8 +1075,8 @@ export default function SessionDetailPage() {
                     )}
                   </div>
                   {latestAnalysis.supervisorNotes && (
-                    <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                      <p className="text-sm text-gray-600">
+                    <div className="mt-4 p-4 bg-background rounded-lg">
+                      <p className="text-sm text-muted-foreground">
                         <strong>Supervisor Notes:</strong>{' '}
                         {latestAnalysis.supervisorNotes}
                       </p>
@@ -1102,7 +1109,7 @@ function StatusBadge({ status }: { status: string }) {
 
 function AnalysisCard({ card }: { card: AnalysisCard }) {
   return (
-    <Card className={`${card.isRisk ? 'border-red-200' : 'border-gray-200'}`}>
+    <Card className={`${card.isRisk ? 'border-red-200' : 'border-border'}`}>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">
@@ -1121,7 +1128,9 @@ function AnalysisCard({ card }: { card: AnalysisCard }) {
         </Badge>
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-gray-600 mb-3">{card.justification}</p>
+        <p className="text-sm text-muted-foreground mb-3">
+          {card.justification}
+        </p>
       </CardContent>
     </Card>
   );

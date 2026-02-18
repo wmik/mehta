@@ -132,7 +132,7 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -284,7 +284,7 @@ export default function SettingsPage() {
                 onChange={e => setNewLlmKey(e.target.value)}
                 className="rounded-none"
               />
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted-foreground">
                 {newLlmKey
                   ? `Current key: ${newLlmKey}`
                   : 'Leave empty to use system default'}
@@ -391,7 +391,7 @@ export default function SettingsPage() {
                 <option value="240">4 hours</option>
                 <option value="480">8 hours</option>
               </select>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted-foreground">
                 Auto logout after inactivity
               </p>
             </div>

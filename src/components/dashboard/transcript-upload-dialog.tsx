@@ -224,7 +224,7 @@ export function TranscriptUploadDialog({
               </div>
               {fileError && <p className="text-sm text-red-500">{fileError}</p>}
               {file && (
-                <div className="flex items-center gap-2 text-sm text-gray-600">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   {getFileIcon()}
                   <span>{file.name}</span>
                   <Button

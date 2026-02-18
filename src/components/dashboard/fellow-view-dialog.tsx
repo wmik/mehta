@@ -174,7 +174,7 @@ export function FellowViewDialog({
 
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
             </div>
           ) : fellow ? (
             <Tabs defaultValue="overview" className="w-full">
@@ -222,18 +222,20 @@ export function FellowViewDialog({
 
                   <div className="grid gap-3">
                     <div className="flex items-center gap-2 text-sm">
-                      <Mail className="w-4 h-4 text-gray-500" />
-                      <span className="text-gray-600">{fellow.email}</span>
+                      <Mail className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-muted-foreground">
+                        {fellow.email}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
-                      <Calendar className="w-4 h-4 text-gray-500" />
-                      <span className="text-gray-600">
+                      <Calendar className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-muted-foreground">
                         Added {new Date(fellow.createdAt).toLocaleDateString()}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
-                      <Activity className="w-4 h-4 text-gray-500" />
-                      <span className="text-gray-600">
+                      <Activity className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-muted-foreground">
                         {fellow.sessionCount} session
                         {fellow.sessionCount !== 1 ? 's' : ''}
                       </span>
@@ -280,7 +282,7 @@ export function FellowViewDialog({
                     </TableBody>
                   </Table>
                 ) : (
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="text-center py-8 text-muted-foreground">
                     No sessions yet
                   </div>
                 )}
@@ -347,7 +349,7 @@ export function FellowViewDialog({
               </TabsContent>
             </Tabs>
           ) : (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-muted-foreground">
               Failed to load fellow details
             </div>
           )}

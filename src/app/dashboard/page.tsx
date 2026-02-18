@@ -480,10 +480,10 @@ export default function DashboardPage() {
       }}
     >
       <TourAlertDialog isOpen={tourDialogOpen} setIsOpen={setTourDialogOpen} />
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-background">
         <ProgressProvider />
         <Toaster />
-        <header className="bg-white shadow-sm border-b">
+        <header className="bg-background shadow-sm border-b">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
               <h1 className="text-lg font-bold tracking-tighter uppercase font-mono">
@@ -500,10 +500,10 @@ export default function DashboardPage() {
 
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="mb-8" id="tour-dashboard-header">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            <h2 className="text-2xl font-bold text-foreground mb-2">
               Shamiri Supervisor Dashboard
             </h2>
-            <p className="text-gray-600">
+            <p className="text-muted-foreground">
               Review and analyze therapy sessions conducted by your Fellows.
             </p>
           </div>
@@ -529,7 +529,9 @@ export default function DashboardPage() {
                     <p className="text-3xl font-bold text-blue-600">
                       {stats.total}
                     </p>
-                    <p className="text-sm text-gray-600">Total Sessions</p>
+                    <p className="text-sm text-muted-foreground">
+                      Total Sessions
+                    </p>
                   </CardContent>
                 </Card>
 
@@ -544,7 +546,9 @@ export default function DashboardPage() {
                     <p className="text-3xl font-bold text-green-600">
                       {stats.processed}
                     </p>
-                    <p className="text-sm text-gray-600">Completed Analyses</p>
+                    <p className="text-sm text-muted-foreground">
+                      Completed Analyses
+                    </p>
                   </CardContent>
                 </Card>
 
@@ -559,7 +563,9 @@ export default function DashboardPage() {
                     <p className="text-3xl font-bold text-red-600">
                       {stats.risks}
                     </p>
-                    <p className="text-sm text-gray-600">Flagged Sessions</p>
+                    <p className="text-sm text-muted-foreground">
+                      Flagged Sessions
+                    </p>
                   </CardContent>
                 </Card>
               </>
@@ -667,7 +673,7 @@ export default function DashboardPage() {
                                 key={t.date}
                                 className="flex items-center justify-between"
                               >
-                                <span className="text-sm text-gray-600">
+                                <span className="text-sm text-muted-foreground">
                                   {new Date(t.date).toLocaleDateString()}
                                 </span>
                                 <Badge variant="destructive">
@@ -761,11 +767,14 @@ export default function DashboardPage() {
             <CardContent>
               {filteredSessions.length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="text-gray-500 mb-4">No sessions found.</p>
+                  <p className="text-muted-foreground mb-4">
+                    No sessions found.
+                  </p>
                   <Button
                     onClick={() =>
                       fetchSessions().then(s => setAllSessions(s || []))
                     }
+                    className="rounded-none"
                   >
                     Refresh
                   </Button>
@@ -828,7 +837,7 @@ export default function DashboardPage() {
                   )}
 
                   <div className="mt-4 flex items-center justify-between">
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-muted-foreground">
                       Showing {(currentPage - 1) * itemsPerPage + 1} to{' '}
                       {Math.min(
                         currentPage * itemsPerPage,
