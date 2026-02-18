@@ -74,6 +74,29 @@ export default function EditUserPage() {
   const selectedRole = watch('role');
 
   useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await fetch(`/api/users/${userId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setUser(data.user);
+          setValue('name', data.user.name || '');
+          setValue('email', data.user.email);
+          setValue('role', data.user.role as 'supervisor' | 'admin');
+        } else {
+          const error = await response.json();
+          toast.error(error.error || 'Failed to fetch user');
+          router.push('/admin');
+        }
+      } catch (error) {
+        console.error('Error fetching user:', error);
+        toast.error('Failed to fetch user');
+        router.push('/admin');
+      } finally {
+        setFetching(false);
+      }
+    };
+
     if (status === 'unauthenticated') {
       router.push('/login');
     } else if (status === 'authenticated') {
@@ -83,30 +106,7 @@ export default function EditUserPage() {
       }
       fetchUser();
     }
-  }, [status, session, router]);
-
-  const fetchUser = async () => {
-    try {
-      const response = await fetch(`/api/users/${userId}`);
-      if (response.ok) {
-        const data = await response.json();
-        setUser(data.user);
-        setValue('name', data.user.name || '');
-        setValue('email', data.user.email);
-        setValue('role', data.user.role as 'supervisor' | 'admin');
-      } else {
-        const error = await response.json();
-        toast.error(error.error || 'Failed to fetch user');
-        router.push('/admin');
-      }
-    } catch (error) {
-      console.error('Error fetching user:', error);
-      toast.error('Failed to fetch user');
-      router.push('/admin');
-    } finally {
-      setFetching(false);
-    }
-  };
+  }, [status, session, router, userId, setValue]);
 
   const onSubmit = async (data: UserFormData) => {
     setLoading(true);

@@ -271,7 +271,7 @@ export function TourProvider({
                 height: steps[currentStep]?.height || elementPosition.height
               }}
               className={cn(
-                'z-[100] border-2 border-muted-foreground',
+                'z-100 border-2 border-muted-foreground',
                 className
               )}
             />
@@ -303,7 +303,7 @@ export function TourProvider({
                   steps[currentStep]?.position
                 ).width
               }}
-              className="bg-background relative z-[100] rounded-lg border p-4 shadow-lg"
+              className="bg-background relative z-100 rounded-lg border p-4 shadow-lg"
             >
               <div className="text-muted-foreground absolute right-4 top-4 text-xs">
                 {currentStep + 1} / {steps.length}

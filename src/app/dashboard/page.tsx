@@ -123,7 +123,6 @@ export default function DashboardPage() {
   const fetcher = (url: string) => fetch(url).then(res => res.json());
   const {
     data: swrData,
-    error: swrError,
     isLoading: swrLoading,
     mutate
   } = useSWR('/api/meetings', fetcher, {
@@ -133,14 +132,10 @@ export default function DashboardPage() {
   });
 
   // Statistics data
-  const { data: statsData, error: statsError } = useSWR(
-    '/api/statistics',
-    fetcher,
-    {
-      refreshInterval: 60000, // Poll every minute
-      revalidateOnFocus: true
-    }
-  );
+  const { data: statsData } = useSWR('/api/statistics', fetcher, {
+    refreshInterval: 60000, // Poll every minute
+    revalidateOnFocus: true
+  });
 
   // Update sessions when SWR data changes
   useEffect(() => {
@@ -394,79 +389,80 @@ export default function DashboardPage() {
 
   const fellowOptions = fellows.map(f => ({ value: f.id, label: f.name }));
 
-  const dashboardTourSteps = [
-    {
-      selectorId: 'tour-dashboard-header',
-      position: 'bottom' as const,
-      content: (
-        <div>
-          <h3 className="font-semibold mb-1">Welcome to Your Dashboard</h3>
-          <p className="text-sm text-muted-foreground">
-            This is your supervisor dashboard where you can manage fellows and
-            review therapy sessions.
-          </p>
-        </div>
-      )
-    },
-    {
-      selectorId: 'tour-add-fellow',
-      position: 'bottom' as const,
-      content: (
-        <div>
-          <h3 className="font-semibold mb-1">Add Fellows</h3>
-          <p className="text-sm text-muted-foreground">
-            Add new fellows to your supervision. Each fellow will conduct
-            therapy sessions for you to review.
-          </p>
-        </div>
-      )
-    },
-    {
-      selectorId: 'tour-sessions-table',
-      position: 'top' as const,
-      content: (
-        <div>
-          <h3 className="font-semibold mb-1">Session Reviews</h3>
-          <p className="text-sm text-muted-foreground">
-            View all therapy sessions conducted by your fellows. Click on any
-            session to view detailed AI analysis.
-          </p>
-        </div>
-      )
-    },
-    {
-      selectorId: 'tour-add-session',
-      position: 'left' as const,
-      content: (
-        <div>
-          <h3 className="font-semibold mb-1">Create Sessions</h3>
-          <p className="text-sm text-muted-foreground">
-            Create new therapy sessions by uploading transcripts or entering
-            them manually.
-          </p>
-        </div>
-      )
-    },
-    {
-      selectorId: 'tour-filters',
-      position: 'bottom' as const,
-      content: (
-        <div>
-          <h3 className="font-semibold mb-1">Filter & Search</h3>
-          <p className="text-sm text-muted-foreground">
-            Filter sessions by fellow, status, or date range to find specific
-            sessions quickly.
-          </p>
-        </div>
-      )
-    }
-  ];
-
   const { setSteps, setIsTourCompleted } = useTour();
   const [tourDialogOpen, setTourDialogOpen] = useState(false);
 
   useEffect(() => {
+    const dashboardTourSteps = [
+      {
+        selectorId: 'tour-dashboard-header',
+        position: 'bottom' as const,
+        content: (
+          <div>
+            <h3 className="font-semibold mb-1">Welcome to Your Dashboard</h3>
+            <p className="text-sm text-muted-foreground">
+              This is your supervisor dashboard where you can manage fellows and
+              review therapy sessions.
+            </p>
+          </div>
+        )
+      },
+      {
+        selectorId: 'tour-add-fellow',
+        position: 'bottom' as const,
+        content: (
+          <div>
+            <h3 className="font-semibold mb-1">Add Fellows</h3>
+            <p className="text-sm text-muted-foreground">
+              Add new fellows to your supervision. Each fellow will conduct
+              therapy sessions for you to review.
+            </p>
+          </div>
+        )
+      },
+      {
+        selectorId: 'tour-sessions-table',
+        position: 'top' as const,
+        content: (
+          <div>
+            <h3 className="font-semibold mb-1">Session Reviews</h3>
+            <p className="text-sm text-muted-foreground">
+              View all therapy sessions conducted by your fellows. Click on any
+              session to view detailed AI analysis.
+            </p>
+          </div>
+        )
+      },
+      {
+        selectorId: 'tour-add-session',
+        position: 'left' as const,
+        content: (
+          <div>
+            <h3 className="font-semibold mb-1">Create Sessions</h3>
+            <p className="text-sm text-muted-foreground">
+              Create new therapy sessions by uploading transcripts or entering
+              them manually.
+            </p>
+          </div>
+        )
+      },
+      {
+        selectorId: 'tour-filters',
+        position: 'bottom' as const,
+        content: (
+          <div>
+            <h3 className="font-semibold mb-1">Filter & Search</h3>
+            <p className="text-sm text-muted-foreground">
+              Filter sessions by fellow, status, or date range to find specific
+              sessions quickly.
+            </p>
+          </div>
+        )
+      }
+    ];
+
     setSteps(dashboardTourSteps);
+
     const completed = localStorage.getItem('dashboard_tour_completed');
     if (!completed) {
       setTourDialogOpen(true);

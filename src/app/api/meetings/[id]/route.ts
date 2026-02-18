@@ -98,6 +98,13 @@ export async function POST(
       return NextResponse.json({ error: 'Meeting not found' }, { status: 404 });
     }
 
+    const handle = await tasks.trigger<typeof analyzeSessionJob>(
+      'analyze-session',
+      {
+        meetingId: meeting.id
+      }
+    );
+
     // Update meeting status to indicate analysis is processing
     await prisma.meeting.update({
       where: { id: meeting.id },
@@ -107,13 +114,6 @@ export async function POST(
         publicAccessToken: handle.publicAccessToken
       }
     });
-
-    const handle = await tasks.trigger<typeof analyzeSessionJob>(
-      'analyze-session',
-      {
-        meetingId: meeting.id
-      }
-    );
 
     return NextResponse.json({
       runId: handle.id,
