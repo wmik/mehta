@@ -48,7 +48,7 @@ import { useLocalStorage } from '@/hooks/use-local-storage';
 import { AddFellowDialog } from '@/components/dashboard/add-fellow-dialog';
 import { AddSessionDialog } from '@/components/dashboard/add-session-dialog';
 import { FellowViewDialog } from '@/components/dashboard/fellow-view-dialog';
-import { TourProvider } from '@/components/dashboard/tour-provider';
+import { TourProvider, useTour, TourAlertDialog } from '@/components/tour';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -396,47 +396,94 @@ export default function DashboardPage() {
 
   const dashboardTourSteps = [
     {
-      target: '[data-tour="dashboard-header"]',
-      title: 'Welcome to Your Dashboard',
-      content:
-        'This is your supervisor dashboard where you can manage fellows and review therapy sessions. Start by adding your first fellow.',
-      placement: 'bottom' as const
+      selectorId: 'tour-dashboard-header',
+      position: 'bottom' as const,
+      content: (
+        <div>
+          <h3 className="font-semibold mb-1">Welcome to Your Dashboard</h3>
+          <p className="text-sm text-muted-foreground">
+            This is your supervisor dashboard where you can manage fellows and
+            review therapy sessions.
+          </p>
+        </div>
+      )
     },
     {
-      target: '[data-tour="add-fellow"]',
-      title: 'Add Fellows',
-      content:
-        'Add new fellows to your supervision. Each fellow will conduct therapy sessions that you can review and analyze.',
-      placement: 'bottom' as const
+      selectorId: 'tour-add-fellow',
+      position: 'bottom' as const,
+      content: (
+        <div>
+          <h3 className="font-semibold mb-1">Add Fellows</h3>
+          <p className="text-sm text-muted-foreground">
+            Add new fellows to your supervision. Each fellow will conduct
+            therapy sessions for you to review.
+          </p>
+        </div>
+      )
     },
     {
-      target: '[data-tour="sessions-table"]',
-      title: 'Session Reviews',
-      content:
-        'View all therapy sessions conducted by your fellows. Click on any session to view detailed AI analysis and validation tools.',
-      placement: 'top' as const
+      selectorId: 'tour-sessions-table',
+      position: 'top' as const,
+      content: (
+        <div>
+          <h3 className="font-semibold mb-1">Session Reviews</h3>
+          <p className="text-sm text-muted-foreground">
+            View all therapy sessions conducted by your fellows. Click on any
+            session to view detailed AI analysis.
+          </p>
+        </div>
+      )
     },
     {
-      target: '[data-tour="add-session"]',
-      title: 'Create Sessions',
-      content:
-        'Create new therapy sessions by uploading transcripts or entering them manually. The AI will analyze each session automatically.',
-      placement: 'left' as const
+      selectorId: 'tour-add-session',
+      position: 'left' as const,
+      content: (
+        <div>
+          <h3 className="font-semibold mb-1">Create Sessions</h3>
+          <p className="text-sm text-muted-foreground">
+            Create new therapy sessions by uploading transcripts or entering
+            them manually.
+          </p>
+        </div>
+      )
     },
     {
-      target: '[data-tour="filters"]',
-      title: 'Filter & Search',
-      content:
-        'Filter sessions by fellow, status, or date range to find specific sessions quickly. Use the search to find sessions by group ID.',
-      placement: 'bottom' as const
+      selectorId: 'tour-filters',
+      position: 'bottom' as const,
+      content: (
+        <div>
+          <h3 className="font-semibold mb-1">Filter & Search</h3>
+          <p className="text-sm text-muted-foreground">
+            Filter sessions by fellow, status, or date range to find specific
+            sessions quickly.
+          </p>
+        </div>
+      )
     }
   ];
 
+  const { setSteps, setIsTourCompleted } = useTour();
+  const [tourDialogOpen, setTourDialogOpen] = useState(false);
+
+  useEffect(() => {
+    setSteps(dashboardTourSteps);
+    const completed = localStorage.getItem('dashboard_tour_completed');
+    if (!completed) {
+      setTourDialogOpen(true);
+    } else {
+      setIsTourCompleted(true);
+    }
+  }, [setSteps, setIsTourCompleted]);
+
   return (
     <TourProvider
-      steps={dashboardTourSteps}
-      tourKey="dashboard_onboarding_tour_completed"
+      isTourCompleted={false}
+      onComplete={() => {
+        localStorage.setItem('dashboard_tour_completed', 'true');
+        setIsTourCompleted(true);
+      }}
     >
+      <TourAlertDialog isOpen={tourDialogOpen} setIsOpen={setTourDialogOpen} />
       <div className="min-h-screen bg-gray-50">
         <ProgressProvider />
         <Toaster />
@@ -456,7 +503,7 @@ export default function DashboardPage() {
         </header>
 
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="mb-8" data-tour="dashboard-header">
+          <div className="mb-8" id="tour-dashboard-header">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
               Shamiri Supervisor Dashboard
             </h2>
@@ -678,14 +725,14 @@ export default function DashboardPage() {
                   <DropdownMenuContent>
                     <DropdownMenuItem
                       onClick={() => setShowAddFellowDialog(true)}
-                      data-tour="add-fellow"
+                      id="tour-add-fellow"
                     >
                       <User className="h-4 w-4 mr-2" />
                       Add Fellow
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => setShowAddSessionDialog(true)}
-                      data-tour="add-session"
+                      id="tour-add-session"
                     >
                       <Calendar className="h-4 w-4 mr-2" />
                       Add Session
@@ -693,7 +740,7 @@ export default function DashboardPage() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
-              <div className="mt-4" data-tour="filters">
+              <div className="mt-4" id="tour-filters">
                 {loading ? (
                   <FilterBarSkeleton />
                 ) : (
@@ -732,7 +779,7 @@ export default function DashboardPage() {
                   {loading ? (
                     <TableSkeleton />
                   ) : (
-                    <Table data-tour="sessions-table">
+                    <Table id="tour-sessions-table">
                       <TableHeader>
                         <TableRow>
                           <TableHead>Fellow Name</TableHead>

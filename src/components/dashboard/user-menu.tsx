@@ -15,7 +15,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useTheme } from 'next-themes';
-import { useTour } from './tour-provider';
+import { useTour } from '@/components/tour';
 import {
   User,
   Settings,
@@ -42,7 +42,7 @@ interface UserMenuProps {
 export function UserMenu({ user }: UserMenuProps) {
   const router = useRouter();
   const { theme, setTheme } = useTheme();
-  const { startDashboardTour } = useTour();
+  const { startTour } = useTour();
   const [loggingOut, setLoggingOut] = useState(false);
 
   const handleLogout = async () => {
@@ -133,7 +133,12 @@ export function UserMenu({ user }: UserMenuProps) {
           {theme === 'system' && <Check className="ml-auto h-4 w-4" />}
         </DropdownMenuItem>
 
-        <DropdownMenuItem onClick={startDashboardTour}>
+        <DropdownMenuItem
+          onClick={() => {
+            localStorage.removeItem('dashboard_tour_completed');
+            startTour();
+          }}
+        >
           <Compass className="mr-2 h-4 w-4" />
           Restart Tour
         </DropdownMenuItem>
