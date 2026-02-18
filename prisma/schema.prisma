@@ -100,19 +100,21 @@ model Fellow {
 }
 
 model Meeting {
-  id           String            @id @default(cuid())
-  groupId      String
-  date         DateTime
-  transcript   String?           // S3 URL or plain text transcript
-  status       String            @default("PENDING")
-  createdAt    DateTime          @default(now())
-  updatedAt    DateTime          @updatedAt
-  fellowId     String
-  supervisorId String
-  deletedAt    DateTime?
-  analyses     MeetingAnalysis[]
-  fellow       Fellow            @relation(fields: [fellowId], references: [id], onDelete: Cascade)
-  supervisor   User              @relation(fields: [supervisorId], references: [id], onDelete: Cascade)
+  id                 String            @id @default(cuid())
+  groupId            String
+  date               DateTime
+  transcript         String?           // S3 URL or plain text transcript
+  status             String            @default("PENDING")
+  runId              String?           // Trigger.dev run ID for analysis job
+  publicAccessToken  String?           // Token for realtime subscription
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  fellowId           String
+  supervisorId       String
+  deletedAt          DateTime?
+  analyses           MeetingAnalysis[]
+  fellow             Fellow            @relation(fields: [fellowId], references: [id], onDelete: Cascade)
+  supervisor         User              @relation(fields: [supervisorId], references: [id], onDelete: Cascade)
 
   @@map("meetings")
 }

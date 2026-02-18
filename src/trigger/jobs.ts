@@ -71,7 +71,11 @@ export const analyzeSessionJob = task({
 
       await prisma.meeting.update({
         where: { id: meeting.id },
-        data: { status: finalStatus }
+        data: {
+          status: finalStatus,
+          runId: null,
+          publicAccessToken: null
+        }
       });
 
       logger.info('Session analysis completed', {
@@ -105,7 +109,11 @@ export const analyzeSessionJob = task({
       await prisma.meeting
         .update({
           where: { id: payload.meetingId },
-          data: { status: 'PENDING' }
+          data: {
+            status: 'PENDING',
+            runId: null,
+            publicAccessToken: null
+          }
         })
         .catch(() => {});
 

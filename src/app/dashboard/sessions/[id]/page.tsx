@@ -94,6 +94,37 @@ interface AnalysisCard {
   isRisk?: boolean;
 }
 
+function AnalysisRealtimeSubscription({
+  runId,
+  accessToken,
+  onComplete,
+  onProgress
+}: {
+  runId: string;
+  accessToken: string;
+  onComplete: (status: string) => void;
+  onProgress: (message: string) => void;
+}) {
+  const { run } = useRealtimeRun(runId, {
+    accessToken,
+    onComplete: async completedRun => {
+      onComplete(completedRun.status);
+    }
+  });
+
+  useEffect(() => {
+    if (run && run.status === 'EXECUTING') {
+      const progressMessage = (run.metadata as Record<string, string>)
+        ?.progressMessage;
+      if (progressMessage) {
+        onProgress(progressMessage);
+      }
+    }
+  }, [run, onProgress]);
+
+  return null;
+}
+
 export default function SessionDetailPage() {
   const { data: auth } = useSession();
   const params = useParams();
@@ -140,37 +171,7 @@ export default function SessionDetailPage() {
     revalidateOnFocus: false
   });
 
-  // Subscribe to run status updates
-  const { run, error: runError } = useRealtimeRun(runId || undefined, {
-    accessToken: accessToken || undefined,
-    onComplete: async completedRun => {
-      if (completedRun.status === 'COMPLETED') {
-        // Refresh session to get the analysis
-        await fetchSession();
-        setJobStatus('completed');
-        setAnalysisStatus('');
-        toast.success('Analysis completed!');
-      } else if (completedRun.status === 'FAILED') {
-        setJobStatus('failed');
-        setAnalysisStatus('');
-        toast.error('Analysis failed. Please try again.');
-      }
-      setRunId(null);
-    }
-  });
-
-  // Update progress from run metadata
-  useEffect(() => {
-    if (run && run.status === 'EXECUTING') {
-      const progressMessage = (run.metadata as Record<string, string>)
-        ?.progressMessage;
-      if (progressMessage) {
-        setAnalysisStatus(progressMessage);
-      }
-    }
-  }, [run]);
-
-  // Get fellow's other sessions
+  // Fetch fellow's other sessions
   const [fellowSessions, setFellowSessions] = useState<Session[]>([]);
 
   const fetchFellowSessions = useCallback(async () => {
@@ -203,6 +204,18 @@ export default function SessionDetailPage() {
       const response = await fetch(`/api/meetings/${params.id}`);
       const data = await response.json();
       setSession(data.session);
+
+      // Restore realtime subscription if job is still processing
+      if (
+        data.session?.status === 'PROCESSING' &&
+        data.session?.runId &&
+        data.session?.publicAccessToken
+      ) {
+        setRunId(data.session.runId);
+        setAccessToken(data.session.publicAccessToken);
+        setJobStatus('processing');
+        setAnalyzing(true);
+      }
     } catch (error) {
       console.error('Failed to fetch session:', error);
     } finally {
@@ -213,8 +226,38 @@ export default function SessionDetailPage() {
   useEffect(() => {
     if (params.id) {
       fetchSession();
+
+      // Check for stale runId (job that was left hanging)
+      const checkStaleJob = setInterval(async () => {
+        if (!runId) {
+          clearInterval(checkStaleJob);
+          return;
+        }
+
+        try {
+          const response = await fetch(`/api/meetings/${params.id}`);
+          const data = await response.json();
+
+          if (
+            data.session?.status === 'PENDING' ||
+            data.session?.status === 'PROCESSED' ||
+            data.session?.status === 'FLAGGED_FOR_REVIEW'
+          ) {
+            // Job is done, clear stale runId
+            setRunId(null);
+            setAccessToken(null);
+            setAnalyzing(false);
+            setJobStatus('idle');
+            clearInterval(checkStaleJob);
+          }
+        } catch (error) {
+          console.error('Error checking stale job:', error);
+        }
+      }, 5000);
+
+      return () => clearInterval(checkStaleJob);
     }
-  }, [params.id, fetchSession]);
+  }, [params.id, fetchSession, runId]);
 
   const runAnalysis = async () => {
     setAnalyzing(true);
@@ -558,7 +601,7 @@ export default function SessionDetailPage() {
                   </Button>
                 </div>
 
-                <Card data-tour="session-info">
+                <Card id="tour-session-info">
                   <CardHeader>
                     <CardTitle>Session Information</CardTitle>
                     <CardDescription>
@@ -634,7 +677,7 @@ export default function SessionDetailPage() {
               </Alert>
             ) : null}
 
-            <div className="space-y-6">
+            <div className="space-y-6" id="tour-ai-analysis">
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold">AI Analysis Results</h2>
                 <div className="flex flex-col items-end gap-1">
@@ -665,6 +708,28 @@ export default function SessionDetailPage() {
                   </Button>
                 </div>
               </div>
+
+              {runId && accessToken && (
+                <AnalysisRealtimeSubscription
+                  runId={runId}
+                  accessToken={accessToken}
+                  onComplete={async status => {
+                    if (status === 'COMPLETED') {
+                      await fetchSession();
+                      setJobStatus('completed');
+                      setAnalysisStatus('');
+                      toast.success('Analysis completed!');
+                    } else if (status === 'FAILED') {
+                      setJobStatus('failed');
+                      setAnalysisStatus('');
+                      toast.error('Analysis failed. Please try again.');
+                    }
+                    setRunId(null);
+                    setAccessToken(null);
+                  }}
+                  onProgress={message => setAnalysisStatus(message)}
+                />
+              )}
 
               {analysisStatus && analyzing && (
                 <div className="mb-4">
@@ -701,7 +766,7 @@ export default function SessionDetailPage() {
 
             {/* Session Summary */}
             {latestAnalysis && (
-              <Card data-tour="ai-analysis">
+              <Card id="tour-ai-analysis">
                 <CardHeader>
                   <CardTitle>Session Summary</CardTitle>
                 </CardHeader>
@@ -717,7 +782,7 @@ export default function SessionDetailPage() {
             {session && latestAnalysis && (
               <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
                 {/* Radar Chart */}
-                <Card className="lg:col-span-3" data-tour="fellow-metrics">
+                <Card className="lg:col-span-3" id="tour-fellow-metrics">
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <div>
@@ -851,7 +916,7 @@ export default function SessionDetailPage() {
 
             {/* Human Review Actions */}
             {latestAnalysis && !latestAnalysis.supervisorStatus && (
-              <Card>
+              <Card id="tour-validation">
                 <CardHeader>
                   <CardTitle>Supervisor Review</CardTitle>
                   <CardDescription>
@@ -971,7 +1036,7 @@ export default function SessionDetailPage() {
                   </div>
                   <div
                     className="flex flex-col sm:flex-row gap-4"
-                    data-tour="validation"
+                    id="tour-validation"
                   >
                     <Button
                       onClick={() => handleValidateClick('validate')}

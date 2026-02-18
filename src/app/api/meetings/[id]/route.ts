@@ -101,7 +101,11 @@ export async function POST(
     // Update meeting status to indicate analysis is processing
     await prisma.meeting.update({
       where: { id: meeting.id },
-      data: { status: 'PROCESSING' }
+      data: {
+        status: 'PROCESSING',
+        runId: handle.id,
+        publicAccessToken: handle.publicAccessToken
+      }
     });
 
     const handle = await tasks.trigger<typeof analyzeSessionJob>(
