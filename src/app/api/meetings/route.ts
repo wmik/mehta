@@ -4,7 +4,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { tasks } from '@trigger.dev/sdk';
 import { analyzeSessionJob } from '@/trigger/jobs';
-import { uploadToS3, isS3Url, extractKeyFromUrl, deleteFromS3 } from '@/lib/s3';
+import { uploadToS3, isS3Url, extractKeyFromUrl } from '@/lib/s3';
 import { trackServer, ANALYTICS_EVENTS } from '@/lib/analytics-server';
 
 // Sample therapy session transcripts (simplified to avoid syntax issues)

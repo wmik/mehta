@@ -47,7 +47,6 @@ export function FilterDropdown({
   onSearchChange,
   initialSearch = ''
 }: FilterDropdownProps) {
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   const [search, setSearch] = useState(initialSearch);

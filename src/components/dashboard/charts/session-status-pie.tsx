@@ -29,13 +29,6 @@ const STATUS_COLORS = {
   FLAGGED_FOR_REVIEW: '#f59e0b' // amber
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  PENDING: 'Pending',
-  PROCESSED: 'Processed',
-  SAFE: 'Safe',
-  FLAGGED_FOR_REVIEW: 'Flagged'
-};
-
 export function SessionStatusPie({ data }: SessionStatusPieProps) {
   if (!data) {
     return (

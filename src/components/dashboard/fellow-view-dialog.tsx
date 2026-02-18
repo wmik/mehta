@@ -1,14 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
-  DialogFooter
+  DialogTitle
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -79,30 +77,30 @@ export function FellowViewDialog({
   const [editStatus, setEditStatus] = useState('');
 
   useEffect(() => {
+    const fetchFellow = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(`/api/fellows/${fellowId}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch fellow');
+        }
+        const data = await response.json();
+        setFellow(data.fellow);
+        setEditName(data.fellow.name);
+        setEditEmail(data.fellow.email);
+        setEditStatus(data.fellow.status);
+      } catch (error) {
+        console.error('Failed to fetch fellow:', error);
+        toast.error('Failed to load fellow details');
+      } finally {
+        setLoading(false);
+      }
+    };
+
     if (open && fellowId) {
       fetchFellow();
     }
   }, [open, fellowId]);
-
-  const fetchFellow = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch(`/api/fellows/${fellowId}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch fellow');
-      }
-      const data = await response.json();
-      setFellow(data.fellow);
-      setEditName(data.fellow.name);
-      setEditEmail(data.fellow.email);
-      setEditStatus(data.fellow.status);
-    } catch (error) {
-      console.error('Failed to fetch fellow:', error);
-      toast.error('Failed to load fellow details');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -147,7 +145,7 @@ export function FellowViewDialog({
       toast.success('Fellow deleted successfully');
       onSuccess?.();
       onOpenChange(false);
-    } catch (error) {
+    } catch {
       toast.error('Failed to delete fellow');
     } finally {
       setDeleting(false);
@@ -164,7 +162,7 @@ export function FellowViewDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto rounded-none">
+        <DialogContent className="sm:max-w-150 max-h-[90vh] overflow-y-auto rounded-none">
           <DialogHeader>
             <DialogTitle>
               {loading ? 'Loading...' : fellow?.name || 'Fellow Details'}

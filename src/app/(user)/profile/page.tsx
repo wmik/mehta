@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import {
   Card,
@@ -25,7 +25,7 @@ interface ProfileData {
 }
 
 export default function ProfilePage() {
-  const { data: session, update: updateSession } = useSession();
+  const { update: updateSession } = useSession();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState<ProfileData | null>(null);
