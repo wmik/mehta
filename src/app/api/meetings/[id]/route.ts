@@ -61,6 +61,8 @@ export async function GET(
         date: meeting.date.toISOString(),
         status: meeting.status,
         transcript: transcriptContent,
+        runId: meeting.runId,
+        publicAccessToken: meeting.publicAccessToken,
         fellow: meeting.fellow,
         analyses: meeting.analyses.map(analysis => ({
           id: analysis.id,
