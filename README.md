@@ -9,19 +9,9 @@ Mental Health Transcript Analysis - AI-Powered Therapy Session Review System
 
 ## Project Overview
 
-Mehta is a web-based dashboard for analyzing therapy sessions conducted by Shamiri Fellows (lay providers aged 18-22) delivering group therapy to young people in Kenya and other African contexts.
+Mehta is a web-based dashboard for analyzing therapy sessions conducted by Fellows (lay providers aged 18-22) delivering group therapy to young people in Kenya and other African contexts.
 
-The application addresses a critical scalability challenge: as Shamiri scales to serve millions of youths, Supervisors cannot manually review every session recording. Mehta amplifies their capacity using Generative AI to automatically analyze session transcripts and flag areas requiring human oversight.
-
-### The Shamiri Mission
-
-Shamiri uses a **Tiered Care Model** to deliver evidence-based mental health interventions:
-
-- **Fellows**: Lay providers (usually 18-22 years old) who deliver group therapy
-- **Supervisors**: Semi-professionals who oversee Fellows' work
-- **Goal**: Scale to serve 10 million youths while maintaining quality assurance
-
----
+The application addresses a critical scalability challenge: scaling to serve millions of youths, without the overhead of manually review every session recording. Mehta amplifies their capacity using Generative AI to automatically analyze session transcripts and flag areas requiring human oversight.
 
 ## Features
 
@@ -432,7 +422,7 @@ How well did the Fellow deliver the content?
 
 #### 3. Protocol Safety
 
-Did the Fellow stay within Shamiri boundaries?
+Did the Fellow stay within expected boundaries?
 
 | Score | Rating      | Criteria                                                      |
 | ----- | ----------- | ------------------------------------------------------------- |
@@ -1023,7 +1013,7 @@ This project was developed with significant AI assistance. Here's how:
 ### AI Prompt Engineering
 
 - **Analysis Prompt**: Carefully crafted prompts for the 3-Point Quality Index scoring
-- **System Prompts**: Context about Shamiri's mission and therapy protocols
+- **System Prompts**: Context about organization mission and therapy protocols
 - **Validation**: Human review of all AI-generated prompts
 
 ### Verification
@@ -1095,7 +1085,7 @@ All rights reserved. This codebase is proprietary and not available for public u
 
 ## Acknowledgments
 
-- [Shamiri](https://shamiri.health) for the inspiring mission
+- [Shamiri Health](https://shamirihealth.com)/[Shamiri](https://shamiri.co) for the inspiring mission
 - [Next.js](https://nextjs.org) team
 - [Trigger.dev](https://trigger.dev) for background job infrastructure
 - [Vercel](https://vercel.com) for AI SDK and deployment
