@@ -97,7 +97,8 @@ export function TranscriptUploadDialog({
             {hasExistingTranscript ? 'Update Transcript' : 'Add Transcript'}
           </DialogTitle>
           <DialogDescription>
-            Upload a transcript file. The AI will analyze the document.
+            Upload a transcript file. Click &quot;Analyze Session&quot; after
+            saving to run AI analysis.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">

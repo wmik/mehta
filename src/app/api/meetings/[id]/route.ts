@@ -168,7 +168,7 @@ export async function PATCH(
 
         const arrayBuffer = await file.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
-        const key = `transcripts/${meetingId}/${file.name}`;
+        const key = `transcripts/${meetingId}/transcript.txt`;
 
         const result = await uploadToS3(buffer, key, file.type);
         transcriptUrl = result.url;

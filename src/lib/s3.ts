@@ -37,7 +37,7 @@ export async function uploadToS3(
 
   await s3Client.send(command);
 
-  const url = `https://${BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+  const url = `https://${BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${encodeURIComponent(key)}`;
   return { url, key };
 }
 

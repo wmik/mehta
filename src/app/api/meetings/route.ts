@@ -365,6 +365,9 @@ export async function POST(request: Request) {
     }
 
     // If transcript provided, trigger AI analysis (async via Trigger.dev)
+    let runId: string | undefined;
+    let publicAccessToken: string | undefined;
+
     if (transcript) {
       try {
         // Update status to processing
@@ -373,11 +376,25 @@ export async function POST(request: Request) {
           data: { status: 'PROCESSING' }
         });
 
-        // Trigger async analysis job
-        await tasks.trigger<typeof analyzeSessionJob>('analyze-session', {
-          meetingId: newSession.id
+        // Trigger async analysis job and capture handle
+        const handle = await tasks.trigger<typeof analyzeSessionJob>(
+          'analyze-session',
+          {
+            meetingId: newSession.id
+          }
+        );
+
+        // Save runId and publicAccessToken to database
+        await prisma.meeting.update({
+          where: { id: newSession.id },
+          data: {
+            runId: handle.id,
+            publicAccessToken: handle.publicAccessToken
+          }
         });
 
+        runId = handle.id;
+        publicAccessToken = handle.publicAccessToken;
         newSession.status = 'PROCESSING';
       } catch (analysisError) {
         console.error('Failed to start analysis:', analysisError);
@@ -404,6 +421,8 @@ export async function POST(request: Request) {
         date: newSession.date,
         status: newSession.status,
         transcript: newSession.transcript,
+        runId: runId,
+        publicAccessToken: publicAccessToken,
         fellow: newSession.fellow,
         analyses: newSession.analyses.map(a => ({
           id: a.id,
