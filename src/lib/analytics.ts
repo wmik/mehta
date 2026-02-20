@@ -13,9 +13,11 @@ export const initMixpanel = () => {
 
   try {
     mixpanel.init(MIXPANEL_TOKEN, {
+      api_host: process.env.MIXPANEL_API_HOST,
       debug: process.env.NODE_ENV === 'development',
       autocapture: true,
-      track_pageview: false
+      track_pageview: false,
+      record_sessions_percent: 100
     });
     mixpanelClient = mixpanel;
   } catch (error) {
