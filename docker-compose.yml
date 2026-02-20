@@ -1,0 +1,103 @@
+version: '3.8'
+
+services:
+  # =============================================================================
+  # Next.js Application
+  # =============================================================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: mehta-app
+    ports:
+      - '3000:3000'
+      - '3001:3001'
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://mehta:mehta@db:5432/mehta
+      - REDIS_URL=redis://cache:6379
+      - NEXTAUTH_URL=http://localhost:3000
+      - NEXTAUTH_SECRET=mehta-dev-secret-minimum-32-characters
+      - AI_PROVIDER=${AI_PROVIDER:-openai}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - OLLAMA_API_URL=${OLLAMA_API_URL:-}
+      - OLLAMA_API_KEY=${OLLAMA_API_KEY:-}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - AWS_S3_BUCKET=${AWS_S3_BUCKET:-}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - TRIGGER_SECRET_KEY=${TRIGGER_SECRET_KEY:-}
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+      - /app/.trigger
+    depends_on:
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - mehta-network
+
+  # =============================================================================
+  # PostgreSQL Database
+  # =============================================================================
+  db:
+    image: postgres:16-alpine
+    container_name: mehta-db
+    ports:
+      - '5432:5432'
+    environment:
+      - POSTGRES_USER=mehta
+      - POSTGRES_PASSWORD=mehta
+      - POSTGRES_DB=mehta
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U mehta -d mehta']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - mehta-network
+
+  # =============================================================================
+  # Redis Cache
+  # =============================================================================
+  cache:
+    image: redis:7-alpine
+    container_name: mehta-cache
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - mehta-network
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  mehta-network:
+    driver: bridge

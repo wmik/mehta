@@ -1,6 +1,6 @@
-# Contributing to Shamiri Supervisor Copilot
+# Contributing to Mehta
 
-Thank you for your interest in contributing to Cron Builder! This document provides guidelines and workflows for contributing to this project.
+Thank you for your interest in contributing to Mehta! This document provides guidelines and workflows for contributing to this project.
 
 ## Development Setup
 
@@ -113,11 +113,10 @@ Follow the established commit message format with emoji prefixes and detailed de
 # Development
 npm run dev          # Start development server on port 3000
 npm run build        # Build for production
-npm run preview      # Preview production build
+npm run start        # Start production server
 
 # Code Quality
 npm run lint         # Run ESLint
-npm run typecheck    # Run TypeScript type checking
 npm run format       # Format code with Prettier
 npm run format:check # Check code formatting
 
@@ -129,7 +128,13 @@ npm run test:coverage # Run tests with coverage
 
 # E2E Testing
 npm run test:e2e     # Run Playwright E2E tests
-npm run test:e2e:ui # Run Playwright E2E tests with UI
+npm run test:e2e:ui  # Run Playwright E2E tests with UI
+
+# Docker
+npm run docker:up        # Start all Docker services
+npm run docker:down      # Stop all Docker services
+npm run docker:migrate   # Run Prisma migrations
+npm run docker:seed      # Seed database
 ```
 
 ## Code Quality Standards
@@ -139,7 +144,6 @@ npm run test:e2e:ui # Run Playwright E2E tests with UI
 Always run these commands before committing:
 
 ```bash
-npm run typecheck
 npm run lint
 npm run test
 npm run format:check
@@ -165,24 +169,36 @@ npm run format:check
 ```
 src/
 ├── app/                  # Next.js App Router
-│   ├── api/             # API routes
-│   ├── dashboard/       # Dashboard pages
-│   └── login/           # Login page
-├── components/          # React components
-│   ├── hooks/          # Custom hooks
-│   └── ui/             # UI components (shadcn)
-├── lib/                # Core library functions
-│   ├── auth.ts         # NextAuth configuration
-│   ├── prisma.ts       # Prisma client
-│   ├── ai-service.ts   # AI SDK service
-│   └── schemas.ts      # Zod validation schemas
-└── types/              # TypeScript type definitions
+│   ├── (user)/         # Authenticated routes
+│   │   ├── dashboard/  # Main dashboard
+│   │   └── admin/     # Admin panel
+│   ├── api/           # API routes
+│   └── login/         # Login page
+├── components/         # React components
+│   ├── dashboard/     # Dashboard components
+│   │   └── charts/   # Recharts components
+│   ├── providers/    # Context providers
+│   └── ui/          # shadcn/ui components
+├── lib/              # Core library functions
+│   ├── ai-service.ts # AI analysis service
+│   ├── auth.ts      # NextAuth configuration
+│   ├── prisma.ts    # Prisma client
+│   ├── s3.ts        # AWS S3 utilities
+│   ├── schemas.ts   # Zod validation
+│   └── analytics.ts # Mixpanel integration
+├── trigger/          # Trigger.dev jobs
+├── hooks/           # Custom React hooks
+├── types/           # TypeScript definitions
+└── config/          # Configuration files
 
-__tests__/              # Unit & integration tests
-├── lib/                # Library function tests
-└── components/         # Component tests
+prisma/
+└── schema.prisma    # Database schema
 
-e2e/                    # Playwright E2E tests
+__tests__/           # Vitest tests
+├── lib/             # Library function tests
+└── components/      # Component tests
+
+e2e/                 # Playwright E2E tests
 ```
 
 ## Submitting Changes
