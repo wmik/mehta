@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, Suspense } from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
@@ -481,7 +481,9 @@ export default function DashboardPage() {
     >
       <TourAlertDialog isOpen={tourDialogOpen} setIsOpen={setTourDialogOpen} />
       <div className="min-h-screen bg-background">
-        <ProgressProvider />
+        <Suspense fallback={null}>
+          <ProgressProvider />
+        </Suspense>
         <Toaster />
         <header className="bg-background shadow-sm border-b">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -746,21 +748,23 @@ export default function DashboardPage() {
                 {loading ? (
                   <FilterBarSkeleton />
                 ) : (
-                  <FilterDropdown
-                    statusOptions={statusOptions}
-                    fellowOptions={fellowOptions}
-                    onStatusChange={setSelectedStatuses}
-                    onFellowChange={setSelectedFellows}
-                    onDateRangeChange={(start, end) =>
-                      setDateRange({ start, end })
-                    }
-                    onSortChange={(sort, order) => {
-                      setSortBy(sort);
-                      setSortOrder(order);
-                    }}
-                    onSearchChange={setSearchQuery}
-                    initialSearch={searchQuery}
-                  />
+                  <Suspense fallback={null}>
+                    <FilterDropdown
+                      statusOptions={statusOptions}
+                      fellowOptions={fellowOptions}
+                      onStatusChange={setSelectedStatuses}
+                      onFellowChange={setSelectedFellows}
+                      onDateRangeChange={(start, end) =>
+                        setDateRange({ start, end })
+                      }
+                      onSortChange={(sort, order) => {
+                        setSortBy(sort);
+                        setSortOrder(order);
+                      }}
+                      onSearchChange={setSearchQuery}
+                      initialSearch={searchQuery}
+                    />
+                  </Suspense>
                 )}
               </div>
             </CardHeader>

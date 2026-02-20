@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
+import { JsonObject } from '@/generated/prisma/runtime/client';
 
 export async function GET(
   request: Request,
@@ -70,7 +71,8 @@ export async function GET(
           groupId: m.groupId,
           date: m.date.toISOString(),
           status: m.status,
-          hasRisk: m.analyses[0]?.riskDetection?.status === 'RISK',
+          hasRisk:
+            (m.analyses[0]?.riskDetection as JsonObject)?.status === 'RISK',
           supervisorStatus: m.analyses[0]?.supervisorStatus || null
         }))
       }

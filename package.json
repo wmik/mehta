@@ -43,6 +43,7 @@
     "@aws-sdk/s3-request-presigner": "^3.991.0",
     "@badrap/bar-of-progress": "^0.3.0",
     "@hookform/resolvers": "^5.2.2",
+    "@next-auth/prisma-adapter": "^1.0.7",
     "@prisma/adapter-pg": "^7.4.0",
     "@prisma/client": "^7.4.0",
     "@sentry/nextjs": "^10.39.0",
