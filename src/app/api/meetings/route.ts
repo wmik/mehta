@@ -4,7 +4,12 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { tasks } from '@trigger.dev/sdk';
 import { analyzeSessionJob } from '@/trigger/jobs';
-import { uploadToS3, extractKeyFromUrl } from '@/lib/s3';
+import {
+  uploadToS3,
+  extractKeyFromUrl,
+  copyObjectInS3,
+  deleteFromS3
+} from '@/lib/s3';
 import { trackServer, ANALYTICS_EVENTS } from '@/lib/analytics-server';
 import { MAX_FILE_SIZE, SUPPORTED_EXTENSIONS } from '@/lib/transcript';
 
@@ -339,13 +344,14 @@ export async function POST(request: Request) {
       }
     });
 
-    // If transcript was uploaded to temp location, update the key
+    // If transcript was uploaded to temp location, copy to final location in S3
     if (transcriptUrl && meetingId) {
       try {
         const oldKey = extractKeyFromUrl(transcriptUrl);
         if (oldKey) {
           const newKey = `transcripts/${newSession.id}/transcript.txt`;
-          // Note: In production, you'd copy and delete the old key
+          await copyObjectInS3(oldKey, newKey);
+          await deleteFromS3(oldKey);
           await prisma.meeting.update({
             where: { id: newSession.id },
             data: {
@@ -354,7 +360,7 @@ export async function POST(request: Request) {
           });
         }
       } catch (error) {
-        console.error('Failed to update transcript key:', error);
+        console.error('Failed to move transcript to final location:', error);
       }
     }
 

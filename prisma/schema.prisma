@@ -18,12 +18,13 @@ model User {
   role          String          @default("supervisor")
   image         String?
   deletedAt     DateTime?
-  settings      Json?           // {"aiProvider": "...", "llmKey": "...", "theme": "...", "notifications": {...}}
+  settings      Json?
   Authenticator Authenticator[]
   accounts      Account[]
   fellows       Fellow[]
   meetings      Meeting[]
   sessions      Session[]
+  notifications Notification[]
 
   @@map("users")
 }
@@ -100,21 +101,21 @@ model Fellow {
 }
 
 model Meeting {
-  id                 String            @id @default(cuid())
-  groupId            String
-  date               DateTime
-  transcript         String?           // S3 URL or plain text transcript
-  status             String            @default("PENDING")
-  runId              String?           // Trigger.dev run ID for analysis job
-  publicAccessToken  String?           // Token for realtime subscription
-  createdAt          DateTime          @default(now())
-  updatedAt          DateTime          @updatedAt
-  fellowId           String
-  supervisorId       String
-  deletedAt          DateTime?
-  analyses           MeetingAnalysis[]
-  fellow             Fellow            @relation(fields: [fellowId], references: [id], onDelete: Cascade)
-  supervisor         User              @relation(fields: [supervisorId], references: [id], onDelete: Cascade)
+  id                String            @id @default(cuid())
+  groupId           String
+  date              DateTime
+  transcript        String?
+  status            String            @default("PENDING")
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  fellowId          String
+  supervisorId      String
+  deletedAt         DateTime?
+  publicAccessToken String?
+  runId             String?
+  analyses          MeetingAnalysis[]
+  fellow            Fellow            @relation(fields: [fellowId], references: [id], onDelete: Cascade)
+  supervisor        User              @relation(fields: [supervisorId], references: [id], onDelete: Cascade)
 
   @@map("meetings")
 }
@@ -137,4 +138,18 @@ model MeetingAnalysis {
   meeting             Meeting   @relation(fields: [meetingId], references: [id], onDelete: Cascade)
 
   @@map("meeting_analyses")
+}
+
+model Notification {
+  id          String    @id @default(cuid())
+  title       String
+  description String
+  custom      Json?     @default("{}")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  userId      String
+  deletedAt   DateTime?
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
 }

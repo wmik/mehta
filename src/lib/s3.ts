@@ -3,7 +3,8 @@ import {
   PutObjectCommand,
   GetObjectCommand,
   DeleteObjectCommand,
-  HeadObjectCommand
+  HeadObjectCommand,
+  CopyObjectCommand
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
@@ -73,6 +74,19 @@ export async function deleteFromS3(key: string): Promise<void> {
   const command = new DeleteObjectCommand({
     Bucket: BUCKET_NAME,
     Key: key
+  });
+
+  await s3Client.send(command);
+}
+
+export async function copyObjectInS3(
+  sourceKey: string,
+  destKey: string
+): Promise<void> {
+  const command = new CopyObjectCommand({
+    Bucket: BUCKET_NAME,
+    CopySource: `${BUCKET_NAME}/${sourceKey}`,
+    Key: destKey
   });
 
   await s3Client.send(command);
