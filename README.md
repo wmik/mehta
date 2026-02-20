@@ -7,6 +7,8 @@ Mental Health Transcript Analysis - AI-Powered Therapy Session Review System
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue)](https://www.typescriptlang.org)
 [![Prisma](https://img.shields.io/badge/Prisma-7.4-2D3748)](https://www.prisma.io)
 
+<img src="assets/01_landing.png" width="100%">
+
 ## Project Overview
 
 Mehta is a web-based dashboard for analyzing therapy sessions conducted by Fellows (lay providers aged 18-22) delivering group therapy to young people in Kenya and other African contexts.
@@ -57,15 +59,11 @@ The application addresses a critical scalability challenge: scaling to serve mil
 
 ## Screenshots
 
-> Placeholder for dashboard overview screenshot
-> _Suggested: Full dashboard view showing session list with status badges_
-
-> Placeholder for session analysis detail screenshot  
-> _Suggested: AI analysis card with scores and supervisor validation buttons_
-
-> Placeholder for analytics dashboard screenshot
-> _Suggested: Charts showing session volume and risk trends_
-
+<img src="assets/dashboard/01_dashboard.png" width="100%">
+<img src="assets/dashboard/02_dashboard.png" width="100%">
+<img src="assets/dashboard/03_dashboard.png" width="100%">
+<img src="assets/dashboard/04_session.png" width="100%">
+<img src="assets/dashboard/05_session.png" width="100%">
 ---
 
 ## Architecture
@@ -156,7 +154,7 @@ The application addresses a critical scalability challenge: scaling to serve mil
 
 ### UI & Styling
 
-| Technology   | Purpose |
+| Technology   | Version | Purpose              |
 | ------------ | ------- | -------------------- |
 | React        | 19.2.3  | UI library           |
 | Tailwind CSS | 4       | Utility-first CSS    |
@@ -168,11 +166,11 @@ The application addresses a critical scalability challenge: scaling to serve mil
 
 ### Auth & Security
 
-| Technology           | Purpose          |
-| -------------------- | ---------------- | ---------------- |
-| NextAuth.js          | 4.24.13          | Authentication   |
-| @auth/prisma-adapter | 2.11.1           | Database adapter |
-| bcryptjs             | Password hashing |
+| Technology           | Version | Purpose          |
+| -------------------- | ------- | ---------------- |
+| NextAuth.js          | 4.24.13 | Authentication   |
+| @auth/prisma-adapter | 2.11.1  | Database adapter |
+| bcryptjs             | 3.0.3   | Password hashing |
 
 ### Cloud & Infrastructure
 
@@ -190,8 +188,6 @@ The application addresses a critical scalability challenge: scaling to serve mil
 | Vitest                | Unit testing      |
 | React Testing Library | Component testing |
 | Playwright            | E2E testing       |
-
----
 
 ## Getting Started
 
@@ -297,29 +293,29 @@ npm run db:seed
 │ role            │       │ status          │
 │ createdAt       │       │ createdAt       │
 └────────┬────────┘       └────────┬────────┘
-         │                          │
-         │         ┌────────────────┴────────────────┐
-         │         │            Meeting              │
+         │                         │
+         │         ┌───────────────┴───────────────┐
+         │         │            Meeting            │
          │         ├───────────────────────────────┤
          │         │ id                            │
          │         │ groupId                       │
          │         │ date                          │
-─────────┼────────▶│ transcript                   │
+         │────────▶│ transcript                    │
          │         │ status                        │
          │         │ fellowId                      │
          │         │ supervisorId                  │
-         │         └────────────┬───────────────────┘
+         │         └────────────┬──────────────────┘
          │                      │
          │                      │
-         │         ┌────────────┴───────────────────┐
-         │         │       MeetingAnalysis          │
+         │         ┌────────────┴──────────────────┐
+         │         │       MeetingAnalysis         │
          │         ├───────────────────────────────┤
          │         │ id                            │
          │         │ summary                       │
          │         │ contentCoverage (JSON)        │
-─────────┼────────▶│ facilitationQuality (JSON)    │
+         │────────▶│ facilitationQuality (JSON)    │
          │         │ protocolSafety (JSON)         │
-         │         │ riskDetection (JSON)         │
+         │         │ riskDetection (JSON)          │
          │         │ supervisorStatus              │
          │         │ supervisorNotes               │
          │         │ reviewedBy                    │
@@ -329,7 +325,7 @@ npm run db:seed
          │
          │
 ┌────────┴────────┐
-│  Notification  │
+│  Notification   │
 ├─────────────────┤
 │ id              │
 │ title           │
@@ -460,8 +456,6 @@ OLLAMA_MODEL=phi3
 ```
 
 **Known Limitation**: The current implementation does not automatically switch between AI providers on failure. If the primary provider (e.g., OpenAI) fails, the system attempts fallback to configured secondary providers in code, but there is no dynamic provider switching or automatic retry with alternative models.
-
----
 
 ## Background Jobs
 
@@ -714,6 +708,56 @@ vercel deploy --prod
 netlify deploy --prod
 ```
 
+### Trigger.dev (Background Jobs)
+
+Mehta uses Trigger.dev for background job processing (session analysis, notifications).
+
+#### Cloud Deployment (Recommended)
+
+1. **Connect to Trigger.dev Dashboard**
+   - Go to https://cloud.trigger.dev
+   - Create a new project or connect existing
+
+2. **Configure Environment**
+   Add these in Trigger.dev dashboard → Settings → Environment:
+
+   ```
+   DATABASE_URL=<your-database-url>
+   OPENAI_API_KEY=<your-openai-key>
+   ANTHROPIC_API_KEY=<your-anthropic-key>
+   AI_PROVIDER=openai
+   AWS_ACCESS_KEY_ID=<your-aws-key>
+   AWS_SECRET_ACCESS_KEY=<your-aws-secret>
+   AWS_S3_BUCKET=<your-bucket>
+   AWS_REGION=us-east-1
+   ```
+
+3. **Deploy**
+   ```bash
+   npx trigger.dev deploy
+   ```
+
+#### Local Development
+
+Trigger.dev runs automatically with:
+
+```bash
+npm run dev
+```
+
+Or separately:
+
+```bash
+npm run trigger:dev
+```
+
+#### Production Notes
+
+- Use **Hobby** (free) or **Pro** tier for production workloads
+- Background jobs run serverless - no container deployment needed
+- Configure environment variables in Trigger.dev dashboard
+- Monitor job runs via dashboard
+
 ### Environment-Specific Notes
 
 #### Development
@@ -728,8 +772,6 @@ netlify deploy --prod
 - Configure proper CORS settings
 - Set up proper auth secrets
 - Enable Sentry for error tracking
-
----
 
 ## Docker
 
