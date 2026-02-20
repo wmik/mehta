@@ -9,6 +9,7 @@
     "dev": "npx concurrently --kill-others --names \"next,trigger\" --prefix-colors \"yellow,blue\" \"next dev\" \"npm run trigger:dev\"",
     "build": "next build",
     "start": "next start",
+    "postinstall": "prisma generate",
     "lint": "eslint . --ext js,jsx,ts,tsx",
     "format": "prettier --write {src,__tests__}/**/*.{js,ts,tsx,json,css,md}",
     "format:check": "prettier --check",
