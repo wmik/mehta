@@ -9,6 +9,7 @@ import {
 } from '@/lib/s3';
 import { tasks } from '@trigger.dev/sdk';
 import { analyzeSessionJob } from '@/trigger/jobs';
+import { MAX_FILE_SIZE, SUPPORTED_EXTENSIONS } from '@/lib/transcript';
 
 export async function GET(
   request: NextRequest,
@@ -142,35 +143,39 @@ export async function PATCH(
     if (contentType.includes('multipart/form-data')) {
       const formData = await request.formData();
       const file = formData.get('file') as File | null;
-      const transcriptText = formData.get('transcript') as string | null;
 
       if (file) {
+        if (file.size > MAX_FILE_SIZE) {
+          return NextResponse.json(
+            {
+              error: `File too large. Maximum size is ${MAX_FILE_SIZE / (1024 * 1024)}MB`
+            },
+            { status: 400 }
+          );
+        }
+
+        const extension = '.' + file.name.split('.').pop()?.toLowerCase();
+        if (!SUPPORTED_EXTENSIONS.includes(extension)) {
+          return NextResponse.json(
+            {
+              error: `Unsupported file type. Supported: ${SUPPORTED_EXTENSIONS.join(', ')}`
+            },
+            { status: 400 }
+          );
+        }
+
         const arrayBuffer = await file.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
         const key = `transcripts/${meetingId}/${file.name}`;
 
         const result = await uploadToS3(buffer, key, file.type);
         transcriptUrl = result.url;
-      } else if (transcriptText) {
-        const key = `transcripts/${meetingId}/transcript.txt`;
-        const buffer = Buffer.from(transcriptText, 'utf-8');
-        const result = await uploadToS3(buffer, key, 'text/plain');
-        transcriptUrl = result.url;
       }
     } else {
-      const { transcript } = await request.json();
-      if (
-        transcript &&
-        typeof transcript === 'string' &&
-        !isS3Url(transcript)
-      ) {
-        const key = `transcripts/${meetingId}/transcript.txt`;
-        const buffer = Buffer.from(transcript, 'utf-8');
-        const result = await uploadToS3(buffer, key, 'text/plain');
-        transcriptUrl = result.url;
-      } else if (transcript) {
-        transcriptUrl = transcript;
-      }
+      return NextResponse.json(
+        { error: 'File upload required. Please upload a transcript file.' },
+        { status: 400 }
+      );
     }
 
     if (!transcriptUrl) {

@@ -4,6 +4,10 @@ import { createAnthropic } from '@ai-sdk/anthropic';
 import { createOllama } from 'ollama-ai-provider-v2';
 import { sessionAnalysisSchema, SESSION_ANALYSIS_PROMPT } from './schemas';
 import { getObjectContent, isS3Url, extractKeyFromUrl } from './s3';
+import { SUPPORTED_EXTENSIONS } from './transcript';
+
+const TEXT_EXTENSIONS = ['.txt', '.md', '.json', '.srt', '.vtt'];
+const DOCUMENT_EXTENSIONS = ['.pdf', '.doc', '.docx'];
 
 // Configure AI providers
 const openai = createOpenAI({
@@ -48,6 +52,14 @@ export async function analyzeSession(
     try {
       const key = extractKeyFromUrl(transcript);
       if (key) {
+        const extension = '.' + key.split('.').pop()?.toLowerCase();
+
+        if (DOCUMENT_EXTENSIONS.includes(extension)) {
+          console.log(
+            `Detected document file: ${extension}. Using AI vision capabilities if available.`
+          );
+        }
+
         transcriptContent = await getObjectContent(key);
       }
     } catch (error) {

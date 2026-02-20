@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -23,13 +23,17 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Upload, FileAudio, FileText, X } from 'lucide-react';
+import { FileUpload } from '@/components/ui/file-upload';
+import {
+  SUPPORTED_EXTENSIONS,
+  SUPPORTED_FORMATS_LABEL,
+  MAX_FILE_SIZE
+} from '@/lib/transcript';
 
 const sessionSchema = z.object({
   groupId: z.string().min(1, 'Group ID is required'),
   date: z.string().min(1, 'Date is required'),
-  fellowId: z.string().min(1, 'Fellow is required'),
-  transcript: z.string().optional()
+  fellowId: z.string().min(1, 'Fellow is required')
 });
 
 type SessionFormData = z.infer<typeof sessionSchema>;
@@ -45,19 +49,6 @@ interface AddSessionDialogProps {
   onSuccess?: () => void;
 }
 
-const TEXT_EXTENSIONS = [
-  '.txt',
-  '.pdf',
-  '.doc',
-  '.docx',
-  '.md',
-  '.srt',
-  '.vtt',
-  '.json'
-];
-const AUDIO_EXTENSIONS = ['.mp3', '.wav', '.m4a', '.webm', '.ogg'];
-const ALL_EXTENSIONS = [...TEXT_EXTENSIONS, ...AUDIO_EXTENSIONS];
-
 export function AddSessionDialog({
   open,
   onOpenChange,
@@ -66,8 +57,7 @@ export function AddSessionDialog({
   const [loading, setLoading] = useState(false);
   const [fellows, setFellows] = useState<Fellow[]>([]);
   const [file, setFile] = useState<File | null>(null);
-  const [fileError, setFileError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
 
   const {
     register,
@@ -98,77 +88,12 @@ export function AddSessionDialog({
     }
   };
 
-  const parseSrt = (content: string): string => {
-    const entries = content.split(/\n\n+/);
-    return entries
-      .filter(entry => !entry.match(/^\d+$/))
-      .map(entry => entry.replace(/^\d+\n.* --> .*\n/, '').replace(/\n/g, ' '))
-      .join('\n');
-  };
-
-  const parseVtt = (content: string): string => {
-    return content
-      .replace(/^WEBVTT.*\n?/gm, '')
-      .replace(/^\d+\n.* --> .*\n/gm, '')
-      .replace(/^NOTE.*\n?/gm, '')
-      .trim();
-  };
-
-  const parseTextFile = async (file: File): Promise<string> => {
-    const extension = '.' + file.name.split('.').pop()?.toLowerCase();
-
-    if (extension === '.json') {
-      const text = await file.text();
-      const data = JSON.parse(text);
-      return typeof data.transcript === 'string'
-        ? data.transcript
-        : JSON.stringify(data, null, 2);
-    }
-
-    if (['.srt', '.vtt'].includes(extension)) {
-      const text = await file.text();
-      return extension === '.srt' ? parseSrt(text) : parseVtt(text);
-    }
-
-    return await file.text();
-  };
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (!selectedFile) return;
-
-    setFileError(null);
-    const extension = '.' + selectedFile.name.split('.').pop()?.toLowerCase();
-
-    if (!ALL_EXTENSIONS.includes(extension)) {
-      setFileError(
-        `Unsupported file type. Supported: ${ALL_EXTENSIONS.join(', ')}`
-      );
-      return;
-    }
-
-    if (AUDIO_EXTENSIONS.includes(extension)) {
-      setFile(selectedFile);
-      setValue('transcript', `[Audio file: ${selectedFile.name}]`);
-      return;
-    }
-
-    try {
-      const content = await parseTextFile(selectedFile);
-      setFile(selectedFile);
-      setValue('transcript', content);
-    } catch (error) {
-      setFileError('Failed to parse file. Please try again.');
-      console.error('File parse error:', error);
-    }
+  const handleFileSelect = (selectedFile: File) => {
+    setFile(selectedFile);
   };
 
   const clearFile = () => {
     setFile(null);
-    setFileError(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
   };
 
   const onSubmit = async (data: SessionFormData) => {
@@ -177,28 +102,24 @@ export function AddSessionDialog({
       return;
     }
 
+    if (!file) {
+      toast.error('Please upload a transcript file');
+      return;
+    }
+
     setLoading(true);
+    setUploading(true);
     try {
-      let response;
+      const formData = new FormData();
+      formData.append('groupId', data.groupId);
+      formData.append('date', data.date);
+      formData.append('fellowId', data.fellowId);
+      formData.append('file', file);
 
-      if (file) {
-        const formData = new FormData();
-        formData.append('groupId', data.groupId);
-        formData.append('date', data.date);
-        formData.append('fellowId', data.fellowId);
-        formData.append('file', file);
-
-        response = await fetch('/api/meetings', {
-          method: 'POST',
-          body: formData
-        });
-      } else {
-        response = await fetch('/api/meetings', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
-      }
+      const response = await fetch('/api/meetings', {
+        method: 'POST',
+        body: formData
+      });
 
       if (!response.ok) {
         const error = await response.json();
@@ -214,6 +135,7 @@ export function AddSessionDialog({
       toast.error((error as Error).message);
     } finally {
       setLoading(false);
+      setUploading(false);
     }
   };
 
@@ -225,23 +147,13 @@ export function AddSessionDialog({
     onOpenChange(isOpen);
   };
 
-  const getFileIcon = () => {
-    if (!file) return null;
-    const extension = '.' + file.name.split('.').pop()?.toLowerCase();
-    if (AUDIO_EXTENSIONS.includes(extension || '')) {
-      return <FileAudio className="h-4 w-4" />;
-    }
-    return <FileText className="h-4 w-4" />;
-  };
-
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto rounded-none">
         <DialogHeader>
           <DialogTitle>Add Session</DialogTitle>
           <DialogDescription>
-            Create a new therapy session. Upload a transcript file or enter
-            manually.
+            Create a new therapy session. Upload a transcript file to begin.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)}>
@@ -308,47 +220,13 @@ export function AddSessionDialog({
 
             <div className="grid grid-cols-4 items-start gap-4">
               <Label className="text-right pt-2">Transcript</Label>
-              <div className="col-span-3 space-y-2">
-                <div className="flex items-center gap-2">
-                  <Input
-                    ref={fileInputRef}
-                    type="file"
-                    accept={ALL_EXTENSIONS.join(',')}
-                    onChange={handleFileChange}
-                    className="rounded-none cursor-pointer"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="rounded-none"
-                  >
-                    <Upload className="h-4 w-4" />
-                  </Button>
-                </div>
-                {fileError && (
-                  <p className="text-sm text-red-500">{fileError}</p>
-                )}
-                {file && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    {getFileIcon()}
-                    <span>{file.name}</span>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={clearFile}
-                      className="h-6 w-6 p-0"
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </div>
-                )}
-                <textarea
-                  {...register('transcript')}
-                  placeholder="Or enter transcript manually..."
-                  className="rounded-none min-h-[150px] flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+              <div className="col-span-3">
+                <FileUpload
+                  accept={SUPPORTED_EXTENSIONS}
+                  maxSize={MAX_FILE_SIZE}
+                  onFileSelect={handleFileSelect}
+                  label="Upload transcript"
+                  hint={`Supported formats: ${SUPPORTED_FORMATS_LABEL}`}
                 />
               </div>
             </div>
@@ -362,8 +240,16 @@ export function AddSessionDialog({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading} className="rounded-none">
-              {loading ? 'Creating...' : 'Create Session'}
+            <Button
+              type="submit"
+              disabled={loading || !file}
+              className="rounded-none"
+            >
+              {uploading
+                ? 'Uploading...'
+                : loading
+                  ? 'Creating...'
+                  : 'Create Session'}
             </Button>
           </DialogFooter>
         </form>

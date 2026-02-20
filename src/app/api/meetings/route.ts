@@ -4,8 +4,9 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { tasks } from '@trigger.dev/sdk';
 import { analyzeSessionJob } from '@/trigger/jobs';
-import { uploadToS3, isS3Url, extractKeyFromUrl } from '@/lib/s3';
+import { uploadToS3, extractKeyFromUrl } from '@/lib/s3';
 import { trackServer, ANALYTICS_EVENTS } from '@/lib/analytics-server';
+import { MAX_FILE_SIZE, SUPPORTED_EXTENSIONS } from '@/lib/transcript';
 
 // Sample therapy session transcripts (simplified to avoid syntax issues)
 const SAMPLE_TRANSCRIPTS = [
@@ -230,6 +231,25 @@ export async function POST(request: Request) {
       transcript = formData.get('transcript') as string | undefined;
 
       if (file) {
+        if (file.size > MAX_FILE_SIZE) {
+          return NextResponse.json(
+            {
+              error: `File too large. Maximum size is ${MAX_FILE_SIZE / (1024 * 1024)}MB`
+            },
+            { status: 400 }
+          );
+        }
+
+        const extension = '.' + file.name.split('.').pop()?.toLowerCase();
+        if (!SUPPORTED_EXTENSIONS.includes(extension)) {
+          return NextResponse.json(
+            {
+              error: `Unsupported file type. Supported: ${SUPPORTED_EXTENSIONS.join(', ')}`
+            },
+            { status: 400 }
+          );
+        }
+
         const arrayBuffer = await file.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
         const tempId = `temp-${Date.now()}`;
@@ -240,12 +260,10 @@ export async function POST(request: Request) {
         meetingId = tempId;
       }
     } else {
-      const body = await request.json();
-      action = body.action;
-      groupId = body.groupId;
-      date = body.date;
-      fellowId = body.fellowId;
-      transcript = body.transcript;
+      return NextResponse.json(
+        { error: 'File upload required. Please upload a transcript file.' },
+        { status: 400 }
+      );
     }
 
     // Check if creating sample sessions (backward compatibility)
@@ -277,14 +295,14 @@ export async function POST(request: Request) {
       );
     }
 
-    // If transcript is not an S3 URL, upload it
-    let transcriptUrl = transcript;
-    if (transcript && !isS3Url(transcript)) {
-      const tempId = meetingId || `temp-${Date.now()}`;
-      const key = `transcripts/${tempId}/transcript.txt`;
-      const buffer = Buffer.from(transcript, 'utf-8');
-      const result = await uploadToS3(buffer, key, 'text/plain');
-      transcriptUrl = result.url;
+    // Transcript is already set as S3 URL from file upload
+    const transcriptUrl = transcript;
+
+    if (!transcriptUrl) {
+      return NextResponse.json(
+        { error: 'Transcript file is required' },
+        { status: 400 }
+      );
     }
 
     // Create the session
