@@ -259,6 +259,37 @@ export default function SessionDetailPage() {
     }
   }, [params.id, fetchSession, runId]);
 
+  // Defensive fallback: poll session status when analyzing to ensure we recover if realtime fails
+  useEffect(() => {
+    if (!analyzing) return;
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const response = await fetch(`/api/meetings/${params.id}`);
+        const data = await response.json();
+
+        if (
+          data.session?.status === 'PENDING' ||
+          data.session?.status === 'PROCESSED' ||
+          data.session?.status === 'FLAGGED_FOR_REVIEW' ||
+          data.session?.status === 'SAFE'
+        ) {
+          // Job completed but realtime didn't fire - reset state
+          setAnalyzing(false);
+          setJobStatus('idle');
+          setRunId(null);
+          setAccessToken(null);
+          setAnalysisStatus('');
+          clearInterval(pollInterval);
+        }
+      } catch (error) {
+        console.error('Error in defensive polling:', error);
+      }
+    }, 5000);
+
+    return () => clearInterval(pollInterval);
+  }, [analyzing, params.id]);
+
   const runAnalysis = async () => {
     setAnalyzing(true);
     setJobStatus('queued');
@@ -731,6 +762,7 @@ export default function SessionDetailPage() {
                       setAnalysisStatus('');
                       toast.error('Analysis failed. Please try again.');
                     }
+                    setAnalyzing(false);
                     setRunId(null);
                     setAccessToken(null);
                   }}
