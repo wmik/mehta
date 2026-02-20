@@ -1,22 +1,30 @@
-import { getServerSession } from 'next-auth/next';
-import { redirect } from 'next/navigation';
+'use client';
+
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { authOptions } from '@/lib/auth';
+import { useSession } from 'next-auth/react';
 import { ThemeToggle } from '@/components/dashboard/theme-toggle';
 import { Notifications } from '@/components/dashboard/notifications';
 import { UserMenu } from '@/components/dashboard/user-menu';
 import { UserTabs } from '@/components/dashboard/user-tabs';
 
-export default async function UserLayout({
+export default function UserLayout({
   children
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getServerSession(authOptions);
+  const pathname = usePathname();
+  const { data: session } = useSession();
 
   if (!session) {
-    redirect('/login');
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p>Redirecting to login...</p>
+      </div>
+    );
   }
+
+  const showUserTabs = !pathname?.includes('/notifications');
 
   return (
     <div className="min-h-screen bg-background">
@@ -41,9 +49,11 @@ export default async function UserLayout({
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="mt-6">
-          <UserTabs />
-        </div>
+        {showUserTabs && (
+          <div className="mt-6">
+            <UserTabs />
+          </div>
+        )}
 
         {children}
       </div>

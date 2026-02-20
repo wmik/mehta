@@ -1,13 +1,10 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import Link from 'next/link';
 import useSWR from 'swr';
-import { Bell, Check, AlertTriangle, Info, ArrowLeft } from 'lucide-react';
+import { Bell, Check, AlertTriangle, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ThemeToggle } from '@/components/dashboard/theme-toggle';
-import { UserMenu } from '@/components/dashboard/user-menu';
 import { useSession } from 'next-auth/react';
 
 interface Notification {
@@ -121,25 +118,7 @@ export default function NotificationsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="bg-background shadow-sm border-b">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link
-              href="/dashboard"
-              className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
-            </Link>
-            <div className="flex items-center gap-2">
-              <ThemeToggle />
-              {auth?.user && <UserMenu user={auth.user} />}
-            </div>
-          </div>
-        </div>
-      </header>
-
+    <>
       <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold">Notifications</h1>
@@ -227,6 +206,6 @@ export default function NotificationsPage() {
           )}
         </div>
       </main>
-    </div>
+    </>
   );
 }
