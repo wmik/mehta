@@ -396,6 +396,15 @@ export async function POST(request: Request) {
         runId = handle.id;
         publicAccessToken = handle.publicAccessToken;
         newSession.status = 'PROCESSING';
+
+        await prisma.notification.create({
+          data: {
+            userId: session.user.id,
+            title: 'New Session Uploaded',
+            description: `Session ${groupId} uploaded and AI analysis started`,
+            custom: { type: 'info' }
+          }
+        });
       } catch (analysisError) {
         console.error('Failed to start analysis:', analysisError);
         await prisma.meeting.update({

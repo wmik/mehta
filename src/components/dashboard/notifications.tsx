@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import useSWR from 'swr';
 import { Bell, Check, AlertTriangle, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -16,65 +17,80 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 interface Notification {
   id: string;
   title: string;
-  message: string;
-  type: 'info' | 'warning' | 'success';
-  read: boolean;
-  createdAt: string;
+  description: string;
+  isRead: boolean;
+  createdAt: Date;
+  custom?: {
+    type?: 'info' | 'warning' | 'success';
+  };
 }
 
-const initialNotifications: Notification[] = [
-  {
-    id: '1',
-    title: 'New Session Analyzed',
-    message: 'GRP-001 analysis complete - Ready for review',
-    type: 'info',
-    read: false,
-    createdAt: new Date(Date.now() - 1000 * 60 * 5).toISOString()
-  },
-  {
-    id: '2',
-    title: 'Risk Detected',
-    message: 'Potential risk flagged in session GRP-003',
-    type: 'warning',
-    read: false,
-    createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString()
-  },
-  {
-    id: '3',
-    title: 'Analysis Validated',
-    message: 'Session GRP-002 has been validated by supervisor',
-    type: 'success',
-    read: true,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60).toISOString()
-  },
-  {
-    id: '4',
-    title: 'New Session Ready',
-    message: 'GRP-004 transcript uploaded - Ready for AI analysis',
-    type: 'info',
-    read: true,
-    createdAt: new Date(Date.now() - 1000 * 60 * 120).toISOString()
-  }
-];
+const fetcher = (url: string) => fetch(url).then(res => res.json());
+
+function mapDbToNotification(dbNotification: {
+  id: string;
+  title: string;
+  description: string;
+  isRead: boolean;
+  createdAt: Date;
+  custom: Record<string, unknown> | null;
+}): Notification {
+  return {
+    id: dbNotification.id,
+    title: dbNotification.title,
+    description: dbNotification.description,
+    isRead: dbNotification.isRead,
+    createdAt: dbNotification.createdAt,
+    custom: dbNotification.custom as Notification['custom']
+  };
+}
 
 export function Notifications() {
-  const [notifications, setNotifications] =
-    useState<Notification[]>(initialNotifications);
   const [open, setOpen] = useState(false);
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const { data, mutate } = useSWR<{ notifications: Notification[] }>(
+    '/api/notifications',
+    fetcher,
+    {
+      refreshInterval: 30000,
+      revalidateOnFocus: false
+    }
+  );
 
-  const markAsRead = (id: string) => {
-    setNotifications(prev =>
-      prev.map(n => (n.id === id ? { ...n, read: true } : n))
-    );
-  };
+  const notifications = (data?.notifications ?? []).map(mapDbToNotification);
+  const unreadCount = notifications.filter(n => !n.isRead).length;
 
-  const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-  };
+  const markAsRead = useCallback(
+    async (id: string) => {
+      try {
+        await fetch('/api/notifications', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ notificationId: id })
+        });
+        mutate();
+      } catch (error) {
+        console.error('Failed to mark notification as read:', error);
+      }
+    },
+    [mutate]
+  );
 
-  const getIcon = (type: Notification['type']) => {
+  const markAllAsRead = useCallback(async () => {
+    try {
+      await fetch('/api/notifications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ markAllRead: true })
+      });
+      mutate();
+    } catch (error) {
+      console.error('Failed to mark all notifications as read:', error);
+    }
+  }, [mutate]);
+
+  const getIcon = (notification: Notification) => {
+    const type = notification.custom?.type ?? 'info';
     switch (type) {
       case 'warning':
         return <AlertTriangle className="h-4 w-4 text-amber-500" />;
@@ -85,17 +101,18 @@ export function Notifications() {
     }
   };
 
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
+  const formatTime = (date: Date) => {
     const now = new Date();
-    const diff = now.getTime() - date.getTime();
+    const diff = now.getTime() - new Date(date).getTime();
     const minutes = Math.floor(diff / (1000 * 60));
     const hours = Math.floor(diff / (1000 * 60 * 60));
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
 
     if (minutes < 1) return 'Just now';
     if (minutes < 60) return `${minutes}m ago`;
     if (hours < 24) return `${hours}h ago`;
-    return date.toLocaleDateString();
+    if (days < 7) return `${days}d ago`;
+    return new Date(date).toLocaleDateString();
   };
 
   return (
@@ -137,20 +154,20 @@ export function Notifications() {
                 className="flex items-start gap-3 p-3 cursor-pointer"
                 onClick={() => markAsRead(notification.id)}
               >
-                <div className="mt-0.5">{getIcon(notification.type)}</div>
+                <div className="mt-0.5">{getIcon(notification)}</div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
                     <p
-                      className={`text-sm font-medium ${!notification.read ? 'text-foreground' : 'text-muted-foreground'}`}
+                      className={`text-sm font-medium ${!notification.isRead ? 'text-foreground' : 'text-muted-foreground'}`}
                     >
                       {notification.title}
                     </p>
-                    {!notification.read && (
+                    {!notification.isRead && (
                       <span className="h-2 w-2 bg-blue-500 rounded-full flex-shrink-0" />
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground truncate">
-                    {notification.message}
+                    {notification.description}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
                     {formatTime(notification.createdAt)}

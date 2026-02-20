@@ -86,11 +86,20 @@ export const analyzeSessionJob = task({
 
       metadata.set('status', 'completed');
 
+      const notificationType = riskStatus === 'RISK' ? 'warning' : 'info';
+      const notificationTitle =
+        riskStatus === 'RISK' ? 'Risk Detected' : 'Session Analyzed';
+      const notificationDescription =
+        riskStatus === 'RISK'
+          ? `${meeting.groupId} analysis complete - Risk detected, requires review`
+          : `${meeting.groupId} analysis ready for review`;
+
       await prisma.notification.create({
         data: {
           userId: meeting.supervisorId,
-          title: 'Session Analyzed',
-          description: `${meeting.groupId} analysis ready for review`
+          title: notificationTitle,
+          description: notificationDescription,
+          custom: { type: notificationType }
         }
       });
 
