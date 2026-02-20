@@ -20,7 +20,15 @@ export async function GET() {
       take: 50
     });
 
-    return NextResponse.json({ notifications });
+    const unreadCount = await prisma.notification.count({
+      where: {
+        userId: session.user.id,
+        isRead: false,
+        deletedAt: null
+      }
+    });
+
+    return NextResponse.json({ notifications, unreadCount });
   } catch (error) {
     console.error('Failed to fetch notifications:', error);
     return NextResponse.json(

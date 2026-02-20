@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import { Bell, Check, AlertTriangle, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -20,45 +21,50 @@ interface Notification {
   description: string;
   isRead: boolean;
   createdAt: Date;
-  custom?: {
-    type?: 'info' | 'warning' | 'success';
-  };
+  custom: Record<string, unknown> | null;
 }
 
-const fetcher = (url: string) => fetch(url).then(res => res.json());
-
-function mapDbToNotification(dbNotification: {
+interface ApiNotification {
   id: string;
   title: string;
   description: string;
   isRead: boolean;
   createdAt: Date;
   custom: Record<string, unknown> | null;
-}): Notification {
+}
+
+const fetcher = (url: string) =>
+  fetch(url).then(res => res.json()) as Promise<{
+    notifications: ApiNotification[];
+    unreadCount: number;
+  }>;
+
+function mapDbToNotification(dbNotification: ApiNotification): Notification {
   return {
     id: dbNotification.id,
     title: dbNotification.title,
     description: dbNotification.description,
     isRead: dbNotification.isRead,
     createdAt: dbNotification.createdAt,
-    custom: dbNotification.custom as Notification['custom']
+    custom: dbNotification.custom
   };
 }
 
 export function Notifications() {
   const [open, setOpen] = useState(false);
+  const router = useRouter();
 
-  const { data, mutate } = useSWR<{ notifications: Notification[] }>(
-    '/api/notifications',
-    fetcher,
-    {
-      refreshInterval: 30000,
-      revalidateOnFocus: false
-    }
-  );
+  const { data, mutate } = useSWR<{
+    notifications: ApiNotification[];
+    unreadCount: number;
+  }>('/api/notifications', fetcher, {
+    refreshInterval: 30000,
+    revalidateOnFocus: false
+  });
 
   const notifications = (data?.notifications ?? []).map(mapDbToNotification);
-  const unreadCount = notifications.filter(n => !n.isRead).length;
+  const unreadCount =
+    data?.unreadCount ?? notifications.filter(n => !n.isRead).length;
 
   const markAsRead = useCallback(
     async (id: string) => {
@@ -90,7 +96,8 @@ export function Notifications() {
   }, [mutate]);
 
   const getIcon = (notification: Notification) => {
-    const type = notification.custom?.type ?? 'info';
+    const custom = notification.custom as { type?: string } | null;
+    const type = custom?.type ?? 'info';
     switch (type) {
       case 'warning':
         return <AlertTriangle className="h-4 w-4 text-amber-500" />;
@@ -183,7 +190,10 @@ export function Notifications() {
             variant="outline"
             size="sm"
             className="w-full rounded-none"
-            onClick={() => setOpen(false)}
+            onClick={() => {
+              setOpen(false);
+              router.push('/notifications');
+            }}
           >
             View All Notifications
           </Button>
