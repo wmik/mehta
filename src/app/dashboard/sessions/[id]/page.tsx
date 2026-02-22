@@ -429,7 +429,7 @@ export default function SessionDetailPage() {
       } else if (response.status === 410) {
         toast.error('Transcript file not found. Please re-upload.');
       } else {
-        const error = await response.json();
+        const error = await response.text();
         throw new Error(error.error || 'Failed to download transcript');
       }
     } catch (error) {

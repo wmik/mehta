@@ -45,16 +45,19 @@ export async function getObjectUrl(
   key: string,
   expiresIn = 3600
 ): Promise<string> {
+  console.log(`[S3] Generating signed URL for key: ${key}`);
   const command = new GetObjectCommand({
     Bucket: BUCKET_NAME,
     Key: key
   });
 
   const signedUrl = await getSignedUrl(s3Client, command, { expiresIn });
+  console.log(`[S3] Generated signed URL successfully`);
   return signedUrl;
 }
 
 export async function getObjectContent(key: string): Promise<string> {
+  console.log(`[S3] Fetching content for key: ${key}`);
   const command = new GetObjectCommand({
     Bucket: BUCKET_NAME,
     Key: key
@@ -63,10 +66,14 @@ export async function getObjectContent(key: string): Promise<string> {
   const response = await s3Client.send(command);
 
   if (!response.Body) {
+    console.error(`[S3] Empty response for key: ${key}`);
     throw new Error('Empty response from S3');
   }
 
   const bodyString = await response.Body.transformToString();
+  console.log(
+    `[S3] Fetched content for key: ${key}, length: ${bodyString.length}`
+  );
   return bodyString;
 }
 
@@ -95,7 +102,7 @@ export async function copyObjectInS3(
 export function extractKeyFromUrl(url: string): string | null {
   try {
     const urlObj = new URL(url);
-    return urlObj.pathname.substring(1);
+    return decodeURIComponent(urlObj.pathname.substring(1));
   } catch {
     return null;
   }
@@ -107,12 +114,15 @@ export function isS3Url(url: string | null | undefined): boolean {
 }
 
 export async function objectExists(key: string): Promise<boolean> {
+  console.log(`[S3] Checking if object exists: ${key}`);
   try {
     const command = new HeadObjectCommand({ Bucket: BUCKET_NAME, Key: key });
     await s3Client.send(command);
+    console.log(`[S3] Object exists: ${key}`);
     return true;
   } catch (error: unknown) {
     const err = error as { name?: string };
+    console.log(`[S3] Object does not exist: ${key}, error: ${err.name}`);
     if (err.name === 'NoSuchKey') return false;
     throw error;
   }

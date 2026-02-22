@@ -197,6 +197,7 @@ export async function PATCH(
 
     if (meeting.transcript && isS3Url(meeting.transcript)) {
       const oldKey = extractKeyFromUrl(meeting.transcript);
+	  console.log('[KEY]', oldKey)
       if (oldKey) {
         try {
           await deleteFromS3(oldKey);

@@ -13,6 +13,7 @@ export async function GET(
 ) {
   try {
     const meetingId = (await context.params).id;
+    console.log(`[Download] Request for meeting: ${meetingId}`);
     const { searchParams } = new URL(request.url);
     const expiresIn = parseInt(searchParams.get('expiresIn') || '3600', 10);
 
@@ -20,6 +21,8 @@ export async function GET(
       where: { id: meetingId },
       select: { transcript: true }
     });
+
+    console.log(`[Download] Meeting found, transcript: ${meeting?.transcript}`);
 
     if (!meeting?.transcript) {
       return NextResponse.json(
@@ -31,13 +34,15 @@ export async function GET(
     // If transcript is an S3 URL, verify the object exists
     if (isS3Url(meeting.transcript)) {
       const key = extractKeyFromUrl(meeting.transcript);
+      console.log(`[Download] Extracted key: ${key}`);
 
       if (key) {
         let exists = false;
         try {
           exists = await objectExists(key);
+          console.log(`[Download] Object exists: ${exists}`);
         } catch (err: unknown) {
-          console.error(err);
+          console.error('[Download] Error checking object existence:', err);
         }
 
         if (!exists) {

@@ -346,21 +346,65 @@ export async function POST(request: Request) {
 
     // If transcript was uploaded to temp location, copy to final location in S3
     if (transcriptUrl && meetingId) {
+      console.log(`[Transcript] Starting copy from temp: ${transcriptUrl}`);
       try {
         const oldKey = extractKeyFromUrl(transcriptUrl);
+        console.log(`[Transcript] Old key: ${oldKey}`);
         if (oldKey) {
           const newKey = `transcripts/${newSession.id}/transcript.txt`;
+          console.log(`[Transcript] New key: ${newKey}`);
           await copyObjectInS3(oldKey, newKey);
+          console.log(`[Transcript] Copy successful, deleting temp: ${oldKey}`);
           await deleteFromS3(oldKey);
           await prisma.meeting.update({
             where: { id: newSession.id },
             data: {
-              transcript: `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${newKey}`
+              transcript: `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${encodeURIComponent(newKey)}`
             }
           });
+          console.log(`[Transcript] Database updated with new URL`);
         }
       } catch (error) {
-        console.error('Failed to move transcript to final location:', error);
+        console.error(
+          '[Transcript] Failed to move transcript to final location:',
+          error
+        );
+        return NextResponse.json(
+          { error: 'Failed to process transcript. Please try again.' },
+          { status: 500 }
+        );
+      }
+    }
+
+    // Re-fetch the meeting after successful copy to get updated transcript
+    let finalSession = newSession;
+    if (transcriptUrl && meetingId) {
+      try {
+        const reFetchedSession = await prisma.meeting.findUnique({
+          where: { id: newSession.id },
+          include: {
+            fellow: { select: { id: true, name: true, email: true } },
+            analyses: {
+              select: {
+                id: true,
+                riskDetection: true,
+                supervisorStatus: true,
+                contentCoverage: true,
+                facilitationQuality: true,
+                protocolSafety: true,
+                createdAt: true
+              }
+            }
+          }
+        });
+        if (reFetchedSession) {
+          finalSession = reFetchedSession;
+        }
+        console.log(
+          `[Transcript] Re-fetched session, transcript: ${finalSession?.transcript}`
+        );
+      } catch (error) {
+        console.error('[Transcript] Failed to re-fetch session:', error);
       }
     }
 
@@ -425,15 +469,15 @@ export async function POST(request: Request) {
     return NextResponse.json({
       message: 'Session created successfully',
       session: {
-        id: newSession.id,
-        groupId: newSession.groupId,
-        date: newSession.date,
-        status: newSession.status,
-        transcript: newSession.transcript,
+        id: finalSession.id,
+        groupId: finalSession.groupId,
+        date: finalSession.date,
+        status: finalSession.status,
+        transcript: finalSession.transcript,
         runId: runId,
         publicAccessToken: publicAccessToken,
-        fellow: newSession.fellow,
-        analyses: newSession.analyses.map(a => ({
+        fellow: finalSession.fellow,
+        analyses: finalSession.analyses.map(a => ({
           id: a.id,
           riskDetection: a.riskDetection,
           supervisorStatus: a.supervisorStatus,
