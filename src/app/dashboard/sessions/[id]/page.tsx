@@ -430,7 +430,7 @@ export default function SessionDetailPage() {
         toast.error('Transcript file not found. Please re-upload.');
       } else {
         const error = await response.text();
-        throw new Error(error.error || 'Failed to download transcript');
+        throw new Error(error || 'Failed to download transcript');
       }
     } catch (error) {
       console.error('Failed to download transcript:', error);
